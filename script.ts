@@ -1,3 +1,4 @@
+import "./style.scss";
 interface Game {
   name: string;
   cardImage: string;
