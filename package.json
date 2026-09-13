@@ -1,0 +1,25 @@
+{
+  "name": "minigames",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmpodrez/minigames.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dmpodrez/minigames/issues"
+  },
+  "homepage": "https://github.com/dmpodrez/minigames#readme",
+  "devDependencies": {
+    "sass": "^1.104.1",
+    "typescript": "^7.0.2"
+  }
+}

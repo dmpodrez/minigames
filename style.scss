@@ -1,3 +1,10 @@
+$background: #f9f8f3;
+$primary: #ffd02b;
+$text-primary: #242145;
+$text-secondary: #5f5d75;
+$tertiary: #3a2ebf;
+$white: #ffffff;
+
 * {
   box-sizing: border-box;
 }
@@ -5,8 +12,8 @@
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background-color: #f9f8f3;
-  color: #242145;
+  background-color: $background;
+  color: $text-primary;
 }
 
 /* Header */
@@ -16,8 +23,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #f9f8f3;
-  border-bottom: 2px solid #242145;
+  background-color: $background;
+  border-bottom: 2px solid $text-primary;
 }
 
 .logo {
@@ -25,17 +32,18 @@ body {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #242145;
-}
-.logo span {
-  font-size: 24px;
-  font-weight: 700;
+  color: $text-primary;
+
+  span {
+    font-size: 24px;
+    font-weight: 700;
+  }
 }
 
 .logo-icon {
   width: 32px;
   height: 32px;
-  border: 2px solid #242145;
+  border: 2px solid $text-primary;
   border-radius: 6px;
 }
 
@@ -52,14 +60,15 @@ body {
 }
 
 .nav-link {
-  color: #5f5d75;
+  color: $text-secondary;
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
-}
-.nav-link.active {
-  color: #242145;
-  font-weight: 700;
+
+  &.active {
+    color: $text-primary;
+    font-weight: 700;
+  }
 }
 
 .auth-buttons {
@@ -70,7 +79,7 @@ body {
 .login-button,
 .signup-button {
   padding: 10px 20px;
-  border: 2px solid #242145;
+  border: 2px solid $text-primary;
   border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
@@ -80,19 +89,21 @@ body {
 
 .login-button {
   background: transparent;
-  color: #242145;
+  color: $text-primary;
 }
 
 .signup-button {
-  background: #ffd02b;
-  color: #242145;
+  background: $primary;
+  color: $text-primary;
 }
 
 /* Hero */
 .hero {
   min-height: 627px;
   padding: 112px 120px;
-  background-image: linear-gradient(rgba(30, 27, 58, 0.65), rgba(30, 27, 58, 0.65)), url("./assets/images/hero-bg.png");
+  background-image:
+    linear-gradient(rgba(30, 27, 58, 0.65), rgba(30, 27, 58, 0.65)),
+    url("./assets/images/hero-bg.png");
   background-size: cover;
   background-position: center;
 }
@@ -104,30 +115,32 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 24px;
-  background-color: #f9f8f3;
-  border: 3px solid #242145;
+  background-color: $background;
+  border: 3px solid $text-primary;
   border-radius: 24px;
-  box-shadow: 8px 8px 0 #242145;
-}
-.hero-content h1 {
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-  color: #242145;
-}
-.hero-content p {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: #5f5d75;
+  box-shadow: 8px 8px 0 $text-primary;
+
+  h1 {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: $text-secondary;
+  }
 }
 
 .hero-button {
   padding: 16px 24px;
-  background-color: #ffd02b;
-  color: #242145;
-  border: 2px solid #242145;
+  background-color: $primary;
+  color: $text-primary;
+  border: 2px solid $text-primary;
   border-radius: 8px;
   font-size: 18px;
   font-weight: 700;
@@ -139,19 +152,20 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.section-title h2 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #242145;
+
+  h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: $text-primary;
+  }
 }
 
 .accent-bar {
   width: 8px;
   height: 32px;
-  background-color: #ffd02b;
-  border: 1.5px solid #242145;
+  background-color: $primary;
+  border: 1.5px solid $text-primary;
   border-radius: 4px;
 }
 
@@ -180,14 +194,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
-  border: 2px solid #242145;
+  background-color: $white;
+  border: 2px solid $text-primary;
   border-radius: 50%;
   font-size: 24px;
   cursor: pointer;
-}
-.slider-btn:hover {
-  background-color: #ffd02b;
+
+  &:hover {
+    background-color: $primary;
+  }
 }
 
 .games-viewport {
@@ -208,21 +223,25 @@ body {
   width: 288px;
   height: 384px;
   flex-shrink: 0;
-  border: 2.5px solid #242145;
+  border: 2.5px solid $text-primary;
   border-radius: 24px;
   overflow: hidden;
-}
-.game-card--active {
-  width: 816px;
-}
-.game-card--edge {
-  width: 120px;
-}
-.game-card--visible {
-  box-shadow: 4px 4px 0 #242145;
-}
-.game-card--hidden {
-  visibility: hidden;
+
+  &--active {
+    width: 816px;
+  }
+
+  &--edge {
+    width: 120px;
+  }
+
+  &--visible {
+    box-shadow: 4px 4px 0 $text-primary;
+  }
+
+  &--hidden {
+    visibility: hidden;
+  }
 }
 
 .game-image {
@@ -240,17 +259,24 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: #ffffff;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0));
-}
-.game-overlay h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.game-overlay--hidden {
-  visibility: hidden;
+  color: $white;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85),
+    rgba(0, 0, 0, 0.4),
+    rgba(0, 0, 0, 0)
+  );
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &--hidden {
+    visibility: hidden;
+  }
 }
 
 .game-info {
@@ -267,11 +293,11 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-.game-rating img,
-.game-likes img {
-  width: 16px;
-  height: 16px;
+
+  img {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* Top Players */
@@ -284,24 +310,25 @@ body {
 
 .leaderboard {
   overflow: hidden;
-  border: 2.5px solid #242145;
+  border: 2.5px solid $text-primary;
   border-radius: 16px;
-  box-shadow: 6px 6px 0 #242145;
-}
-.leaderboard table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.leaderboard thead {
-  background-color: #3a2ebf;
-  color: #ffffff;
-}
-.leaderboard th {
-  padding: 24px;
-  font-size: 16px;
-  font-weight: 800;
-  text-transform: uppercase;
-  text-align: center;
-}
+  box-shadow: 6px 6px 0 $text-primary;
 
-/*# sourceMappingURL=style.css.map */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    background-color: $tertiary;
+    color: $white;
+  }
+
+  th {
+    padding: 24px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+  }
+}
