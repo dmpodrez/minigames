@@ -1,10 +1,5 @@
-$background: #f9f8f3;
-$primary: #ffd02b;
-$text-primary: #242145;
-$text-secondary: #5f5d75;
-$tertiary: #3a2ebf;
-$white: #ffffff;
-
+@use "./styles/abstracts/variables" as *;
+@use "./styles/abstracts/mixins" as *;
 * {
   box-sizing: border-box;
 }
@@ -25,6 +20,9 @@ body {
   justify-content: space-between;
   background-color: $background;
   border-bottom: 2px solid $text-primary;
+  @include mobile {
+    padding: 16px 24px;
+  }
 }
 
 .logo {
@@ -301,6 +299,7 @@ body {
 }
 
 /* Top Players */
+/* Top Players */
 .top-players {
   padding: 40px 120px;
   display: flex;
@@ -308,27 +307,378 @@ body {
   gap: 40px;
 }
 
+/* сама таблица */
 .leaderboard {
+  position: relative;
+  width: 100%;
+  height: 427px;
+
   overflow: hidden;
-  border: 2.5px solid $text-primary;
+
   border-radius: 16px;
   box-shadow: 6px 6px 0 $text-primary;
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
+  /*
+   * Рисуем border поверх таблицы,
+   * чтобы он не съедал ширину колонок.
+   */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border: 2.5px solid $text-primary;
+    border-radius: 16px;
+
+    pointer-events: none;
+    z-index: 2;
   }
 
+  table {
+    width: 100%;
+    height: 427px;
+
+    table-layout: fixed;
+    border-collapse: collapse;
+
+    color: $text-primary;
+  }
+
+  /* =========================
+     HEADER
+     ========================= */
+
   thead {
+    height: 67px;
     background-color: $tertiary;
     color: $white;
   }
 
+  thead tr {
+    height: 67px;
+  }
+
   th {
-    padding: 24px;
+    height: 67px;
+
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 16px;
+
+    vertical-align: middle;
+    text-align: center;
+
     font-size: 16px;
     font-weight: 800;
+    line-height: 19px;
     text-transform: uppercase;
+  }
+
+  /* =========================
+     COLUMN WIDTHS
+     Figma table width = 1680
+     ========================= */
+
+  /*
+   * RANK
+   *
+   * 24px слева
+   * 80px контент
+   * 16px справа
+   *
+   * 24 + 80 + 16 = 120px
+   */
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 120px;
+
+    padding-left: 24px;
+    padding-right: 16px;
+
     text-align: center;
   }
+
+  /*
+   * PLAYER
+   *
+   * 294.4px контент
+   * 16px справа
+   *
+   * = 310.4px
+   */
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 310.4px;
+    padding-right: 16px;
+  }
+
+  /*
+   * GAMES PLAYED
+   */
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 310.4px;
+    padding-right: 16px;
+  }
+
+  /*
+   * TOTAL SCORE
+   */
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 310.4px;
+    padding-right: 16px;
+  }
+
+  /*
+   * STREAK
+   */
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 310.4px;
+    padding-right: 16px;
+  }
+
+  /*
+   * FAVORITE GAME
+   *
+   * 294.4px контент
+   * 24px справа
+   *
+   * = 318.4px
+   */
+  th:nth-child(6),
+  td:nth-child(6) {
+    width: 318.4px;
+
+    padding-left: 0;
+    padding-right: 24px;
+
+    text-align: center;
+  }
+
+  /* =========================
+     BODY ROWS
+     ========================= */
+
+  tbody tr {
+    height: 72px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody tr:nth-child(odd) {
+    background-color: $background;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: $white;
+  }
+
+  td {
+    height: 72px;
+
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 16px;
+
+    vertical-align: middle;
+    text-align: center;
+
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 19px;
+  }
+
+  /* =========================
+     PLAYER COLUMN
+     ========================= */
+
+  td.leaderboard-player {
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  /*
+   * Сам td НЕ делаем display:flex.
+   * Он должен оставаться table-cell,
+   * иначе браузер ломает размеры колонок.
+   */
+
+  .player-avatar {
+    width: 40px;
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 12px;
+
+    vertical-align: middle;
+
+    border: 1.5px solid $text-primary;
+    border-radius: 50%;
+
+    color: $text-primary;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+  }
+
+  .leaderboard-player > span:not(.player-avatar) {
+    vertical-align: middle;
+  }
+
+  /* avatar rank colors */
+
+  tbody tr:nth-child(1) .player-avatar {
+    background-color: $primary;
+  }
+
+  tbody tr:nth-child(2) .player-avatar {
+    background-color: #a3e2c9;
+  }
+
+  tbody tr:nth-child(3) .player-avatar {
+    background-color: #bce3ff;
+  }
+
+  tbody tr:nth-child(4) .player-avatar {
+    background-color: #ffc6ff;
+  }
+
+  tbody tr:nth-child(5) .player-avatar {
+    background-color: #e8dff5;
+  }
+
+  /* =========================
+     RANK
+     ========================= */
+
+  tbody tr:first-child td:first-child {
+    color: $primary;
+    font-weight: 800;
+  }
+
+  /* =========================
+     FAVORITE GAME BADGE
+     ========================= */
+
+  tbody td:nth-child(6) > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 22px;
+
+    padding: 4px 12px;
+
+    border: 1px solid $text-primary;
+    border-radius: 999px;
+
+    background-color: transparent;
+    color: $text-primary;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 14px;
+
+    white-space: nowrap;
+  }
+}
+/* Developer Section */
+.developer-section {
+  padding: 40px 120px 80px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.developer-illustration {
+  width: 682px;
+  height: 483px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 24px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+.developer-card {
+  flex: 1;
+  padding: 40px;
+
+  border: 2px solid $text-primary;
+  border-radius: 24px;
+  background-color: $white;
+
+  box-shadow: 0 12px 24px rgba(36, 33, 69, 0.1);
+
+  h2 {
+    margin: 0 0 24px;
+
+    color: $text-primary;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+}
+
+.developer-description {
+  max-width: 610px;
+  margin: 0 0 28px;
+
+  color: $text-secondary;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.developer-button {
+  min-height: 56px;
+  padding: 0 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  border: 2px solid $text-primary;
+  border-radius: 12px;
+
+  background-color: $primary;
+  color: $text-primary;
+
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 3px 3px 0 $text-primary;
+}
+
+.developer-contact {
+  margin: 28px 0 0;
+
+  color: $text-secondary;
+  font-size: 14px;
+  font-weight: 400;
+}
+.developer-button-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
