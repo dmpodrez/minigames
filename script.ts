@@ -250,3 +250,123 @@ function getInitials(name: string): string {
 loadLeaderboard().catch((error: unknown) => {
   console.error(error);
 });
+
+type AuthMode = "login" | "register";
+
+const authDialog = getElement<HTMLDialogElement>(".auth-dialog");
+
+const authOpenButtons =
+  document.querySelectorAll<HTMLButtonElement>(".auth-open");
+
+const authTabs =
+  document.querySelectorAll<HTMLButtonElement>("[data-auth-tab]");
+
+const authPanels = document.querySelectorAll<HTMLElement>("[data-auth-panel]");
+
+const authSwitchButtons =
+  document.querySelectorAll<HTMLButtonElement>("[data-auth-switch]");
+
+const authForms = document.querySelectorAll<HTMLFormElement>(".auth-form");
+
+function setAuthMode(mode: AuthMode): void {
+  authTabs.forEach((tab) => {
+    const isActive = tab.dataset.authTab === mode;
+
+    tab.classList.toggle("auth-tab--active", isActive);
+  });
+
+  authPanels.forEach((panel) => {
+    const isActive = panel.dataset.authPanel === mode;
+
+    panel.classList.toggle("auth-panel--active", isActive);
+  });
+}
+
+function openAuthDialog(mode: AuthMode): void {
+  setAuthMode(mode);
+
+  if (!authDialog.open) {
+    authDialog.showModal();
+  }
+}
+
+function closeAuthDialog(): void {
+  if (!authDialog.open) {
+    return;
+  }
+
+  authDialog.classList.add("auth-dialog--closing");
+
+  window.setTimeout(() => {
+    authDialog.close();
+    authDialog.classList.remove("auth-dialog--closing");
+  }, 200);
+}
+
+authOpenButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const mode = button.dataset.authMode as AuthMode;
+
+    openAuthDialog(mode);
+  });
+});
+
+authTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const mode = tab.dataset.authTab as AuthMode;
+
+    setAuthMode(mode);
+  });
+});
+
+authSwitchButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const mode = button.dataset.authSwitch as AuthMode;
+
+    setAuthMode(mode);
+  });
+});
+
+authDialog.addEventListener("click", (event: MouseEvent) => {
+  if (event.target === authDialog) {
+    closeAuthDialog();
+  }
+});
+
+authDialog.addEventListener("cancel", (event: Event) => {
+  event.preventDefault();
+  closeAuthDialog();
+});
+
+authForms.forEach((form) => {
+  form.addEventListener("submit", (event: SubmitEvent) => {
+    event.preventDefault();
+  });
+});
+const passwordToggleButtons =
+  document.querySelectorAll<HTMLButtonElement>(".password-toggle");
+
+passwordToggleButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const authInput = button.closest(".auth-input");
+
+    if (!authInput) {
+      return;
+    }
+
+    const input = authInput.querySelector<HTMLInputElement>("input");
+
+    if (!input) {
+      return;
+    }
+
+    const isPasswordHidden = input.type === "password";
+
+    input.type = isPasswordHidden ? "text" : "password";
+
+    button.setAttribute(
+      "aria-label",
+      isPasswordHidden ? "Hide password" : "Show password",
+    );
+  });
+});

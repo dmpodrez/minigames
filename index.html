@@ -23,8 +23,21 @@
           <a href="#">Library</a>
           <a href="#">Tournaments</a>
           <a href="#">Community</a>
-          <button class="login-button">Log In</button>
-          <button class="signup-button">Sign Up</button>
+          <button
+            class="login-button auth-open"
+            type="button"
+            data-auth-mode="login"
+          >
+            Log In
+          </button>
+
+          <button
+            class="signup-button auth-open"
+            type="button"
+            data-auth-mode="register"
+          >
+            Sign Up
+          </button>
         </nav>
       </header>
       <main>
@@ -181,7 +194,234 @@
         </div>
       </footer>
     </div>
+    <dialog class="auth-dialog">
+      <div class="auth-dialog-content">
+        <div class="auth-tabs">
+          <button
+            class="auth-tab auth-tab--active"
+            type="button"
+            data-auth-tab="login"
+          >
+            Login
+          </button>
 
+          <button class="auth-tab" type="button" data-auth-tab="register">
+            Register
+          </button>
+        </div>
+
+        <div class="auth-panels">
+          <!-- LOGIN -->
+          <section
+            class="auth-panel auth-panel--active"
+            data-auth-panel="login"
+          >
+            <h2>Welcome Back!</h2>
+
+            <p class="auth-subtitle">
+              Sign in to resume your games and progress.
+            </p>
+
+            <form class="auth-form">
+              <label class="auth-field">
+                <span>Email Address</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/mail.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="e.g. alex@minigames.com"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+              </label>
+
+              <label class="auth-field">
+                <span>Password</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/lock.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                    required
+                  />
+
+                  <button
+                    class="password-toggle"
+                    type="button"
+                    aria-label="Show password"
+                  >
+                    <img src="./assets/svg/visibility.svg" alt="" />
+                  </button>
+                </div>
+              </label>
+
+              <button class="forgot-password" type="button">
+                Forgot Password?
+              </button>
+
+              <button class="auth-submit" type="submit">Login</button>
+            </form>
+
+            <div class="auth-divider">
+              <span>OR</span>
+            </div>
+
+            <button class="google-button" type="button">
+              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+
+              Continue with Google
+            </button>
+
+            <p class="auth-switch-text">
+              Don't have an account?
+              <button type="button" data-auth-switch="register">
+                Register
+              </button>
+            </p>
+          </section>
+
+          <!-- REGISTER -->
+          <section class="auth-panel" data-auth-panel="register">
+            <h2>Create Account</h2>
+
+            <p class="auth-subtitle">
+              Join MiniGames to track your score &amp; streak.
+            </p>
+
+            <form class="auth-form">
+              <label class="auth-field">
+                <span>Username</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/person.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="text"
+                    name="username"
+                    placeholder="e.g. CozyGamer_99"
+                    autocomplete="username"
+                    required
+                  />
+                </div>
+              </label>
+
+              <label class="auth-field">
+                <span>Email Address</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/mail.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="your.email@domain.com"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+              </label>
+
+              <label class="auth-field">
+                <span>Password</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/lock.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Min. 8 characters"
+                    autocomplete="new-password"
+                    required
+                  />
+
+                  <button
+                    class="password-toggle"
+                    type="button"
+                    aria-label="Show password"
+                  >
+                    <img src="./assets/svg/visibility.svg" alt="" />
+                  </button>
+                </div>
+              </label>
+
+              <label class="auth-field">
+                <span>Confirm Password</span>
+
+                <div class="auth-input">
+                  <img
+                    class="auth-input-icon"
+                    src="./assets/svg/lock.svg"
+                    alt=""
+                  />
+
+                  <input
+                    type="password"
+                    name="confirm-password"
+                    placeholder="Repeat your password"
+                    autocomplete="new-password"
+                    required
+                  />
+
+                  <button
+                    class="password-toggle"
+                    type="button"
+                    aria-label="Show password"
+                  >
+                    <img src="./assets/svg/visibility.svg" alt="" />
+                  </button>
+                </div>
+              </label>
+
+              <button class="auth-submit" type="submit">Create Account</button>
+            </form>
+
+            <div class="auth-divider">
+              <span>OR</span>
+            </div>
+
+            <button class="google-button" type="button">
+              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+
+              Sign up with Google
+            </button>
+
+            <p class="auth-switch-text">
+              Already have an account?
+              <button type="button" data-auth-switch="login">Login</button>
+            </p>
+          </section>
+        </div>
+      </div>
+    </dialog>
     <script type="module" src="./script.ts"></script>
   </body>
 </html>
