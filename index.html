@@ -15,14 +15,18 @@
   <body>
     <div class="app">
       <header class="header">
-        <a class="logo" href="#"
-          ><img src="assets/svg/logo.svg" /> MiniGames
+        <a class="logo" href="#" aria-label="MiniGames home">
+          <img src="./assets/svg/logo.svg" alt="" />
+          <span>MiniGames</span>
         </a>
-        <nav class="nav">
+
+        <!-- Desktop navigation -->
+        <nav class="nav" aria-label="Main navigation">
           <a href="#">Home</a>
-          <a href="#">Library</a>
+          <a href="#library">Library</a>
           <a href="#">Tournaments</a>
           <a href="#">Community</a>
+
           <button
             class="login-button auth-open"
             type="button"
@@ -39,7 +43,65 @@
             Sign Up
           </button>
         </nav>
+
+        <!-- Tablet / Mobile -->
+        <div class="header-mobile-actions">
+          <button
+            class="signup-button header-signup auth-open"
+            type="button"
+            data-auth-mode="register"
+          >
+            Sign Up
+          </button>
+
+          <button
+            class="burger-button"
+            type="button"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
       </header>
+      <div class="mobile-menu-overlay" id="mobile-menu" aria-hidden="true">
+        <aside class="mobile-menu" aria-label="Mobile navigation">
+          <div class="mobile-menu-header">
+            <a class="logo" href="#">
+              <img src="./assets/svg/logo.svg" alt="" />
+              <span>MiniGames</span>
+            </a>
+          </div>
+
+          <nav class="mobile-menu-nav">
+            <a href="#">Home</a>
+            <a href="#library">Library</a>
+            <a href="#">Tournaments</a>
+            <a href="#">Community</a>
+          </nav>
+
+          <div class="mobile-menu-actions">
+            <button
+              class="login-button auth-open"
+              type="button"
+              data-auth-mode="login"
+            >
+              Log In
+            </button>
+
+            <button
+              class="signup-button auth-open"
+              type="button"
+              data-auth-mode="register"
+            >
+              Sign Up
+            </button>
+          </div>
+        </aside>
+      </div>
       <main>
         <section class="hero">
           <div class="hero-content">
@@ -283,7 +345,7 @@
             </div>
 
             <button class="google-button" type="button">
-              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+              <img class="google-icon" src="./assets/svg/Vector.svg" alt="" />
 
               Continue with Google
             </button>
@@ -409,7 +471,7 @@
             </div>
 
             <button class="google-button" type="button">
-              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+              <img class="google-icon" src="./assets/svg/Vector.svg" alt="" />
 
               Sign up with Google
             </button>

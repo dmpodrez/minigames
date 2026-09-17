@@ -87,15 +87,41 @@ function renderGames(): void {
   updateSlider(false);
 }
 
+function isCompactSlider(): boolean {
+  return window.innerWidth <= 768;
+}
+
+function normalizeCurrentIndex(): void {
+  const total = games.length;
+
+  if (total === 0) {
+    return;
+  }
+
+  if (currentIndex < total) {
+    currentIndex += total;
+  } else if (currentIndex >= total * 2) {
+    currentIndex -= total;
+  }
+}
+
 function updateSlider(animate = true): void {
   const cards = gamesTrack.querySelectorAll<HTMLElement>(".game-card");
+  const compact = isCompactSlider();
 
   cards.forEach((card, index) => {
-    const isActive = index === currentIndex;
-    const isEdge = index === currentIndex - 2 || index === currentIndex + 2;
-    const isVisible = index >= currentIndex - 2 && index <= currentIndex + 2;
-    const shouldShowOverlay =
-      index >= currentIndex - 1 && index <= currentIndex + 1;
+    const distanceFromActive = index - currentIndex;
+    const isActive = distanceFromActive === 0;
+
+    const isVisible = compact
+      ? Math.abs(distanceFromActive) <= 1
+      : Math.abs(distanceFromActive) <= 2;
+
+    const isEdge = !compact && Math.abs(distanceFromActive) === 2;
+
+    const shouldShowOverlay = compact
+      ? isActive
+      : Math.abs(distanceFromActive) <= 1;
 
     card.classList.toggle("game-card--active", isActive);
     card.classList.toggle("game-card--edge", isEdge);
@@ -104,6 +130,13 @@ function updateSlider(animate = true): void {
     const gameOverlay = card.querySelector<HTMLElement>(".game-overlay");
     gameOverlay?.classList.toggle("game-overlay--hidden", !shouldShowOverlay);
   });
+
+  if (compact) {
+    gamesTrack.style.transition = "none";
+    gamesTrack.style.transform = "translateX(0)";
+    isAnimating = false;
+    return;
+  }
 
   const activeCard = cards[currentIndex];
 
@@ -124,24 +157,92 @@ function updateSlider(animate = true): void {
   }
 }
 
-nextButton.addEventListener("click", () => {
+function showNextSlide(): void {
+  if (isCompactSlider()) {
+    currentIndex++;
+
+    normalizeCurrentIndex();
+    updateSlider(false);
+
+    return;
+  }
+
   if (isAnimating) {
     return;
   }
 
   isAnimating = true;
   currentIndex++;
-  updateSlider();
-});
 
-prevButton.addEventListener("click", () => {
+  updateSlider();
+}
+
+function showPreviousSlide(): void {
+  if (isCompactSlider()) {
+    currentIndex--;
+
+    normalizeCurrentIndex();
+    updateSlider(false);
+
+    return;
+  }
+
   if (isAnimating) {
     return;
   }
 
   isAnimating = true;
   currentIndex--;
+
   updateSlider();
+}
+
+nextButton.addEventListener("click", showNextSlide);
+prevButton.addEventListener("click", showPreviousSlide);
+let swipeStartX = 0;
+let swipeStartY = 0;
+let activePointerId: number | null = null;
+
+const SWIPE_THRESHOLD = 45;
+
+gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
+  if (!isCompactSlider() || event.pointerType === "mouse") {
+    return;
+  }
+
+  swipeStartX = event.clientX;
+  swipeStartY = event.clientY;
+  activePointerId = event.pointerId;
+});
+
+gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
+  if (event.pointerId !== activePointerId) {
+    return;
+  }
+
+  const deltaX = event.clientX - swipeStartX;
+  const deltaY = event.clientY - swipeStartY;
+
+  activePointerId = null;
+
+  if (Math.abs(deltaX) < SWIPE_THRESHOLD) {
+    return;
+  }
+
+  if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+    return;
+  }
+
+  if (deltaX < 0) {
+    showNextSlide();
+    return;
+  }
+
+  showPreviousSlide();
+});
+
+gamesViewport.addEventListener("pointercancel", () => {
+  activePointerId = null;
 });
 
 gamesTrack.addEventListener("transitionend", (event: TransitionEvent) => {
@@ -149,19 +250,15 @@ gamesTrack.addEventListener("transitionend", (event: TransitionEvent) => {
     return;
   }
 
-  const total = games.length;
-
-  if (currentIndex < total) {
-    currentIndex += total;
-    updateSlider(false);
-  }
-
-  if (currentIndex >= total * 2) {
-    currentIndex -= total;
-    updateSlider(false);
-  }
-
+  normalizeCurrentIndex();
+  updateSlider(false);
   isAnimating = false;
+});
+
+window.addEventListener("resize", () => {
+  normalizeCurrentIndex();
+  isAnimating = false;
+  updateSlider(false);
 });
 
 loadGames().catch((error: unknown) => {
@@ -369,4 +466,86 @@ passwordToggleButtons.forEach((button) => {
       isPasswordHidden ? "Hide password" : "Show password",
     );
   });
+});
+/* Mobile menu */
+
+const burgerButton = getElement<HTMLButtonElement>(".burger-button");
+
+const mobileMenuOverlay = getElement<HTMLElement>(".mobile-menu-overlay");
+
+const mobileMenuLinks =
+  document.querySelectorAll<HTMLAnchorElement>(".mobile-menu-nav a");
+
+const mobileMenuAuthButtons = document.querySelectorAll<HTMLButtonElement>(
+  ".mobile-menu .auth-open",
+);
+
+function openMobileMenu(): void {
+  mobileMenuOverlay.classList.add("mobile-menu-overlay--open");
+  burgerButton.classList.add("burger-button--active");
+
+  burgerButton.setAttribute("aria-expanded", "true");
+  burgerButton.setAttribute("aria-label", "Close menu");
+  mobileMenuOverlay.setAttribute("aria-hidden", "false");
+
+  document.body.classList.add("menu-open");
+}
+
+function closeMobileMenu(): void {
+  mobileMenuOverlay.classList.remove("mobile-menu-overlay--open");
+  burgerButton.classList.remove("burger-button--active");
+
+  burgerButton.setAttribute("aria-expanded", "false");
+  burgerButton.setAttribute("aria-label", "Open menu");
+  mobileMenuOverlay.setAttribute("aria-hidden", "true");
+
+  document.body.classList.remove("menu-open");
+}
+
+function toggleMobileMenu(): void {
+  const isOpen = mobileMenuOverlay.classList.contains(
+    "mobile-menu-overlay--open",
+  );
+
+  if (isOpen) {
+    closeMobileMenu();
+  } else {
+    openMobileMenu();
+  }
+}
+
+burgerButton.addEventListener("click", toggleMobileMenu);
+
+/* Close by clicking backdrop */
+mobileMenuOverlay.addEventListener("click", (event: MouseEvent) => {
+  if (event.target === mobileMenuOverlay) {
+    closeMobileMenu();
+  }
+});
+
+/* Close after clicking navigation link */
+mobileMenuLinks.forEach((link) => {
+  link.addEventListener("click", closeMobileMenu);
+});
+
+/* Close menu when Login / Sign Up opens auth dialog */
+mobileMenuAuthButtons.forEach((button) => {
+  button.addEventListener("click", closeMobileMenu);
+});
+
+/* Close with Escape */
+document.addEventListener("keydown", (event: KeyboardEvent) => {
+  if (
+    event.key === "Escape" &&
+    mobileMenuOverlay.classList.contains("mobile-menu-overlay--open")
+  ) {
+    closeMobileMenu();
+  }
+});
+
+/* Safety: close menu when returning to desktop */
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 768) {
+    closeMobileMenu();
+  }
 });

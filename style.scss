@@ -1,36 +1,69 @@
 @use "./styles/abstracts/variables" as *;
 @use "./styles/abstracts/mixins" as *;
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-width: 375px;
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  overflow-x: hidden;
   font-family: "Inter", sans-serif;
   background-color: $background;
   color: $text-primary;
 }
 
-/* Header */
+button,
+a,
+input {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+.app {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  overflow: clip;
+  background-color: $background;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
 .header {
   height: 85px;
   padding: 24px 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
   background-color: $background;
   border-bottom: 2px solid $text-primary;
-  @include mobile {
-    padding: 16px 24px;
-  }
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 8px;
-  text-decoration: none;
+  flex-shrink: 0;
   color: $text-primary;
+  text-decoration: none;
+
+  img {
+    width: 32px;
+    height: 32px;
+    display: block;
+  }
 
   span {
     font-size: 24px;
@@ -38,47 +71,36 @@ body {
   }
 }
 
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  border: 2px solid $text-primary;
-  border-radius: 6px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
 .nav {
   display: flex;
   align-items: center;
   gap: 40px;
-}
 
-.nav-link {
-  color: $text-secondary;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 500;
+  > a {
+    color: $text-secondary;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
 
-  &.active {
-    color: $text-primary;
-    font-weight: 700;
+    &:first-child,
+    &:hover {
+      color: $text-primary;
+    }
+
+    &:first-child {
+      font-weight: 700;
+    }
   }
-}
-
-.auth-buttons {
-  display: flex;
-  gap: 16px;
 }
 
 .login-button,
 .signup-button {
-  padding: 10px 20px;
+  height: 37px;
+  padding: 0 20px;
   border: 2px solid $text-primary;
   border-radius: 8px;
+  color: $text-primary;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -86,19 +108,155 @@ body {
 }
 
 .login-button {
-  background: transparent;
-  color: $text-primary;
+  background-color: transparent;
 }
 
 .signup-button {
-  background: $primary;
-  color: $text-primary;
+  background-color: $primary;
 }
 
-/* Hero */
+.header-mobile-actions {
+  display: none;
+}
+
+.burger-button {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+
+  span {
+    width: 16px;
+    height: 2px;
+    display: block;
+    border-radius: 2px;
+    background-color: $text-primary;
+    transition:
+      transform 0.25s ease,
+      opacity 0.2s ease;
+  }
+
+  &--active {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 103;
+
+    span {
+      position: absolute;
+    }
+
+    span:nth-child(1) {
+      transform: rotate(45deg);
+    }
+
+    span:nth-child(2) {
+      opacity: 0;
+    }
+
+    span:nth-child(3) {
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  visibility: hidden;
+  opacity: 0;
+  background-color: rgba(36, 33, 69, 0.45);
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease;
+
+  &--open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+
+    .mobile-menu {
+      transform: translateX(0);
+    }
+  }
+}
+
+.mobile-menu {
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  height: 100dvh;
+  margin-left: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  background-color: $background;
+  border-left: 2px solid $text-primary;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.mobile-menu-header {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+
+  .logo span {
+    font-size: 20px;
+  }
+}
+
+.mobile-menu-nav {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  a {
+    width: fit-content;
+    color: $text-primary;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 22px;
+    text-decoration: none;
+  }
+}
+
+.mobile-menu-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .login-button,
+  .signup-button {
+    width: 100%;
+  }
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+/* =========================
+   HERO
+   ========================= */
+
 .hero {
   min-height: 627px;
-  padding: 112px 120px;
+  padding: 112px clamp(48px, 6.25vw, 120px);
+  display: flex;
+  align-items: center;
   background-image:
     linear-gradient(rgba(30, 27, 58, 0.65), rgba(30, 27, 58, 0.65)),
     url("./assets/images/hero-bg.png");
@@ -107,7 +265,7 @@ body {
 }
 
 .hero-content {
-  width: 640px;
+  width: min(640px, 100%);
   padding: 48px;
   display: flex;
   flex-direction: column;
@@ -119,18 +277,19 @@ body {
   box-shadow: 8px 8px 0 $text-primary;
 
   h1 {
-    font-size: 56px;
+    margin: 0;
+    color: $text-primary;
+    font-size: clamp(36px, 2.92vw, 56px);
     font-weight: 700;
     line-height: 1;
-    color: $text-primary;
   }
 
   p {
     margin: 0;
+    color: $text-secondary;
     font-size: 18px;
     font-weight: 500;
     line-height: 1.5;
-    color: $text-secondary;
   }
 }
 
@@ -145,7 +304,10 @@ body {
   text-decoration: none;
 }
 
-/* Shared section title */
+/* =========================
+   SHARED SECTION TITLE
+   ========================= */
+
 .section-title {
   display: flex;
   align-items: center;
@@ -153,23 +315,28 @@ body {
 
   h2 {
     margin: 0;
+    color: $text-primary;
     font-size: 32px;
     font-weight: 700;
-    color: $text-primary;
   }
 }
 
 .accent-bar {
   width: 8px;
   height: 32px;
+  flex-shrink: 0;
   background-color: $primary;
   border: 1.5px solid $text-primary;
   border-radius: 4px;
 }
 
-/* New Games */
+/* =========================
+   NEW GAMES
+   Desktop = five visible cards
+   ========================= */
+
 .new-games {
-  padding: 40px 120px;
+  padding: 40px clamp(40px, 6.25vw, 120px);
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -179,22 +346,27 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
 }
 
 .slider-controls {
   display: flex;
+  flex-shrink: 0;
   gap: 16px;
 }
 
 .slider-btn {
   width: 48px;
   height: 48px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: $white;
   border: 2px solid $text-primary;
   border-radius: 50%;
+  background-color: $white;
+  color: $text-primary;
+  font-family: inherit;
   font-size: 24px;
   cursor: pointer;
 
@@ -210,31 +382,39 @@ body {
 
 .games-track {
   position: relative;
+  width: 100%;
+  min-width: 100%;
   display: flex;
-  gap: 8px;
-  padding: 0 8px;
-  width: max-content;
+  flex-wrap: nowrap;
+  gap: 0.47619%;
+  padding: 0 0.47619%;
+  will-change: transform;
 }
 
+/*
+ * At 1920px the section content is 1680px:
+ * 120 | 288 | 816 | 288 | 120 with 8px gaps/padding.
+ */
 .game-card {
   position: relative;
-  width: 288px;
-  height: 384px;
-  flex-shrink: 0;
+  width: 17.142857%;
+  height: clamp(280px, 20vw, 384px);
+  flex: 0 0 17.142857%;
   border: 2.5px solid $text-primary;
   border-radius: 24px;
   overflow: hidden;
+  transition:
+    width 0.25s ease,
+    flex-basis 0.25s ease;
 
   &--active {
-    width: 816px;
+    width: 48.571429%;
+    flex-basis: 48.571429%;
   }
 
   &--edge {
-    width: 120px;
-  }
-
-  &--visible {
-    box-shadow: 4px 4px 0 $text-primary;
+    width: 7.142857%;
+    flex-basis: 7.142857%;
   }
 
   &--hidden {
@@ -245,6 +425,7 @@ body {
 .game-image {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
 }
 
@@ -267,9 +448,12 @@ body {
 
   h3 {
     margin: 0;
+    overflow: hidden;
     font-size: 18px;
     font-weight: 700;
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &--hidden {
@@ -280,8 +464,8 @@ body {
 .game-info {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   font-size: 16px;
   font-weight: 700;
 }
@@ -291,6 +475,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 
   img {
     width: 16px;
@@ -298,55 +483,40 @@ body {
   }
 }
 
-/* Top Players */
-/* Top Players */
+/* =========================
+   TOP PLAYERS
+   ========================= */
+
 .top-players {
-  padding: 40px 120px;
+  padding: 40px clamp(40px, 6.25vw, 120px);
   display: flex;
   flex-direction: column;
   gap: 40px;
 }
 
-/* сама таблица */
 .leaderboard {
   position: relative;
   width: 100%;
-  height: 427px;
-
   overflow: hidden;
-
   border-radius: 16px;
   box-shadow: 6px 6px 0 $text-primary;
 
-  /*
-   * Рисуем border поверх таблицы,
-   * чтобы он не съедал ширину колонок.
-   */
   &::after {
     content: "";
     position: absolute;
     inset: 0;
-
+    z-index: 2;
     border: 2.5px solid $text-primary;
     border-radius: 16px;
-
     pointer-events: none;
-    z-index: 2;
   }
 
   table {
     width: 100%;
-    height: 427px;
-
     table-layout: fixed;
     border-collapse: collapse;
-
     color: $text-primary;
   }
-
-  /* =========================
-     HEADER
-     ========================= */
 
   thead {
     height: 67px;
@@ -354,113 +524,46 @@ body {
     color: $white;
   }
 
-  thead tr {
-    height: 67px;
-  }
-
   th {
     height: 67px;
-
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    padding-right: 16px;
-
+    padding: 0 12px;
     vertical-align: middle;
     text-align: center;
-
     font-size: 16px;
     font-weight: 800;
     line-height: 19px;
     text-transform: uppercase;
   }
 
-  /* =========================
-     COLUMN WIDTHS
-     Figma table width = 1680
-     ========================= */
-
-  /*
-   * RANK
-   *
-   * 24px слева
-   * 80px контент
-   * 16px справа
-   *
-   * 24 + 80 + 16 = 120px
-   */
   th:nth-child(1),
   td:nth-child(1) {
-    width: 120px;
-
-    padding-left: 24px;
-    padding-right: 16px;
-
-    text-align: center;
+    width: 8%;
   }
 
-  /*
-   * PLAYER
-   *
-   * 294.4px контент
-   * 16px справа
-   *
-   * = 310.4px
-   */
   th:nth-child(2),
   td:nth-child(2) {
-    width: 310.4px;
-    padding-right: 16px;
+    width: 21%;
   }
 
-  /*
-   * GAMES PLAYED
-   */
   th:nth-child(3),
   td:nth-child(3) {
-    width: 310.4px;
-    padding-right: 16px;
+    width: 18%;
   }
 
-  /*
-   * TOTAL SCORE
-   */
   th:nth-child(4),
   td:nth-child(4) {
-    width: 310.4px;
-    padding-right: 16px;
+    width: 18%;
   }
 
-  /*
-   * STREAK
-   */
   th:nth-child(5),
   td:nth-child(5) {
-    width: 310.4px;
-    padding-right: 16px;
+    width: 17%;
   }
 
-  /*
-   * FAVORITE GAME
-   *
-   * 294.4px контент
-   * 24px справа
-   *
-   * = 318.4px
-   */
   th:nth-child(6),
   td:nth-child(6) {
-    width: 318.4px;
-
-    padding-left: 0;
-    padding-right: 24px;
-
-    text-align: center;
+    width: 18%;
   }
-
-  /* =========================
-     BODY ROWS
-     ========================= */
 
   tbody tr {
     height: 72px;
@@ -481,62 +584,45 @@ body {
 
   td {
     height: 72px;
-
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    padding-right: 16px;
-
+    padding: 0 12px;
     vertical-align: middle;
     text-align: center;
-
     font-size: 16px;
     font-weight: 600;
     line-height: 19px;
   }
-
-  /* =========================
-     PLAYER COLUMN
-     ========================= */
 
   td.leaderboard-player {
     text-align: left;
     white-space: nowrap;
   }
 
-  /*
-   * Сам td НЕ делаем display:flex.
-   * Он должен оставаться table-cell,
-   * иначе браузер ломает размеры колонок.
-   */
+  .leaderboard-player__content {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+
+    > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 
   .player-avatar {
     width: 40px;
     height: 40px;
-
+    margin-right: 12px;
+    flex: 0 0 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    margin-right: 12px;
-
-    vertical-align: middle;
-
     border: 1.5px solid $text-primary;
     border-radius: 50%;
-
     color: $text-primary;
-
     font-size: 12px;
     font-weight: 700;
-    line-height: 16px;
   }
-
-  .leaderboard-player > span:not(.player-avatar) {
-    vertical-align: middle;
-  }
-
-  /* avatar rank colors */
 
   tbody tr:nth-child(1) .player-avatar {
     background-color: $primary;
@@ -558,52 +644,42 @@ body {
     background-color: #e8dff5;
   }
 
-  /* =========================
-     RANK
-     ========================= */
-
   tbody tr:first-child td:first-child {
     color: $primary;
     font-weight: 800;
   }
 
-  /* =========================
-     FAVORITE GAME BADGE
-     ========================= */
-
   tbody td:nth-child(6) > span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     min-height: 22px;
-
     padding: 4px 12px;
-
     border: 1px solid $text-primary;
     border-radius: 999px;
-
     background-color: transparent;
     color: $text-primary;
-
     font-size: 12px;
     font-weight: 700;
     line-height: 14px;
-
     white-space: nowrap;
   }
 }
-/* Developer Section */
+
+/* =========================
+   DEVELOPER
+   ========================= */
+
 .developer-section {
-  padding: 40px 120px 80px;
+  padding: 40px clamp(40px, 6.25vw, 120px) 80px;
   display: flex;
   align-items: center;
   gap: 40px;
 }
 
 .developer-illustration {
-  width: 682px;
-  height: 483px;
+  width: min(42%, 682px);
+  aspect-ratio: 682 / 483;
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 24px;
@@ -618,17 +694,15 @@ body {
 
 .developer-card {
   flex: 1;
+  min-width: 0;
   padding: 40px;
-
   border: 2px solid $text-primary;
   border-radius: 24px;
   background-color: $white;
-
   box-shadow: 0 12px 24px rgba(36, 33, 69, 0.1);
 
   h2 {
     margin: 0 0 24px;
-
     color: $text-primary;
     font-size: 32px;
     font-weight: 800;
@@ -639,7 +713,6 @@ body {
 .developer-description {
   max-width: 610px;
   margin: 0 0 28px;
-
   color: $text-secondary;
   font-size: 18px;
   font-weight: 400;
@@ -649,67 +722,61 @@ body {
 .developer-button {
   min-height: 56px;
   padding: 0 24px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-
   border: 2px solid $text-primary;
   border-radius: 12px;
-
   background-color: $primary;
   color: $text-primary;
-
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow: 3px 3px 0 $text-primary;
 }
 
-.developer-contact {
-  margin: 28px 0 0;
-
-  color: $text-secondary;
-  font-size: 14px;
-  font-weight: 400;
-}
 .developer-button-icon {
   width: 24px;
   height: 24px;
   display: block;
 }
 
-/* Footer */
-/* Footer */
-.footer {
-  padding: 40px 120px 32px;
+.developer-contact {
+  margin: 28px 0 0;
+  color: $text-secondary;
+  font-size: 14px;
+  font-weight: 400;
+}
 
+/* =========================
+   FOOTER
+   ========================= */
+
+.footer {
+  padding: 40px clamp(40px, 6.25vw, 120px) 32px;
   background-color: $text-primary;
   color: $white;
 }
 
 .footer-main {
   min-height: 220px;
-
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 48px;
 }
+
 .footer-brand {
-  width: 420px;
+  width: min(420px, 34%);
 }
 
 .footer-logo {
   margin-bottom: 24px;
-
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   color: $white;
   text-decoration: none;
 
@@ -728,29 +795,23 @@ body {
 .footer-description {
   max-width: 390px;
   margin: 0;
-
   color: rgba(255, 255, 255, 0.65);
-
   font-size: 12px;
   font-weight: 500;
   line-height: 1.5;
 }
+
 .footer-nav {
   display: flex;
   align-items: flex-start;
-  gap: 72px;
+  gap: clamp(32px, 3.75vw, 72px);
 }
 
-.footer-column {
-  min-width: 96px;
-}
 .footer-column,
 .footer-community {
   h3 {
     margin: 0 0 16px;
-
     color: $white;
-
     font-size: 14px;
     font-weight: 700;
     line-height: 1.2;
@@ -763,21 +824,17 @@ body {
   ul {
     margin: 0;
     padding: 0;
-
     display: flex;
     flex-direction: column;
     gap: 12px;
-
     list-style: none;
   }
 
   a {
     color: rgba(255, 255, 255, 0.55);
-
     font-size: 13px;
     font-weight: 500;
     line-height: 1.3;
-
     text-decoration: none;
   }
 }
@@ -789,13 +846,10 @@ body {
   a {
     width: 36px;
     height: 36px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border-radius: 50%;
-
     background-color: rgba(255, 255, 255, 0.08);
   }
 
@@ -808,15 +862,12 @@ body {
 
 .footer-bottom {
   padding-top: 24px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  gap: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-
   color: rgba(255, 255, 255, 0.55);
-
   font-size: 12px;
   font-weight: 500;
 }
@@ -830,36 +881,30 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
+
+  img {
+    width: 18px;
+    height: 18px;
+  }
 }
 
-.footer-school-icon {
-  color: $primary;
-  font-size: 10px;
-  font-weight: 700;
-}
+/* =========================
+   AUTH DIALOG
+   ========================= */
 
-.footer-github img {
-  width: 18px;
-  height: 18px;
-}
-/* Auth Dialog */
 .auth-dialog {
   width: 420px;
   max-width: calc(100% - 32px);
+  max-height: calc(100dvh - 32px);
   padding: 0;
-
   border: 2px solid $text-primary;
   border-radius: 16px;
-
   background-color: $background;
   color: $text-primary;
-
   box-shadow: 4px 4px 0 $text-primary;
-
-  overflow: hidden;
+  overflow: auto;
 
   &::backdrop {
     background-color: rgba(36, 33, 69, 0.72);
@@ -878,37 +923,25 @@ body {
   padding: 28px 24px;
 }
 
-/* Tabs */
 .auth-tabs {
   width: 100%;
   height: 44px;
-
+  margin-bottom: 28px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-
-  margin-bottom: 28px;
-
   border: 2px solid $text-primary;
   border-radius: 10px;
-
   overflow: hidden;
 }
 
 .auth-tab {
   border: 0;
-
   background-color: $white;
   color: $text-primary;
-
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-
   cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
 
   &--active {
     background-color: $text-primary;
@@ -916,7 +949,6 @@ body {
   }
 }
 
-/* Panels */
 .auth-panel {
   display: none;
 
@@ -927,9 +959,7 @@ body {
 
   h2 {
     margin: 0 0 8px;
-
     color: $text-primary;
-
     font-size: 24px;
     font-weight: 800;
     line-height: 1.2;
@@ -938,15 +968,12 @@ body {
 
 .auth-subtitle {
   margin: 0 0 26px;
-
   color: $text-secondary;
-
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
 }
 
-/* Forms */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -971,19 +998,14 @@ body {
   input {
     width: 100%;
     height: 50px;
-
     padding: 0 44px;
-
     border: 2px solid $text-primary;
     border-radius: 8px;
-
     background-color: $white;
     color: $text-primary;
-
     font-family: inherit;
     font-size: 14px;
     font-weight: 500;
-
     outline: none;
   }
 }
@@ -992,12 +1014,9 @@ body {
   position: absolute;
   top: 50%;
   left: 14px;
-
   width: 18px;
   height: 18px;
-
   transform: translateY(-50%);
-
   pointer-events: none;
 }
 
@@ -1005,20 +1024,15 @@ body {
   position: absolute;
   top: 50%;
   right: 12px;
-
   width: 24px;
   height: 24px;
   padding: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: 0;
   background: transparent;
-
   transform: translateY(-50%);
-
   cursor: pointer;
 
   img {
@@ -1027,156 +1041,916 @@ body {
   }
 }
 
-.google-icon {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
-/* Forgot password */
 .forgot-password {
   align-self: flex-end;
-
   margin-top: -8px;
   padding: 0;
-
   border: 0;
-
   background: transparent;
   color: $text-primary;
-
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
-
   cursor: pointer;
 }
 
-/* Main yellow button */
 .auth-submit {
   width: 100%;
   height: 48px;
-
   margin-top: 4px;
-
   border: 2px solid $text-primary;
   border-radius: 8px;
-
   background-color: $primary;
   color: $text-primary;
-
   font-family: inherit;
   font-size: 14px;
   font-weight: 800;
-
   box-shadow: 3px 3px 0 $text-primary;
-
   cursor: pointer;
-
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-
-  &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 $text-primary;
-  }
-
-  &:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 $text-primary;
-  }
 }
 
-/* OR divider */
 .auth-divider {
   display: flex;
   align-items: center;
   gap: 12px;
-
   margin: 22px 0;
-
   color: $text-secondary;
-
   font-size: 12px;
   font-weight: 700;
 
   &::before,
   &::after {
     content: "";
-
     flex: 1;
     height: 1px;
-
     background-color: rgba(36, 33, 69, 0.2);
   }
 }
 
-/* Google */
 .google-button {
   width: 100%;
   height: 46px;
-
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-
   border: 2px solid $text-primary;
   border-radius: 8px;
-
   background-color: $white;
   color: $text-primary;
-
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-
   cursor: pointer;
 }
 
 .google-icon {
   width: 20px;
   height: 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 16px;
-  font-weight: 800;
+  display: block;
 }
 
-/* Bottom switch */
 .auth-switch-text {
   margin: 20px 0 0;
-
   text-align: center;
-
   color: $text-secondary;
-
   font-size: 12px;
   font-weight: 500;
 
   button {
     padding: 0;
-
     border: 0;
-
     background: transparent;
     color: $text-primary;
-
     font-family: inherit;
     font-size: inherit;
     font-weight: 800;
-
     text-decoration: underline;
-
     cursor: pointer;
   }
 }
 
-/* Animations */
+/* =========================
+   INTERMEDIATE / TABLET
+   ========================= */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header {
+    height: 76px;
+    padding: 18px 32px;
+  }
+
+  .logo {
+    gap: 6px;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
+
+    span {
+      font-size: 20px;
+    }
+  }
+
+  .nav {
+    gap: 18px;
+
+    > a {
+      font-size: 13px;
+    }
+  }
+
+  .login-button,
+  .signup-button {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .hero {
+    min-height: 500px;
+    padding: 64px clamp(48px, 6.25vw, 64px);
+  }
+
+  .hero-content {
+    width: min(560px, 100%);
+    padding: 36px;
+    gap: 20px;
+
+    p {
+      font-size: 16px;
+    }
+  }
+
+  .hero-button {
+    padding: 13px 20px;
+    font-size: 15px;
+  }
+
+  .new-games,
+  .top-players {
+    padding-top: 36px;
+    padding-bottom: 36px;
+    gap: 32px;
+  }
+
+  .section-title h2 {
+    font-size: 28px;
+  }
+
+  .accent-bar {
+    width: 6px;
+    height: 28px;
+  }
+
+  .slider-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+  }
+
+  .game-overlay {
+    padding: 12px;
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+
+  .game-info {
+    font-size: 13px;
+  }
+
+  .leaderboard {
+    th,
+    td {
+      padding-inline: 8px;
+      font-size: 13px;
+    }
+
+    .player-avatar {
+      width: 34px;
+      height: 34px;
+      margin-right: 8px;
+      flex-basis: 34px;
+    }
+  }
+
+  .developer-section {
+    padding-top: 36px;
+    padding-bottom: 64px;
+    gap: 28px;
+  }
+
+  .developer-card {
+    padding: 28px;
+
+    h2 {
+      margin-bottom: 16px;
+      font-size: 26px;
+    }
+  }
+
+  .developer-description {
+    margin-bottom: 20px;
+    font-size: 15px;
+  }
+
+  .developer-contact {
+    margin-top: 20px;
+  }
+
+  .footer {
+    padding-top: 36px;
+  }
+
+  .footer-main {
+    gap: 32px;
+  }
+
+  .footer-brand {
+    width: 34%;
+  }
+
+  .footer-nav {
+    gap: 28px;
+  }
+
+  .footer-column {
+    min-width: 92px;
+  }
+}
+
+/* =========================
+   FIGMA TABLET / MOBILE MODEL
+   <= 768px
+   ========================= */
+
+@media (max-width: 768px) {
+  .header {
+    height: 68px;
+    padding-inline: clamp(16px, calc(6.11vw - 6.9px), 40px);
+    padding-block: 0;
+  }
+
+  .logo {
+    gap: 6px;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
+
+    span {
+      font-size: 20px;
+    }
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .header-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-signup {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .hero {
+    min-height: clamp(331px, calc(13.23vw + 281.4px), 383px);
+    padding-inline: clamp(16px, calc(6.11vw - 6.9px), 40px);
+    padding-block: 32px;
+  }
+
+  .hero-content {
+    width: min(480px, 100%);
+    padding: 24px;
+    gap: 16px;
+    border-width: 2px;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 $text-primary;
+
+    h1 {
+      font-size: clamp(24px, calc(2.04vw + 16.4px), 32px);
+      line-height: 1.05;
+    }
+
+    p {
+      font-size: clamp(12px, calc(0.51vw + 10.1px), 14px);
+      line-height: 1.45;
+    }
+  }
+
+  .hero-button {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .new-games,
+  .top-players,
+  .developer-section {
+    padding-left: clamp(16px, calc(6.11vw - 6.9px), 40px);
+    padding-right: clamp(16px, calc(6.11vw - 6.9px), 40px);
+  }
+
+  .new-games {
+    padding-top: clamp(24px, 4.17vw, 32px);
+    padding-bottom: clamp(24px, 4.17vw, 32px);
+    gap: 24px;
+  }
+
+  .section-title {
+    gap: 6px;
+
+    h2 {
+      font-size: clamp(20px, calc(1.02vw + 16.2px), 24px);
+    }
+  }
+
+  .accent-bar {
+    width: 5px;
+    height: clamp(22px, 3.13vw, 24px);
+  }
+
+  .slider-controls {
+    gap: 8px;
+  }
+
+  .slider-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .games-track {
+    width: 100%;
+    min-width: 100%;
+    gap: 8px;
+    padding: 0;
+  }
+
+  /* Only previous + active + next participate in layout. */
+  .game-card--hidden {
+    display: none;
+  }
+
+  .game-card {
+    --side-card-width: clamp(56px, calc(12.214vw + 10.2px), 104px);
+    width: var(--side-card-width);
+    height: clamp(200px, calc(20.356vw + 123.7px), 280px);
+    flex: 0 0 var(--side-card-width);
+    border-width: 2px;
+    border-radius: clamp(16px, 3vw, 20px);
+    transition: none;
+  }
+
+  .game-card--active {
+    width: calc(100% - (2 * var(--side-card-width)) - 16px);
+    flex-basis: calc(100% - (2 * var(--side-card-width)) - 16px);
+  }
+
+  .game-overlay {
+    padding: clamp(8px, 1.56vw, 12px);
+
+    h3 {
+      font-size: clamp(12px, 1.95vw, 15px);
+    }
+  }
+
+  .game-info {
+    display: flex;
+    font-size: clamp(10px, 1.69vw, 13px);
+  }
+
+  .game-rating,
+  .game-likes {
+    gap: 3px;
+
+    img {
+      width: clamp(12px, 1.82vw, 14px);
+      height: clamp(12px, 1.82vw, 14px);
+    }
+  }
+
+  .top-players {
+    padding-top: 24px;
+    padding-bottom: 32px;
+    gap: 24px;
+  }
+
+  .leaderboard {
+    border-radius: 12px;
+    box-shadow: 4px 4px 0 $text-primary;
+
+    &::after {
+      border-width: 2px;
+      border-radius: 12px;
+    }
+
+    /* Figma 768 model has 5 columns: no Favorite Game. */
+    th:nth-child(6),
+    td:nth-child(6) {
+      display: none;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 12%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 32%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 18%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 20%;
+    }
+
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 18%;
+    }
+
+    thead,
+    th {
+      height: 48px;
+    }
+
+    th {
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.1;
+    }
+
+    tbody tr {
+      height: 56px;
+    }
+
+    /* Figma tablet/mobile preview shows three leaderboard rows. */
+    tbody tr:nth-child(n + 4) {
+      display: none;
+    }
+
+    td {
+      height: 56px;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .player-avatar {
+      width: 28px;
+      height: 28px;
+      margin-right: 6px;
+      flex-basis: 28px;
+      font-size: 9px;
+    }
+  }
+
+  .developer-section {
+    padding-top: 16px;
+    padding-bottom: 32px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .developer-illustration {
+    width: 100%;
+    height: clamp(224px, calc(19.34vw + 151.5px), 300px);
+    aspect-ratio: auto;
+    border-radius: 16px;
+
+    img {
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+
+  .developer-card {
+    width: 100%;
+    padding: clamp(24px, 4.17vw, 32px);
+    border-radius: 16px;
+    box-shadow: none;
+
+    h2 {
+      margin-bottom: 16px;
+      font-size: clamp(20px, calc(1.02vw + 16.2px), 24px);
+    }
+  }
+
+  .developer-description {
+    max-width: none;
+    margin-bottom: 20px;
+    font-size: clamp(12px, calc(0.51vw + 10.1px), 14px);
+    line-height: 1.5;
+  }
+
+  .developer-button {
+    min-height: 42px;
+    padding: 0 16px;
+    gap: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    box-shadow: 2px 2px 0 $text-primary;
+  }
+
+  .developer-button-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .developer-contact {
+    margin-top: 18px;
+    font-size: 10px;
+  }
+
+  .footer {
+    padding: 32px clamp(16px, calc(6.11vw - 6.9px), 40px) 24px;
+  }
+
+  .footer-main {
+    min-height: 0;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .footer-brand {
+    width: 100%;
+  }
+
+  .footer-logo {
+    margin-bottom: 16px;
+  }
+
+  .footer-description {
+    max-width: 100%;
+  }
+
+  .footer-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .footer-column {
+    min-width: 0;
+  }
+
+  .footer-bottom {
+    margin-top: 28px;
+    padding-top: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .auth-dialog-content {
+    padding: 24px 20px;
+  }
+}
+
+/* =========================
+   FIGMA 375px MODEL
+   ========================= */
+
+@media (max-width: 600px) {
+  .header {
+    height: 60px;
+  }
+
+  .logo {
+    img {
+      width: 24px;
+      height: 24px;
+    }
+
+    span {
+      font-size: 18px;
+    }
+  }
+
+  .header-signup {
+    display: none;
+  }
+
+  .header-mobile-actions {
+    gap: 0;
+  }
+
+  .burger-button--active {
+    top: 14px;
+    right: 14px;
+  }
+
+  .mobile-menu {
+    width: 320px;
+    max-width: calc(100vw - 55px);
+    padding: 20px;
+  }
+
+  .mobile-menu-nav {
+    margin-top: 28px;
+    gap: 20px;
+
+    a {
+      font-size: 16px;
+    }
+  }
+
+  .hero {
+    padding-block: 24px;
+  }
+
+  .hero-content {
+    padding: 24px;
+    gap: 14px;
+  }
+
+  .hero-button {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .new-games {
+    gap: 20px;
+  }
+
+  /* No carousel arrows in the 375px Figma frame. */
+  .slider-controls {
+    display: none;
+  }
+
+  .top-players {
+    padding-top: 20px;
+    padding-bottom: 24px;
+    gap: 20px;
+  }
+
+  .leaderboard {
+    /* Mobile Figma: Rank / Player / Score / Streak. */
+    th:nth-child(3),
+    td:nth-child(3) {
+      display: none;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 16%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 40%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 24%;
+    }
+
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 20%;
+    }
+
+    thead,
+    th {
+      height: 42px;
+    }
+
+    th {
+      padding-inline: 4px;
+      font-size: 9px;
+    }
+
+    tbody tr,
+    td {
+      height: 52px;
+    }
+
+    td {
+      padding-inline: 4px;
+      font-size: 9px;
+    }
+
+    .player-avatar {
+      width: 24px;
+      height: 24px;
+      margin-right: 4px;
+      flex-basis: 24px;
+      font-size: 8px;
+    }
+  }
+
+  .developer-section {
+    padding-top: 12px;
+    padding-bottom: 24px;
+  }
+
+  .developer-card {
+    padding: 24px;
+  }
+
+  .developer-contact {
+    overflow-wrap: anywhere;
+  }
+
+  /* Footer — mobile Figma */
+  .footer {
+    padding: 32px 16px;
+  }
+
+  .footer-main {
+    min-height: 0;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .footer-brand {
+    width: 100%;
+  }
+
+  .footer-logo {
+    margin-bottom: 24px;
+    gap: 8px;
+
+    img {
+      width: 28px;
+      height: 28px;
+    }
+
+    span {
+      font-size: 20px;
+      line-height: 24px;
+    }
+  }
+
+  .footer-description {
+    max-width: none;
+
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Explore + Company */
+  .footer-nav {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    column-gap: 32px;
+    row-gap: 24px;
+  }
+
+  .footer-column {
+    min-width: 0;
+  }
+
+  .footer-column,
+  .footer-community {
+    h3 {
+      margin: 0 0 16px;
+
+      font-size: 16px;
+      line-height: 19px;
+    }
+  }
+
+  .footer-column {
+    ul {
+      margin: 0;
+      padding: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    a {
+      font-size: 14px;
+      line-height: 18px;
+    }
+  }
+
+  /* Community идёт новой строкой */
+  .footer-community {
+    grid-column: 1 / -1;
+  }
+
+  .footer-socials {
+    gap: 8px;
+
+    a {
+      width: 32px;
+      height: 32px;
+    }
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* Нижняя часть как в Figma */
+  .footer-bottom {
+    margin-top: 24px;
+    padding-top: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    flex-wrap: wrap;
+
+    column-gap: 16px;
+    row-gap: 12px;
+
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  /* Copyright отдельной строкой */
+  .footer-copyright {
+    flex: 0 0 100%;
+  }
+
+  /* RS School + GitHub рядом */
+  .footer-school,
+  .footer-github {
+    gap: 8px;
+
+    img {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  /* На мобильном макете этой строки нет */
+  .footer-love {
+    display: none;
+  }
+
+  .auth-dialog {
+    width: calc(100% - 32px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .auth-dialog-content {
+    padding: 20px 16px;
+  }
+
+  .auth-tabs {
+    height: 40px;
+    margin-bottom: 22px;
+  }
+
+  .auth-panel h2 {
+    font-size: 22px;
+  }
+
+  .auth-subtitle {
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+
+  .auth-form {
+    gap: 14px;
+  }
+
+  .auth-input input {
+    height: 46px;
+    font-size: 12px;
+  }
+
+  .auth-submit {
+    height: 44px;
+  }
+
+  .auth-divider {
+    margin: 18px 0;
+  }
+
+  .google-button {
+    height: 44px;
+    font-size: 12px;
+  }
+}
+
 @keyframes auth-dialog-open {
   from {
     opacity: 0;
