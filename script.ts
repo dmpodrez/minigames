@@ -1,4 +1,8 @@
 import "./style.scss";
+import { renderApp } from "./view";
+
+renderApp();
+
 interface Game {
   name: string;
   cardImage: string;
@@ -87,56 +91,53 @@ function renderGames(): void {
   updateSlider(false);
 }
 
-function isCompactSlider(): boolean {
-  return window.innerWidth <= 768;
-}
-
-function normalizeCurrentIndex(): void {
-  const total = games.length;
-
-  if (total === 0) {
-    return;
-  }
-
-  if (currentIndex < total) {
-    currentIndex += total;
-  } else if (currentIndex >= total * 2) {
-    currentIndex -= total;
-  }
-}
-
 function updateSlider(animate = true): void {
   const cards = gamesTrack.querySelectorAll<HTMLElement>(".game-card");
-  const compact = isCompactSlider();
+
+  const showThreeCards = window.innerWidth <= 768;
 
   cards.forEach((card, index) => {
     const distanceFromActive = index - currentIndex;
+
     const isActive = distanceFromActive === 0;
 
-    const isVisible = compact
+    const isVisible = showThreeCards
       ? Math.abs(distanceFromActive) <= 1
       : Math.abs(distanceFromActive) <= 2;
 
-    const isEdge = !compact && Math.abs(distanceFromActive) === 2;
+    const isEdge = !showThreeCards && Math.abs(distanceFromActive) === 2;
 
-    const shouldShowOverlay = compact
-      ? isActive
-      : Math.abs(distanceFromActive) <= 1;
+    const shouldShowOverlay = Math.abs(distanceFromActive) <= 1;
 
     card.classList.toggle("game-card--active", isActive);
+
     card.classList.toggle("game-card--edge", isEdge);
+
     card.classList.toggle("game-card--hidden", !isVisible);
 
     const gameOverlay = card.querySelector<HTMLElement>(".game-overlay");
+
     gameOverlay?.classList.toggle("game-overlay--hidden", !shouldShowOverlay);
   });
 
-  if (compact) {
+  /*
+   * <= 768px
+   *
+   * У нас остаются только:
+   * previous + active + next.
+   *
+   * Они сами занимают ровно 100% viewport,
+   * поэтому сдвиг ленты здесь НЕ нужен.
+   */
+  if (showThreeCards) {
     gamesTrack.style.transition = "none";
     gamesTrack.style.transform = "translateX(0)";
     isAnimating = false;
+
     return;
   }
+
+  /* Desktop slider */
 
   const activeCard = cards[currentIndex];
 
@@ -156,109 +157,49 @@ function updateSlider(animate = true): void {
     void gamesTrack.offsetWidth;
   }
 }
-
-function showNextSlide(): void {
-  if (isCompactSlider()) {
-    currentIndex++;
-
-    normalizeCurrentIndex();
-    updateSlider(false);
-
-    return;
-  }
-
+window.addEventListener("resize", () => {
+  updateSlider(false);
+});
+nextButton.addEventListener("click", () => {
   if (isAnimating) {
     return;
   }
 
   isAnimating = true;
   currentIndex++;
-
   updateSlider();
-}
+});
 
-function showPreviousSlide(): void {
-  if (isCompactSlider()) {
-    currentIndex--;
-
-    normalizeCurrentIndex();
-    updateSlider(false);
-
-    return;
-  }
-
+prevButton.addEventListener("click", () => {
   if (isAnimating) {
     return;
   }
 
   isAnimating = true;
   currentIndex--;
-
   updateSlider();
-}
-
-nextButton.addEventListener("click", showNextSlide);
-prevButton.addEventListener("click", showPreviousSlide);
-let swipeStartX = 0;
-let swipeStartY = 0;
-let activePointerId: number | null = null;
-
-const SWIPE_THRESHOLD = 45;
-
-gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
-  if (!isCompactSlider() || event.pointerType === "mouse") {
-    return;
-  }
-
-  swipeStartX = event.clientX;
-  swipeStartY = event.clientY;
-  activePointerId = event.pointerId;
 });
-
-gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
-  if (event.pointerId !== activePointerId) {
-    return;
-  }
-
-  const deltaX = event.clientX - swipeStartX;
-  const deltaY = event.clientY - swipeStartY;
-
-  activePointerId = null;
-
-  if (Math.abs(deltaX) < SWIPE_THRESHOLD) {
-    return;
-  }
-
-  if (Math.abs(deltaY) >= Math.abs(deltaX)) {
-    return;
-  }
-
-  if (deltaX < 0) {
-    showNextSlide();
-    return;
-  }
-
-  showPreviousSlide();
+window.addEventListener("resize", () => {
+  updateSlider(false);
 });
-
-gamesViewport.addEventListener("pointercancel", () => {
-  activePointerId = null;
-});
-
 gamesTrack.addEventListener("transitionend", (event: TransitionEvent) => {
   if (event.propertyName !== "transform") {
     return;
   }
 
-  normalizeCurrentIndex();
-  updateSlider(false);
-  isAnimating = false;
-});
+  const total = games.length;
 
-window.addEventListener("resize", () => {
-  normalizeCurrentIndex();
+  if (currentIndex < total) {
+    currentIndex += total;
+    updateSlider(false);
+  }
+
+  if (currentIndex >= total * 2) {
+    currentIndex -= total;
+    updateSlider(false);
+  }
+
   isAnimating = false;
-  updateSlider(false);
 });
 
 loadGames().catch((error: unknown) => {

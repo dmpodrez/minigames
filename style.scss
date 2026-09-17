@@ -378,8 +378,8 @@ body.menu-open {
 .games-viewport {
   width: 100%;
   overflow: hidden;
+  touch-action: pan-y;
 }
-
 .games-track {
   position: relative;
   width: 100%;
