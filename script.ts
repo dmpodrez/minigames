@@ -39,7 +39,7 @@ function formatLikes(count: number): string {
 }
 
 async function loadGames(): Promise<void> {
-  const response = await fetch("./assets/data/all-games-seed.json");
+  const response = await fetch("/assets/data/all-games-seed.json");
 
   if (!response.ok) {
     throw new Error(`Failed to load games: ${response.status}`);
@@ -73,12 +73,12 @@ function renderGames(): void {
 
             <div class="game-info">
               <span class="game-rating">
-                <img src="./assets/svg/star.svg" alt="">
+                <img src="/assets/svg/star.svg" alt="">
                 ${game.rating}
               </span>
 
               <span class="game-likes">
-                <img src="./assets/svg/heart.svg" alt="">
+                <img src="/assets/svg/heart.svg" alt="">
                 ${formatLikes(game.likesCount)}
               </span>
             </div>
@@ -220,7 +220,7 @@ interface LeaderboardResponse {
   data: Player[];
 }
 async function loadLeaderboard(): Promise<void> {
-  const response = await fetch("./assets/data/leaderboard.json");
+  const response = await fetch("/assets/data/leaderboard.json");
 
   if (!response.ok) {
     throw new Error(`Failed to load leaderboard: ${response.status}`);

@@ -3,7 +3,7 @@ export function renderApp(): void {
     <div class="app">
       <header class="header">
         <a class="logo" href="#" aria-label="MiniGames home">
-          <img src="./assets/svg/logo.svg" alt="" />
+          <img src="/assets/svg/logo.svg" alt="" />
           <span>MiniGames</span>
         </a>
     
@@ -58,7 +58,7 @@ export function renderApp(): void {
         <aside class="mobile-menu" aria-label="Mobile navigation">
           <div class="mobile-menu-header">
             <a class="logo" href="#">
-              <img src="./assets/svg/logo.svg" alt="" />
+              <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
           </div>
@@ -140,7 +140,7 @@ export function renderApp(): void {
         <section class="developer-section">
           <div class="developer-illustration">
             <img
-              src="./assets/images/illustration-side.png"
+              src="/assets/images/illustration-side.png"
               alt="Game developer workspace"
             />
           </div>
@@ -157,7 +157,7 @@ export function renderApp(): void {
             <button class="developer-button" type="button">
               <img
                 class="developer-button-icon"
-                src="./assets/svg/upload.svg"
+                src="/assets/svg/upload.svg"
                 alt=""
               />
               Submit Form
@@ -173,7 +173,7 @@ export function renderApp(): void {
         <div class="footer-main">
           <div class="footer-brand">
             <a class="footer-logo" href="#">
-              <img src="./assets/svg/logo.svg" alt="" />
+              <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
     
@@ -211,15 +211,15 @@ export function renderApp(): void {
     
               <div class="footer-socials">
                 <a href="#" aria-label="Share">
-                  <img src="./assets/svg/share.svg" alt="" />
+                  <img src="/assets/svg/share.svg" alt="" />
                 </a>
     
                 <a href="#" aria-label="Twitch">
-                  <img src="./assets/svg/chat.svg" alt="" />
+                  <img src="/assets/svg/chat.svg" alt="" />
                 </a>
     
                 <a href="#" aria-label="RSS">
-                  <img src="./assets/svg/rss_feed.svg" alt="" />
+                  <img src="/assets/svg/rss_feed.svg" alt="" />
                 </a>
               </div>
             </div>
@@ -230,12 +230,12 @@ export function renderApp(): void {
           <p class="footer-copyright">© 2026 MiniGames. All rights reserved.</p>
     
           <a class="footer-school" href="#">
-            <img src="./assets/svg/rs-logo-container.svg" alt="" />
+            <img src="/assets/svg/rs-logo-container.svg" alt="" />
             <span>RS School</span>
           </a>
     
           <a class="footer-github" href="#">
-            <img src="./assets/svg/github-icon.svg" alt="" />
+            <img src="/assets/svg/github-icon.svg" alt="" />
             <span>@dmpodrez</span>
           </a>
     
@@ -278,7 +278,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/mail.svg"
+                    src="/assets/svg/mail.svg"
                     alt=""
                   />
     
@@ -298,7 +298,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/lock.svg"
+                    src="/assets/svg/lock.svg"
                     alt=""
                   />
     
@@ -315,7 +315,7 @@ export function renderApp(): void {
                     type="button"
                     aria-label="Show password"
                   >
-                    <img src="./assets/svg/visibility.svg" alt="" />
+                    <img src="/assets/svg/visibility.svg" alt="" />
                   </button>
                 </div>
               </label>
@@ -332,7 +332,7 @@ export function renderApp(): void {
             </div>
     
             <button class="google-button" type="button">
-              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+              <img class="google-icon" src="/assets/svg/Vector.svg alt="" />
     
               Continue with Google
             </button>
@@ -360,7 +360,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/person.svg"
+                    src="/assets/svg/person.svg"
                     alt=""
                   />
     
@@ -380,7 +380,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/mail.svg"
+                    src="/assets/svg/mail.svg"
                     alt=""
                   />
     
@@ -400,7 +400,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/lock.svg"
+                    src="/assets/svg/lock.svg"
                     alt=""
                   />
     
@@ -417,7 +417,7 @@ export function renderApp(): void {
                     type="button"
                     aria-label="Show password"
                   >
-                    <img src="./assets/svg/visibility.svg" alt="" />
+                    <img src="/assets/svg/visibility.svg" alt="" />
                   </button>
                 </div>
               </label>
@@ -428,7 +428,7 @@ export function renderApp(): void {
                 <div class="auth-input">
                   <img
                     class="auth-input-icon"
-                    src="./assets/svg/lock.svg"
+                    src="/assets/svg/lock.svg"
                     alt=""
                   />
     
@@ -445,7 +445,7 @@ export function renderApp(): void {
                     type="button"
                     aria-label="Show password"
                   >
-                    <img src="./assets/svg/visibility.svg" alt="" />
+                    <img src="/assets/svg/visibility.svg" alt="" />
                   </button>
                 </div>
               </label>
@@ -458,7 +458,7 @@ export function renderApp(): void {
             </div>
     
             <button class="google-button" type="button">
-              <img class="google-icon" src="./assets/svg/google.svg" alt="" />
+              <img class="google-icon" src="/assets/svg/Vector.svg" alt="" />
     
               Sign up with Google
             </button>
