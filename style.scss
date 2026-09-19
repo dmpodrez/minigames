@@ -380,32 +380,41 @@ body.menu-open {
   overflow: hidden;
   touch-action: pan-y;
 }
+
 .games-track {
   position: relative;
+
   width: 100%;
   min-width: 100%;
+
   display: flex;
   flex-wrap: nowrap;
+
   gap: 0.47619%;
   padding: 0 0.47619%;
-  will-change: transform;
+
+  will-change: transform, opacity;
 }
 
 /*
- * At 1920px the section content is 1680px:
- * 120 | 288 | 816 | 288 | 120 with 8px gaps/padding.
+ * Desktop 1920 / content width 1680:
+ *
+ * 120 | 288 | 816 | 288 | 120
+ *
+ * + gaps/padding.
  */
 .game-card {
   position: relative;
+
   width: 17.142857%;
   height: clamp(280px, 20vw, 384px);
+
   flex: 0 0 17.142857%;
+
   border: 2.5px solid $text-primary;
   border-radius: 24px;
+
   overflow: hidden;
-  transition:
-    width 0.25s ease,
-    flex-basis 0.25s ease;
 
   &--active {
     width: 48.571429%;
@@ -415,10 +424,6 @@ body.menu-open {
   &--edge {
     width: 7.142857%;
     flex-basis: 7.142857%;
-  }
-
-  &--hidden {
-    visibility: hidden;
   }
 }
 
@@ -1392,28 +1397,29 @@ body.menu-open {
   .games-track {
     width: 100%;
     min-width: 100%;
+
     gap: 8px;
     padding: 0;
   }
 
-  /* Only previous + active + next participate in layout. */
-  .game-card--hidden {
-    display: none;
-  }
-
   .game-card {
     --side-card-width: clamp(56px, calc(12.214vw + 10.2px), 104px);
+
     width: var(--side-card-width);
     height: clamp(200px, calc(20.356vw + 123.7px), 280px);
+
     flex: 0 0 var(--side-card-width);
+
     border-width: 2px;
     border-radius: clamp(16px, 3vw, 20px);
-    transition: none;
   }
 
   .game-card--active {
-    width: calc(100% - (2 * var(--side-card-width)) - 16px);
-    flex-basis: calc(100% - (2 * var(--side-card-width)) - 16px);
+    width: calc(100% - var(--side-card-width) - var(--side-card-width) - 16px);
+
+    flex-basis: calc(
+      100% - var(--side-card-width) - var(--side-card-width) - 16px
+    );
   }
 
   .game-overlay {
@@ -1425,10 +1431,8 @@ body.menu-open {
   }
 
   .game-info {
-    display: flex;
-    font-size: clamp(10px, 1.69vw, 13px);
+    display: none;
   }
-
   .game-rating,
   .game-likes {
     gap: 3px;

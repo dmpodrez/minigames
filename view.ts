@@ -459,7 +459,7 @@ export function renderApp(): void {
     
             <button class="google-button" type="button">
               <img class="google-icon" src="/assets/svg/Vector.svg" alt="" />
-    
+      
               Sign up with Google
             </button>
     
