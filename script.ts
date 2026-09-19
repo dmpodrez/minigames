@@ -32,10 +32,24 @@ const leaderboardBody =
   getElement<HTMLTableSectionElement>(".leaderboard-body");
 let games: Game[] = [];
 let currentIndex = 0;
-let isAnimating = false;
+let isSliderAnimating = false;
+
+type SlideDirection = "next" | "previous";
 
 function formatLikes(count: number): string {
   return `${(count / 1000).toFixed(1)}K`;
+}
+
+function isCompactSlider(): boolean {
+  return window.innerWidth <= 768;
+}
+
+function wrapIndex(index: number): number {
+  if (games.length === 0) {
+    return 0;
+  }
+
+  return ((index % games.length) + games.length) % games.length;
 }
 
 async function loadGames(): Promise<void> {
@@ -48,27 +62,49 @@ async function loadGames(): Promise<void> {
   const result: GamesResponse = await response.json();
 
   games = result.data;
-  currentIndex = games.length;
+  currentIndex = 0;
 
   renderGames();
 }
 
 function renderGames(): void {
-  const sliderGames: Game[] = [...games, ...games, ...games];
+  if (games.length === 0) {
+    return;
+  }
 
-  gamesTrack.innerHTML = sliderGames
-    .map((game, index) => {
+  const compact = isCompactSlider();
+
+  const offsets = compact ? [-1, 0, 1] : [-2, -1, 0, 1, 2];
+
+  gamesTrack.innerHTML = offsets
+    .map((offset) => {
+      const gameIndex = wrapIndex(currentIndex + offset);
+      const game = games[gameIndex];
+
+      const isActive = offset === 0;
+      const isEdge = !compact && Math.abs(offset) === 2;
+
+      const showOverlay = compact ? isActive : Math.abs(offset) <= 1;
+
+      const cardClasses = [
+        "game-card",
+        isActive ? "game-card--active" : "",
+        isEdge ? "game-card--edge" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
       return `
-        <article class="game-card ${
-          index === currentIndex ? "game-card--active" : ""
-        }">
+        <article class="${cardClasses}">
           <img
             class="game-image"
-            src=".${game.cardImage}"
+            src="${game.cardImage}"
             alt="${game.name}"
           >
 
-          <div class="game-overlay">
+          <div
+            class="game-overlay ${showOverlay ? "" : "game-overlay--hidden"}"
+          >
             <h3>${game.name}</h3>
 
             <div class="game-info">
@@ -87,119 +123,153 @@ function renderGames(): void {
       `;
     })
     .join("");
-
-  updateSlider(false);
 }
 
-function updateSlider(animate = true): void {
-  const cards = gamesTrack.querySelectorAll<HTMLElement>(".game-card");
-
-  const showThreeCards = window.innerWidth <= 768;
-
-  cards.forEach((card, index) => {
-    const distanceFromActive = index - currentIndex;
-
-    const isActive = distanceFromActive === 0;
-
-    const isVisible = showThreeCards
-      ? Math.abs(distanceFromActive) <= 1
-      : Math.abs(distanceFromActive) <= 2;
-
-    const isEdge = !showThreeCards && Math.abs(distanceFromActive) === 2;
-
-    const shouldShowOverlay = Math.abs(distanceFromActive) <= 1;
-
-    card.classList.toggle("game-card--active", isActive);
-
-    card.classList.toggle("game-card--edge", isEdge);
-
-    card.classList.toggle("game-card--hidden", !isVisible);
-
-    const gameOverlay = card.querySelector<HTMLElement>(".game-overlay");
-
-    gameOverlay?.classList.toggle("game-overlay--hidden", !shouldShowOverlay);
-  });
-
-  /*
-   * <= 768px
-   *
-   * У нас остаются только:
-   * previous + active + next.
-   *
-   * Они сами занимают ровно 100% viewport,
-   * поэтому сдвиг ленты здесь НЕ нужен.
-   */
-  if (showThreeCards) {
-    gamesTrack.style.transition = "none";
-    gamesTrack.style.transform = "translateX(0)";
-    isAnimating = false;
-
+async function changeSlide(direction: SlideDirection): Promise<void> {
+  if (isSliderAnimating || games.length === 0) {
     return;
   }
 
-  /* Desktop slider */
+  isSliderAnimating = true;
 
-  const activeCard = cards[currentIndex];
+  const isNext = direction === "next";
 
-  if (!activeCard) {
-    return;
+  const exitX = isNext ? "-18px" : "18px";
+  const enterX = isNext ? "18px" : "-18px";
+
+  const exitAnimation = gamesTrack.animate(
+    [
+      {
+        transform: "translateX(0)",
+        opacity: 1,
+      },
+      {
+        transform: `translateX(${exitX})`,
+        opacity: 0.35,
+      },
+    ],
+    {
+      duration: 140,
+      easing: "ease-in",
+      fill: "both",
+    },
+  );
+
+  try {
+    await exitAnimation.finished;
+  } catch {
+    // Animation can be cancelled during resize.
   }
 
-  gamesTrack.style.transition = animate ? "transform 0.4s ease" : "none";
+  exitAnimation.cancel();
 
-  const offset =
-    activeCard.offsetLeft -
-    (gamesViewport.clientWidth - activeCard.clientWidth) / 2;
+  currentIndex = wrapIndex(currentIndex + (isNext ? 1 : -1));
 
-  gamesTrack.style.transform = `translateX(-${offset}px)`;
+  renderGames();
 
-  if (!animate) {
-    void gamesTrack.offsetWidth;
+  const enterAnimation = gamesTrack.animate(
+    [
+      {
+        transform: `translateX(${enterX})`,
+        opacity: 0.35,
+      },
+      {
+        transform: "translateX(0)",
+        opacity: 1,
+      },
+    ],
+    {
+      duration: 260,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      fill: "both",
+    },
+  );
+
+  try {
+    await enterAnimation.finished;
+  } catch {
+    // Animation can be cancelled during resize.
   }
+
+  enterAnimation.cancel();
+
+  isSliderAnimating = false;
 }
-window.addEventListener("resize", () => {
-  updateSlider(false);
-});
+
 nextButton.addEventListener("click", () => {
-  if (isAnimating) {
-    return;
-  }
-
-  isAnimating = true;
-  currentIndex++;
-  updateSlider();
+  void changeSlide("next");
 });
 
 prevButton.addEventListener("click", () => {
-  if (isAnimating) {
+  void changeSlide("previous");
+});
+
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipePointerId: number | null = null;
+
+const SWIPE_THRESHOLD = 40;
+
+gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
+  if (!isCompactSlider() || event.pointerType === "mouse") {
     return;
   }
 
-  isAnimating = true;
-  currentIndex--;
-  updateSlider();
+  swipeStartX = event.clientX;
+  swipeStartY = event.clientY;
+  swipePointerId = event.pointerId;
 });
+
+gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
+  if (event.pointerId !== swipePointerId) {
+    return;
+  }
+
+  const deltaX = event.clientX - swipeStartX;
+  const deltaY = event.clientY - swipeStartY;
+
+  swipePointerId = null;
+
+  if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+    return;
+  }
+
+  if (Math.abs(deltaX) < SWIPE_THRESHOLD) {
+    return;
+  }
+
+  if (deltaX < 0) {
+    void changeSlide("next");
+    return;
+  }
+
+  void changeSlide("previous");
+});
+
+gamesViewport.addEventListener("pointercancel", () => {
+  swipePointerId = null;
+});
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+let compactSlider = isCompactSlider();
+
 window.addEventListener("resize", () => {
-  updateSlider(false);
-});
-gamesTrack.addEventListener("transitionend", (event: TransitionEvent) => {
-  if (event.propertyName !== "transform") {
-    return;
+  const nextCompactSlider = isCompactSlider();
+
+  if (nextCompactSlider !== compactSlider) {
+    compactSlider = nextCompactSlider;
+
+    gamesTrack.getAnimations().forEach((animation) => {
+      animation.cancel();
+    });
+
+    isSliderAnimating = false;
+
+    renderGames();
   }
-
-  const total = games.length;
-
-  if (currentIndex < total) {
-    currentIndex += total;
-    updateSlider(false);
-  }
-
-  if (currentIndex >= total * 2) {
-    currentIndex -= total;
-    updateSlider(false);
-  }
-
-  isAnimating = false;
 });
 
 loadGames().catch((error: unknown) => {
