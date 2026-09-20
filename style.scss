@@ -370,6 +370,9 @@ body.menu-open {
   font-size: 18px;
   font-weight: 700;
   text-decoration: none;
+  &:hover {
+    background-color: $hover;
+  }
 }
 
 /* =========================
@@ -830,6 +833,9 @@ body.menu-open {
     margin-top: 0px;
     margin-bottom: 35px;
   }
+  &:hover {
+    background-color: $hover;
+  }
 }
 
 .developer-button-icon {
@@ -1080,7 +1086,7 @@ body.menu-open {
   flex-direction: column;
   gap: 8px;
 
-  > span {
+  > label {
     color: $text-primary;
     font-size: 13px;
     font-weight: 700;
@@ -1306,11 +1312,7 @@ body.menu-open {
   }
 
   .game-overlay {
-    padding: 12px;
-
-    h3 {
-      font-size: 15px;
-    }
+    display: none;
   }
 
   .game-info {
@@ -2232,5 +2234,177 @@ body.menu-open {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+/* =========================
+   FIGMA INTERACTIVE STATES
+   ========================= */
+
+/* Header auth buttons */
+
+.login-button,
+.signup-button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.login-button:hover {
+  background-color: $surface;
+}
+
+.signup-button:hover {
+  background-color: $hover;
+}
+
+/* Burger */
+
+.burger-button {
+  background-color: $surface;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    background-color: $surface;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+    background-color: $lowest;
+  }
+
+  &--active {
+    background-color: $text-primary;
+    border-color: $text-primary;
+
+    span {
+      background-color: $white;
+    }
+
+    &:hover {
+      background-color: $text-primary;
+      border-color: $primary;
+
+      span {
+        background-color: $primary;
+      }
+    }
+  }
+}
+
+/* Mobile menu links */
+
+.mobile-menu-nav {
+  a {
+    transition:
+      color 0.2s ease,
+      text-decoration-color 0.2s ease;
+
+    &:hover {
+      color: $primary;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    &:first-child {
+      color: $primary;
+      font-weight: 700;
+    }
+  }
+}
+
+/* Auth tabs */
+
+.auth-tab {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:not(.auth-tab--active):hover {
+    background-color: rgba(255, 208, 43, 0.16);
+  }
+
+  &--active {
+    background-color: $text-primary;
+    color: $white;
+  }
+}
+
+/* Auth inputs */
+
+.auth-input input {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: $tertiary;
+    box-shadow: 0 0 0 2px rgba(58, 46, 191, 0.12);
+  }
+}
+
+/* Auth main buttons */
+
+.auth-submit,
+.google-button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.auth-submit:hover {
+  background-color: $text-primary;
+  color: $primary;
+}
+
+.google-button:hover {
+  background-color: rgba(255, 208, 43, 0.12);
+}
+
+.auth-submit:active,
+.google-button:active {
+  transform: translateY(1px);
+}
+
+/* Text links */
+
+.forgot-password,
+.auth-switch-text button {
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $tertiary;
+  }
+}
+
+/* Footer links */
+
+.footer-column a,
+.footer-school,
+.footer-github {
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $primary;
+  }
+}
+
+.footer-socials a {
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 208, 43, 0.18);
+    transform: translateY(-2px);
   }
 }
