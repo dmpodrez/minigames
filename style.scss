@@ -74,7 +74,7 @@ img {
 .nav {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 30px;
 
   > a {
     color: $text-secondary;
@@ -321,7 +321,6 @@ body.menu-open {
    ========================= */
 
 .hero {
-  min-height: 627px;
   padding: 112px clamp(48px, 6.25vw, 120px);
   display: flex;
   align-items: center;
@@ -331,14 +330,16 @@ body.menu-open {
   background-size: cover;
   background-position: center;
 }
-
+.hero-description-mobile {
+  display: none;
+}
 .hero-content {
   width: min(640px, 100%);
   padding: 48px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 20px;
   background-color: $background;
   border: 3px solid $text-primary;
   border-radius: 24px;
@@ -351,7 +352,6 @@ body.menu-open {
     font-weight: 700;
     line-height: 1;
   }
-
   p {
     margin: 0;
     color: $text-secondary;
@@ -566,7 +566,9 @@ body.menu-open {
   flex-direction: column;
   gap: 40px;
 }
-
+.top-players-title-mobile {
+  display: none;
+}
 .leaderboard {
   position: relative;
   width: 100%;
@@ -610,32 +612,32 @@ body.menu-open {
 
   th:nth-child(1),
   td:nth-child(1) {
-    width: 8%;
+    width: 6.190476%;
   }
 
   th:nth-child(2),
   td:nth-child(2) {
-    width: 21%;
+    width: 18.571429%;
   }
 
   th:nth-child(3),
   td:nth-child(3) {
-    width: 18%;
+    width: 17.619048%;
   }
 
   th:nth-child(4),
   td:nth-child(4) {
-    width: 18%;
+    width: 17.619048%;
   }
 
   th:nth-child(5),
   td:nth-child(5) {
-    width: 17%;
+    width: 18.571429%;
   }
 
   th:nth-child(6),
   td:nth-child(6) {
-    width: 18%;
+    width: 21.904762%;
   }
 
   tbody tr {
@@ -741,7 +743,12 @@ body.menu-open {
 .compact-label {
   display: none;
 }
-
+.score-mobile {
+  display: none;
+}
+.streak-compact {
+  display: none;
+}
 @media (max-width: 768px) {
   .desktop-label {
     display: none;
@@ -756,7 +763,7 @@ body.menu-open {
    ========================= */
 
 .developer-section {
-  padding: 40px clamp(40px, 6.25vw, 120px) 80px;
+  padding: 30px 100px;
   display: flex;
   align-items: center;
   gap: 40px;
@@ -796,8 +803,7 @@ body.menu-open {
 }
 
 .developer-description {
-  max-width: 610px;
-  margin: 0 0 28px;
+  max-width: 950px;
   color: $text-secondary;
   font-size: 18px;
   font-weight: 400;
@@ -820,6 +826,10 @@ body.menu-open {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 3px 3px 0 $text-primary;
+  p {
+    margin-top: 0px;
+    margin-bottom: 35px;
+  }
 }
 
 .developer-button-icon {
@@ -840,7 +850,7 @@ body.menu-open {
    ========================= */
 
 .footer {
-  padding: 40px clamp(40px, 6.25vw, 120px) 32px;
+  padding: 35px 120px;
   background-color: $text-primary;
   color: $white;
 }
@@ -946,7 +956,7 @@ body.menu-open {
 }
 
 .footer-bottom {
-  padding-top: 24px;
+  padding-top: 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1499,24 +1509,69 @@ body.menu-open {
   }
 
   .game-overlay {
-    padding: clamp(8px, 1.56vw, 12px);
+    padding: 40px 12px 10px;
+
+    justify-content: flex-end;
+
+    gap: 6px;
+
+    background: linear-gradient(
+      to top,
+      rgba(15, 13, 30, 0.95) 0%,
+      rgba(15, 13, 30, 0.72) 45%,
+      rgba(15, 13, 30, 0) 100%
+    );
 
     h3 {
-      font-size: clamp(12px, 1.95vw, 15px);
+      width: 100%;
+
+      margin: 0;
+
+      overflow: hidden;
+
+      color: $white;
+
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 17px;
+
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 
   .game-info {
-    display: none;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: $white;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 15px;
   }
+
   .game-rating,
   .game-likes {
-    gap: 3px;
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+
+    white-space: nowrap;
 
     img {
-      width: clamp(12px, 1.82vw, 14px);
-      height: clamp(12px, 1.82vw, 14px);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
     }
+  }
+
+  .game-likes {
+    margin-left: auto;
   }
 
   .top-players {
@@ -1524,16 +1579,24 @@ body.menu-open {
     padding-bottom: 32px;
     gap: 24px;
   }
+  .streak-full {
+    display: none;
+  }
 
+  .streak-compact {
+    display: inline;
+  }
   .leaderboard {
     border-radius: 12px;
     box-shadow: 4px 4px 0 $text-primary;
-
     &::after {
       border-width: 2px;
       border-radius: 12px;
     }
-
+    tbody tr:first-child td:first-child {
+      color: black;
+      font-weight: 800;
+    }
     /* Figma 768 model has 5 columns: no Favorite Game. */
     th:nth-child(6),
     td:nth-child(6) {
@@ -1575,11 +1638,16 @@ body.menu-open {
       font-size: 14px;
       line-height: 1.1;
     }
-
+    tbody {
+      tr {
+        first-child td:first-child {
+          color: black;
+        }
+      }
+    }
     tbody tr {
       height: 60px;
     }
-
     /* Figma tablet/mobile preview shows three leaderboard rows. */
     tbody tr:nth-child(n + 4) {
       display: none;
@@ -1603,10 +1671,10 @@ body.menu-open {
 
   .developer-section {
     padding-top: 16px;
-    padding-bottom: 32px;
+    padding-bottom: 18px;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 25px;
   }
 
   .developer-illustration {
@@ -1623,7 +1691,7 @@ body.menu-open {
 
   .developer-card {
     width: 100%;
-    padding: clamp(24px, 4.17vw, 32px);
+    padding: 30px;
     border-radius: 16px;
     box-shadow: none;
 
@@ -1635,7 +1703,6 @@ body.menu-open {
 
   .developer-description {
     max-width: none;
-    margin-bottom: 20px;
     font-size: clamp(12px, calc(0.51vw + 10.1px), 14px);
     line-height: 1.5;
   }
@@ -1660,7 +1727,7 @@ body.menu-open {
   }
 
   .footer {
-    padding: 50px 40px;
+    padding: 40px 40px;
   }
 
   .footer-main {
@@ -1715,17 +1782,17 @@ body.menu-open {
 
 @media (max-width: 600px) {
   .header {
-    height: 60px;
+    height: 64px;
   }
 
   .logo {
     img {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
     }
 
     span {
-      font-size: 18px;
+      font-size: 20px;
     }
   }
 
@@ -1756,51 +1823,116 @@ body.menu-open {
       font-size: 16px;
     }
   }
+  .hero-description-desktop {
+    display: none;
+  }
 
-  .hero {
-    padding-block: 24px;
+  .hero-description-mobile {
+    display: inline;
   }
 
   .hero-content {
-    padding: 24px;
-    gap: 14px;
-  }
+    h1 {
+      font-size: 24px;
+      line-height: 1.2;
+    }
 
+    p {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  }
   .hero-button {
-    padding: 9px 12px;
-    font-size: 11px;
+    padding: 7px 5px;
   }
-
   .new-games {
     gap: 20px;
+    padding-top: 15px;
+  }
+  .section-title {
+    .accent-bar {
+      width: 8px;
+      height: 24px;
+    }
+    h2 {
+      font-size: 24px;
+    }
+  }
+  .game-overlay {
+    padding: 15px 15px 20px;
+    gap: 20px;
+
+    h3 {
+      font-size: 18px;
+      line-height: 17px;
+    }
   }
 
+  .game-info {
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+  .game-rating,
+  .game-likes {
+    gap: 10px;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  .score-full {
+    display: none;
+  }
+
+  .score-mobile {
+    display: inline;
+  }
   /* No carousel arrows in the 375px Figma frame. */
   .slider-controls {
     display: none;
   }
 
   .top-players {
-    padding-top: 20px;
+    padding-top: 10px;
     padding-bottom: 24px;
     gap: 20px;
   }
+  .top-players-title-full {
+    display: none;
+  }
 
+  .top-players-title-mobile {
+    display: inline;
+  }
   .leaderboard {
-    /* Mobile Figma: Rank / Player / Score / Streak. */
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 $text-primary;
+
+    &::after {
+      border-width: 2px;
+      border-radius: 16px;
+    }
+
+    /* Mobile:
+     RANK | PLAYER | SCORE | STREAK */
+
     th:nth-child(3),
-    td:nth-child(3) {
+    td:nth-child(3),
+    th:nth-child(6),
+    td:nth-child(6) {
       display: none;
     }
 
     th:nth-child(1),
     td:nth-child(1) {
-      width: 16%;
+      width: 17%;
     }
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 40%;
+      width: 35%;
     }
 
     th:nth-child(4),
@@ -1810,47 +1942,82 @@ body.menu-open {
 
     th:nth-child(5),
     td:nth-child(5) {
-      width: 20%;
+      width: 24%;
     }
 
     thead,
     th {
-      height: 42px;
+      height: 44px;
     }
 
     th {
-      padding-inline: 4px;
-      font-size: 9px;
+      padding: 0 4px;
+
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 13px;
     }
 
     tbody tr,
     td {
-      height: 52px;
+      height: 58px;
     }
 
     td {
-      padding-inline: 4px;
-      font-size: 9px;
+      padding: 0 4px;
+
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 14px;
+    }
+
+    .leaderboard-player__content {
+      min-width: 0;
     }
 
     .player-avatar {
       width: 24px;
       height: 24px;
-      margin-right: 4px;
-      flex-basis: 24px;
+
+      margin-right: 6px;
+
+      flex: 0 0 24px;
+
       font-size: 8px;
+    }
+
+    .leaderboard-player__content > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(n + 4) {
+      display: none;
     }
   }
 
   .developer-section {
-    padding-top: 12px;
-    padding-bottom: 24px;
+    padding-top: 0px;
+    padding-bottom: 20px;
+    gap: 20px;
   }
 
   .developer-card {
-    padding: 24px;
+    padding: 15px;
+    h2 {
+      margin-top: 10px;
+      font-size: 24px;
+    }
   }
-
+  .developer-description {
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+  .developer-button {
+    min-height: 32px;
+    padding: 0 10px;
+  }
   .developer-contact {
     overflow-wrap: anywhere;
   }
@@ -1939,8 +2106,6 @@ body.menu-open {
   }
 
   .footer-socials {
-    gap: 8px;
-
     a {
       width: 32px;
       height: 32px;
@@ -1948,12 +2113,12 @@ body.menu-open {
 
     img {
       width: 16px;
-      height: 16px;
+      height: 19px;
     }
   }
 
   .footer-bottom {
-    margin-top: 24px;
+    margin-top: 15px;
     padding-top: 12px;
 
     display: flex;
@@ -1977,8 +2142,6 @@ body.menu-open {
   /* RS School + GitHub рядом */
   .footer-school,
   .footer-github {
-    gap: 8px;
-
     img {
       width: 18px;
       height: 18px;
