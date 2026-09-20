@@ -74,7 +74,7 @@ img {
 .nav {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 30px;
 
   > a {
     color: $text-secondary;
@@ -121,62 +121,79 @@ img {
 
 .burger-button {
   position: relative;
+
   width: 32px;
   height: 32px;
   padding: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  border: 0;
+  gap: 4px;
+  border: 2px solid $text-primary;
   border-radius: 6px;
-  background: transparent;
   cursor: pointer;
 
   span {
+    position: static;
+
     width: 16px;
     height: 2px;
+
     display: block;
+
     border-radius: 2px;
     background-color: $text-primary;
+
     transition:
       transform 0.25s ease,
-      opacity 0.2s ease;
+      opacity 0.2s ease,
+      background-color 0.2s ease;
   }
 
   &--active {
     position: fixed;
     top: 18px;
     right: 18px;
+
     z-index: 103;
+    background-color: rgba(255, 255, 255, 0.08);
 
     span {
       position: absolute;
+      top: 50%;
+      left: 50%;
+
+      background-color: $white;
     }
 
     span:nth-child(1) {
-      transform: rotate(45deg);
+      transform: translate(-50%, -50%) rotate(45deg);
     }
 
     span:nth-child(2) {
       opacity: 0;
+      transform: translate(-50%, -50%);
     }
 
     span:nth-child(3) {
-      transform: rotate(-45deg);
+      transform: translate(-50%, -50%) rotate(-45deg);
     }
   }
 }
-
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
+
   visibility: hidden;
   opacity: 0;
-  background-color: rgba(36, 33, 69, 0.45);
+
+  background-color: rgba(30, 27, 58, 0.55);
+
   pointer-events: none;
+
   transition:
     opacity 0.25s ease,
     visibility 0.25s ease;
@@ -194,56 +211,107 @@ img {
 
 .mobile-menu {
   width: 320px;
-  max-width: calc(100vw - 40px);
+  max-width: calc(100vw - 55px);
   height: 100dvh;
+
   margin-left: auto;
   padding: 24px;
+
   display: flex;
   flex-direction: column;
-  background-color: $background;
-  border-left: 2px solid $text-primary;
+
+  background-color: #1e1b3a;
+
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mobile-menu-header {
   min-height: 32px;
+
   display: flex;
   align-items: center;
 
-  .logo span {
-    font-size: 20px;
+  .logo {
+    gap: 8px;
+
+    img {
+      width: 32px;
+      height: 32px;
+    }
+
+    span {
+      color: $white;
+      font-size: 20px;
+      font-weight: 700;
+    }
   }
 }
 
 .mobile-menu-nav {
   margin-top: 32px;
+
   display: flex;
   flex-direction: column;
+
   gap: 24px;
 
   a {
     width: fit-content;
-    color: $text-primary;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 22px;
+
+    color: #b9b7c8;
+
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+
     text-decoration: none;
+
+    transition: color 0.2s ease;
+
+    &:first-child {
+      color: $primary;
+      font-weight: 700;
+    }
+
+    &:hover {
+      color: $white;
+    }
   }
 }
 
 .mobile-menu-actions {
   margin-top: auto;
+
   display: flex;
   flex-direction: column;
+
   gap: 12px;
 
   .login-button,
   .signup-button {
     width: 100%;
+    height: 38px;
+
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .login-button {
+    color: $white;
+    background-color: transparent;
+    border: 2px solid $white;
+  }
+
+  .signup-button {
+    color: $text-primary;
+    background-color: $primary;
+    border: 2px solid $primary;
   }
 }
-
 body.menu-open {
   overflow: hidden;
 }
@@ -253,7 +321,6 @@ body.menu-open {
    ========================= */
 
 .hero {
-  min-height: 627px;
   padding: 112px clamp(48px, 6.25vw, 120px);
   display: flex;
   align-items: center;
@@ -263,14 +330,16 @@ body.menu-open {
   background-size: cover;
   background-position: center;
 }
-
+.hero-description-mobile {
+  display: none;
+}
 .hero-content {
   width: min(640px, 100%);
   padding: 48px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 20px;
   background-color: $background;
   border: 3px solid $text-primary;
   border-radius: 24px;
@@ -283,7 +352,6 @@ body.menu-open {
     font-weight: 700;
     line-height: 1;
   }
-
   p {
     margin: 0;
     color: $text-secondary;
@@ -498,7 +566,9 @@ body.menu-open {
   flex-direction: column;
   gap: 40px;
 }
-
+.top-players-title-mobile {
+  display: none;
+}
 .leaderboard {
   position: relative;
   width: 100%;
@@ -542,32 +612,32 @@ body.menu-open {
 
   th:nth-child(1),
   td:nth-child(1) {
-    width: 8%;
+    width: 6.190476%;
   }
 
   th:nth-child(2),
   td:nth-child(2) {
-    width: 21%;
+    width: 18.571429%;
   }
 
   th:nth-child(3),
   td:nth-child(3) {
-    width: 18%;
+    width: 17.619048%;
   }
 
   th:nth-child(4),
   td:nth-child(4) {
-    width: 18%;
+    width: 17.619048%;
   }
 
   th:nth-child(5),
   td:nth-child(5) {
-    width: 17%;
+    width: 18.571429%;
   }
 
   th:nth-child(6),
   td:nth-child(6) {
-    width: 18%;
+    width: 21.904762%;
   }
 
   tbody tr {
@@ -670,13 +740,30 @@ body.menu-open {
     white-space: nowrap;
   }
 }
+.compact-label {
+  display: none;
+}
+.score-mobile {
+  display: none;
+}
+.streak-compact {
+  display: none;
+}
+@media (max-width: 768px) {
+  .desktop-label {
+    display: none;
+  }
 
+  .compact-label {
+    display: inline;
+  }
+}
 /* =========================
    DEVELOPER
    ========================= */
 
 .developer-section {
-  padding: 40px clamp(40px, 6.25vw, 120px) 80px;
+  padding: 30px 100px;
   display: flex;
   align-items: center;
   gap: 40px;
@@ -716,8 +803,7 @@ body.menu-open {
 }
 
 .developer-description {
-  max-width: 610px;
-  margin: 0 0 28px;
+  max-width: 950px;
   color: $text-secondary;
   font-size: 18px;
   font-weight: 400;
@@ -740,6 +826,10 @@ body.menu-open {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 3px 3px 0 $text-primary;
+  p {
+    margin-top: 0px;
+    margin-bottom: 35px;
+  }
 }
 
 .developer-button-icon {
@@ -760,7 +850,7 @@ body.menu-open {
    ========================= */
 
 .footer {
-  padding: 40px clamp(40px, 6.25vw, 120px) 32px;
+  padding: 35px 120px;
   background-color: $text-primary;
   color: $white;
 }
@@ -801,7 +891,7 @@ body.menu-open {
   max-width: 390px;
   margin: 0;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -849,8 +939,8 @@ body.menu-open {
   gap: 12px;
 
   a {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -859,14 +949,14 @@ body.menu-open {
   }
 
   img {
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
     display: block;
   }
 }
 
 .footer-bottom {
-  padding-top: 24px;
+  padding-top: 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1294,7 +1384,7 @@ body.menu-open {
 
 @media (max-width: 768px) {
   .header {
-    height: 68px;
+    height: 72px;
     padding-inline: clamp(16px, calc(6.11vw - 6.9px), 40px);
     padding-block: 0;
   }
@@ -1324,8 +1414,8 @@ body.menu-open {
 
   .header-signup {
     height: 32px;
-    padding: 0 14px;
-    font-size: 12px;
+    padding: 0 17px;
+    font-size: 14px;
   }
 
   .hero {
@@ -1343,7 +1433,7 @@ body.menu-open {
     box-shadow: 4px 4px 0 $text-primary;
 
     h1 {
-      font-size: clamp(24px, calc(2.04vw + 16.4px), 32px);
+      font-size: 36px;
       line-height: 1.05;
     }
 
@@ -1354,8 +1444,8 @@ body.menu-open {
   }
 
   .hero-button {
-    padding: 10px 14px;
-    font-size: 12px;
+    padding: 7px 16px;
+    font-size: 14px;
   }
 
   .new-games,
@@ -1366,7 +1456,7 @@ body.menu-open {
   }
 
   .new-games {
-    padding-top: clamp(24px, 4.17vw, 32px);
+    padding-top: clamp(24px, 4.17vw, 3px);
     padding-bottom: clamp(24px, 4.17vw, 32px);
     gap: 24px;
   }
@@ -1380,17 +1470,13 @@ body.menu-open {
   }
 
   .accent-bar {
-    width: 5px;
+    width: 8px;
     height: clamp(22px, 3.13vw, 24px);
   }
 
-  .slider-controls {
-    gap: 8px;
-  }
-
   .slider-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     font-size: 18px;
   }
 
@@ -1409,7 +1495,7 @@ body.menu-open {
     height: clamp(200px, calc(20.356vw + 123.7px), 280px);
 
     flex: 0 0 var(--side-card-width);
-
+    box-shadow: 4px 4px 0 $text-primary;
     border-width: 2px;
     border-radius: clamp(16px, 3vw, 20px);
   }
@@ -1423,24 +1509,69 @@ body.menu-open {
   }
 
   .game-overlay {
-    padding: clamp(8px, 1.56vw, 12px);
+    padding: 40px 12px 10px;
+
+    justify-content: flex-end;
+
+    gap: 6px;
+
+    background: linear-gradient(
+      to top,
+      rgba(15, 13, 30, 0.95) 0%,
+      rgba(15, 13, 30, 0.72) 45%,
+      rgba(15, 13, 30, 0) 100%
+    );
 
     h3 {
-      font-size: clamp(12px, 1.95vw, 15px);
+      width: 100%;
+
+      margin: 0;
+
+      overflow: hidden;
+
+      color: $white;
+
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 17px;
+
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 
   .game-info {
-    display: none;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: $white;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 15px;
   }
+
   .game-rating,
   .game-likes {
-    gap: 3px;
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+
+    white-space: nowrap;
 
     img {
-      width: clamp(12px, 1.82vw, 14px);
-      height: clamp(12px, 1.82vw, 14px);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
     }
+  }
+
+  .game-likes {
+    margin-left: auto;
   }
 
   .top-players {
@@ -1448,16 +1579,24 @@ body.menu-open {
     padding-bottom: 32px;
     gap: 24px;
   }
+  .streak-full {
+    display: none;
+  }
 
+  .streak-compact {
+    display: inline;
+  }
   .leaderboard {
     border-radius: 12px;
     box-shadow: 4px 4px 0 $text-primary;
-
     &::after {
       border-width: 2px;
       border-radius: 12px;
     }
-
+    tbody tr:first-child td:first-child {
+      color: black;
+      font-weight: 800;
+    }
     /* Figma 768 model has 5 columns: no Favorite Game. */
     th:nth-child(6),
     td:nth-child(6) {
@@ -1471,7 +1610,7 @@ body.menu-open {
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 32%;
+      width: 30%;
     }
 
     th:nth-child(3),
@@ -1481,7 +1620,7 @@ body.menu-open {
 
     th:nth-child(4),
     td:nth-child(4) {
-      width: 20%;
+      width: 22%;
     }
 
     th:nth-child(5),
@@ -1496,14 +1635,19 @@ body.menu-open {
 
     th {
       padding: 0 6px;
-      font-size: 11px;
+      font-size: 14px;
       line-height: 1.1;
     }
-
-    tbody tr {
-      height: 56px;
+    tbody {
+      tr {
+        first-child td:first-child {
+          color: black;
+        }
+      }
     }
-
+    tbody tr {
+      height: 60px;
+    }
     /* Figma tablet/mobile preview shows three leaderboard rows. */
     tbody tr:nth-child(n + 4) {
       display: none;
@@ -1511,8 +1655,8 @@ body.menu-open {
 
     td {
       height: 56px;
-      padding: 0 6px;
-      font-size: 11px;
+      padding: 0 20px;
+      font-size: 14px;
       line-height: 1.2;
     }
 
@@ -1527,10 +1671,10 @@ body.menu-open {
 
   .developer-section {
     padding-top: 16px;
-    padding-bottom: 32px;
+    padding-bottom: 18px;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 25px;
   }
 
   .developer-illustration {
@@ -1547,7 +1691,7 @@ body.menu-open {
 
   .developer-card {
     width: 100%;
-    padding: clamp(24px, 4.17vw, 32px);
+    padding: 30px;
     border-radius: 16px;
     box-shadow: none;
 
@@ -1559,7 +1703,6 @@ body.menu-open {
 
   .developer-description {
     max-width: none;
-    margin-bottom: 20px;
     font-size: clamp(12px, calc(0.51vw + 10.1px), 14px);
     line-height: 1.5;
   }
@@ -1584,7 +1727,7 @@ body.menu-open {
   }
 
   .footer {
-    padding: 32px clamp(16px, calc(6.11vw - 6.9px), 40px) 24px;
+    padding: 40px 40px;
   }
 
   .footer-main {
@@ -1598,7 +1741,7 @@ body.menu-open {
   }
 
   .footer-logo {
-    margin-bottom: 16px;
+    margin-bottom: 30px;
   }
 
   .footer-description {
@@ -1607,17 +1750,23 @@ body.menu-open {
 
   .footer-nav {
     width: 100%;
-    justify-content: space-between;
-    gap: 24px;
+    justify-content: flex-start;
+    gap: 45px;
   }
-
+  .footer-socials {
+    gap: 17px;
+    a {
+      width: 32px;
+      height: 32px;
+    }
+  }
   .footer-column {
     min-width: 0;
   }
 
   .footer-bottom {
     margin-top: 28px;
-    padding-top: 20px;
+    padding-top: 30px;
     gap: 12px;
     flex-wrap: wrap;
   }
@@ -1633,17 +1782,17 @@ body.menu-open {
 
 @media (max-width: 600px) {
   .header {
-    height: 60px;
+    height: 64px;
   }
 
   .logo {
     img {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
     }
 
     span {
-      font-size: 18px;
+      font-size: 20px;
     }
   }
 
@@ -1655,15 +1804,15 @@ body.menu-open {
     gap: 0;
   }
 
-  .burger-button--active {
-    top: 14px;
-    right: 14px;
-  }
-
   .mobile-menu {
     width: 320px;
     max-width: calc(100vw - 55px);
-    padding: 20px;
+    padding: 24px;
+  }
+
+  .burger-button--active {
+    top: 14px;
+    right: 14px;
   }
 
   .mobile-menu-nav {
@@ -1674,51 +1823,116 @@ body.menu-open {
       font-size: 16px;
     }
   }
+  .hero-description-desktop {
+    display: none;
+  }
 
-  .hero {
-    padding-block: 24px;
+  .hero-description-mobile {
+    display: inline;
   }
 
   .hero-content {
-    padding: 24px;
-    gap: 14px;
-  }
+    h1 {
+      font-size: 24px;
+      line-height: 1.2;
+    }
 
+    p {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  }
   .hero-button {
-    padding: 9px 12px;
-    font-size: 11px;
+    padding: 7px 5px;
   }
-
   .new-games {
     gap: 20px;
+    padding-top: 15px;
+  }
+  .section-title {
+    .accent-bar {
+      width: 8px;
+      height: 24px;
+    }
+    h2 {
+      font-size: 24px;
+    }
+  }
+  .game-overlay {
+    padding: 15px 15px 20px;
+    gap: 20px;
+
+    h3 {
+      font-size: 18px;
+      line-height: 17px;
+    }
   }
 
+  .game-info {
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+  .game-rating,
+  .game-likes {
+    gap: 10px;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  .score-full {
+    display: none;
+  }
+
+  .score-mobile {
+    display: inline;
+  }
   /* No carousel arrows in the 375px Figma frame. */
   .slider-controls {
     display: none;
   }
 
   .top-players {
-    padding-top: 20px;
+    padding-top: 10px;
     padding-bottom: 24px;
     gap: 20px;
   }
+  .top-players-title-full {
+    display: none;
+  }
 
+  .top-players-title-mobile {
+    display: inline;
+  }
   .leaderboard {
-    /* Mobile Figma: Rank / Player / Score / Streak. */
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 $text-primary;
+
+    &::after {
+      border-width: 2px;
+      border-radius: 16px;
+    }
+
+    /* Mobile:
+     RANK | PLAYER | SCORE | STREAK */
+
     th:nth-child(3),
-    td:nth-child(3) {
+    td:nth-child(3),
+    th:nth-child(6),
+    td:nth-child(6) {
       display: none;
     }
 
     th:nth-child(1),
     td:nth-child(1) {
-      width: 16%;
+      width: 17%;
     }
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 40%;
+      width: 35%;
     }
 
     th:nth-child(4),
@@ -1728,47 +1942,82 @@ body.menu-open {
 
     th:nth-child(5),
     td:nth-child(5) {
-      width: 20%;
+      width: 24%;
     }
 
     thead,
     th {
-      height: 42px;
+      height: 44px;
     }
 
     th {
-      padding-inline: 4px;
-      font-size: 9px;
+      padding: 0 4px;
+
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 13px;
     }
 
     tbody tr,
     td {
-      height: 52px;
+      height: 58px;
     }
 
     td {
-      padding-inline: 4px;
-      font-size: 9px;
+      padding: 0 4px;
+
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 14px;
+    }
+
+    .leaderboard-player__content {
+      min-width: 0;
     }
 
     .player-avatar {
       width: 24px;
       height: 24px;
-      margin-right: 4px;
-      flex-basis: 24px;
+
+      margin-right: 6px;
+
+      flex: 0 0 24px;
+
       font-size: 8px;
+    }
+
+    .leaderboard-player__content > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(n + 4) {
+      display: none;
     }
   }
 
   .developer-section {
-    padding-top: 12px;
-    padding-bottom: 24px;
+    padding-top: 0px;
+    padding-bottom: 20px;
+    gap: 20px;
   }
 
   .developer-card {
-    padding: 24px;
+    padding: 15px;
+    h2 {
+      margin-top: 10px;
+      font-size: 24px;
+    }
   }
-
+  .developer-description {
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+  .developer-button {
+    min-height: 32px;
+    padding: 0 10px;
+  }
   .developer-contact {
     overflow-wrap: anywhere;
   }
@@ -1857,8 +2106,6 @@ body.menu-open {
   }
 
   .footer-socials {
-    gap: 8px;
-
     a {
       width: 32px;
       height: 32px;
@@ -1866,13 +2113,12 @@ body.menu-open {
 
     img {
       width: 16px;
-      height: 16px;
+      height: 19px;
     }
   }
 
-  /* Нижняя часть как в Figma */
   .footer-bottom {
-    margin-top: 24px;
+    margin-top: 15px;
     padding-top: 12px;
 
     display: flex;
@@ -1896,8 +2142,6 @@ body.menu-open {
   /* RS School + GitHub рядом */
   .footer-school,
   .footer-github {
-    gap: 8px;
-
     img {
       width: 18px;
       height: 18px;

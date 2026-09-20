@@ -65,7 +65,7 @@ export function renderApp(): void {
     
           <nav class="mobile-menu-nav">
             <a href="#">Home</a>
-            <a href="#library">Library</a>
+            <a href="#">Library</a>
             <a href="#">Tournaments</a>
             <a href="#">Community</a>
           </nav>
@@ -93,10 +93,16 @@ export function renderApp(): void {
         <section class="hero">
           <div class="hero-content">
             <h1>Take a Short Break & Have Fun</h1>
-            <p>
-              Discover hundreds of curated casual mini-games. Play instantly in
-              your browser — puzzle, match 3, farm, and board classics.
-            </p>
+           <p class="hero-description">
+              <span class="hero-description-desktop">
+                Discover hundreds of curated casual mini-games. Play instantly in
+                your browser — puzzle, match 3, farm, and board classics.
+              </span>
+
+              <span class="hero-description-mobile">
+                Discover hundreds of curated casual mini-games right in your browser.
+              </span>
+           </p>
             <a class="hero-button" href="#library">Browse Library</a>
           </div>
         </section>
@@ -118,7 +124,10 @@ export function renderApp(): void {
         <section class="top-players">
           <div class="section-title">
             <span class="accent-bar"></span>
-            <h2>Top Players This Week</h2>
+            <h2>
+              <span class="top-players-title-full">Top Players This Week</span>
+              <span class="top-players-title-mobile">Top Players</span>
+            </h2>
           </div>
     
           <div class="leaderboard">
@@ -127,8 +136,14 @@ export function renderApp(): void {
                 <tr>
                   <th>Rank</th>
                   <th>Player</th>
-                  <th>Games Played</th>
-                  <th>Total Score</th>
+                 <th>
+                  <span class="desktop-label">GAMES PLAYED</span>
+                  <span class="compact-label">GAMES</span>
+                </th>
+                <th>
+                  <span class="desktop-label">TOTAL SCORE</span>
+                  <span class="compact-label">SCORE</span>
+                </th>
                   <th>Streak</th>
                   <th>Favorite Game</th>
                 </tr>
@@ -149,8 +164,8 @@ export function renderApp(): void {
             <h2>Are You a Game Developer?</h2>
     
             <p class="developer-description">
-              Want to see your game on MiniGames? We're always looking for fun,
-              engaging mini games to add to our platform. Submit your game and
+              Want to see your game on MiniGames? We're always looking for fun,<br>
+              engaging mini games to add to our platform. Submit your game<br> and
               reach thousands of players!
             </p>
     

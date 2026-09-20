@@ -39,7 +39,9 @@ type SlideDirection = "next" | "previous";
 function formatLikes(count: number): string {
   return `${(count / 1000).toFixed(1)}K`;
 }
-
+function formatCompactScore(score: number): string {
+  return `${(score / 1000).toFixed(1)}K`;
+}
 function isCompactSlider(): boolean {
   return window.innerWidth <= 768;
 }
@@ -321,10 +323,25 @@ function renderLeaderboard(players: Player[]): void {
           </td>
 
           <td>${player.gamesPlayed}</td>
-          <td>${player.totalScore.toLocaleString("en-US")}</td>
+          <td>
+            <span class="score-full">
+              ${player.totalScore.toLocaleString("en-US")}
+            </span>
+
+            <span class="score-mobile">
+              ${formatCompactScore(player.totalScore)}
+            </span>
+          </td>
 
           <td>
-            🔥 ${player.streakDays} days
+            🔥
+            <span class="streak-full">
+              ${player.streakDays} days
+            </span>
+
+            <span class="streak-compact">
+              ${player.streakDays}d
+            </span>
           </td>
 
           <td>
