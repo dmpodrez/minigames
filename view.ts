@@ -347,7 +347,7 @@ export function renderApp(): void {
             </div>
     
             <button class="google-button" type="button">
-              <img class="google-icon" src="/assets/svg/Vector.svg alt="" />
+              <img class="google-icon" src="/assets/svg/Vector.svg" alt="" />
     
               Continue with Google
             </button>
