@@ -65,7 +65,7 @@ export function renderApp(): void {
     
           <nav class="mobile-menu-nav">
             <a href="#">Home</a>
-            <a href="#library">Library</a>
+            <a href="#">Library</a>
             <a href="#">Tournaments</a>
             <a href="#">Community</a>
           </nav>
@@ -127,8 +127,14 @@ export function renderApp(): void {
                 <tr>
                   <th>Rank</th>
                   <th>Player</th>
-                  <th>Games Played</th>
-                  <th>Total Score</th>
+                 <th>
+                  <span class="desktop-label">GAMES PLAYED</span>
+                  <span class="compact-label">GAMES</span>
+                </th>
+                <th>
+                  <span class="desktop-label">TOTAL SCORE</span>
+                  <span class="compact-label">SCORE</span>
+                </th>
                   <th>Streak</th>
                   <th>Favorite Game</th>
                 </tr>

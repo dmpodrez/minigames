@@ -121,62 +121,79 @@ img {
 
 .burger-button {
   position: relative;
+
   width: 32px;
   height: 32px;
   padding: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  border: 0;
+  gap: 4px;
+  border: 2px solid $text-primary;
   border-radius: 6px;
-  background: transparent;
   cursor: pointer;
 
   span {
+    position: static;
+
     width: 16px;
     height: 2px;
+
     display: block;
+
     border-radius: 2px;
     background-color: $text-primary;
+
     transition:
       transform 0.25s ease,
-      opacity 0.2s ease;
+      opacity 0.2s ease,
+      background-color 0.2s ease;
   }
 
   &--active {
     position: fixed;
     top: 18px;
     right: 18px;
+
     z-index: 103;
+    background-color: rgba(255, 255, 255, 0.08);
 
     span {
       position: absolute;
+      top: 50%;
+      left: 50%;
+
+      background-color: $white;
     }
 
     span:nth-child(1) {
-      transform: rotate(45deg);
+      transform: translate(-50%, -50%) rotate(45deg);
     }
 
     span:nth-child(2) {
       opacity: 0;
+      transform: translate(-50%, -50%);
     }
 
     span:nth-child(3) {
-      transform: rotate(-45deg);
+      transform: translate(-50%, -50%) rotate(-45deg);
     }
   }
 }
-
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
+
   visibility: hidden;
   opacity: 0;
-  background-color: rgba(36, 33, 69, 0.45);
+
+  background-color: rgba(30, 27, 58, 0.55);
+
   pointer-events: none;
+
   transition:
     opacity 0.25s ease,
     visibility 0.25s ease;
@@ -194,56 +211,107 @@ img {
 
 .mobile-menu {
   width: 320px;
-  max-width: calc(100vw - 40px);
+  max-width: calc(100vw - 55px);
   height: 100dvh;
+
   margin-left: auto;
   padding: 24px;
+
   display: flex;
   flex-direction: column;
-  background-color: $background;
-  border-left: 2px solid $text-primary;
+
+  background-color: #1e1b3a;
+
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mobile-menu-header {
   min-height: 32px;
+
   display: flex;
   align-items: center;
 
-  .logo span {
-    font-size: 20px;
+  .logo {
+    gap: 8px;
+
+    img {
+      width: 32px;
+      height: 32px;
+    }
+
+    span {
+      color: $white;
+      font-size: 20px;
+      font-weight: 700;
+    }
   }
 }
 
 .mobile-menu-nav {
   margin-top: 32px;
+
   display: flex;
   flex-direction: column;
+
   gap: 24px;
 
   a {
     width: fit-content;
-    color: $text-primary;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 22px;
+
+    color: #b9b7c8;
+
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+
     text-decoration: none;
+
+    transition: color 0.2s ease;
+
+    &:first-child {
+      color: $primary;
+      font-weight: 700;
+    }
+
+    &:hover {
+      color: $white;
+    }
   }
 }
 
 .mobile-menu-actions {
   margin-top: auto;
+
   display: flex;
   flex-direction: column;
+
   gap: 12px;
 
   .login-button,
   .signup-button {
     width: 100%;
+    height: 38px;
+
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .login-button {
+    color: $white;
+    background-color: transparent;
+    border: 2px solid $white;
+  }
+
+  .signup-button {
+    color: $text-primary;
+    background-color: $primary;
+    border: 2px solid $primary;
   }
 }
-
 body.menu-open {
   overflow: hidden;
 }
@@ -670,7 +738,19 @@ body.menu-open {
     white-space: nowrap;
   }
 }
+.compact-label {
+  display: none;
+}
 
+@media (max-width: 768px) {
+  .desktop-label {
+    display: none;
+  }
+
+  .compact-label {
+    display: inline;
+  }
+}
 /* =========================
    DEVELOPER
    ========================= */
@@ -801,7 +881,7 @@ body.menu-open {
   max-width: 390px;
   margin: 0;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -849,8 +929,8 @@ body.menu-open {
   gap: 12px;
 
   a {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -859,8 +939,8 @@ body.menu-open {
   }
 
   img {
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
     display: block;
   }
 }
@@ -1294,7 +1374,7 @@ body.menu-open {
 
 @media (max-width: 768px) {
   .header {
-    height: 68px;
+    height: 72px;
     padding-inline: clamp(16px, calc(6.11vw - 6.9px), 40px);
     padding-block: 0;
   }
@@ -1324,8 +1404,8 @@ body.menu-open {
 
   .header-signup {
     height: 32px;
-    padding: 0 14px;
-    font-size: 12px;
+    padding: 0 17px;
+    font-size: 14px;
   }
 
   .hero {
@@ -1343,7 +1423,7 @@ body.menu-open {
     box-shadow: 4px 4px 0 $text-primary;
 
     h1 {
-      font-size: clamp(24px, calc(2.04vw + 16.4px), 32px);
+      font-size: 36px;
       line-height: 1.05;
     }
 
@@ -1354,8 +1434,8 @@ body.menu-open {
   }
 
   .hero-button {
-    padding: 10px 14px;
-    font-size: 12px;
+    padding: 7px 16px;
+    font-size: 14px;
   }
 
   .new-games,
@@ -1366,7 +1446,7 @@ body.menu-open {
   }
 
   .new-games {
-    padding-top: clamp(24px, 4.17vw, 32px);
+    padding-top: clamp(24px, 4.17vw, 3px);
     padding-bottom: clamp(24px, 4.17vw, 32px);
     gap: 24px;
   }
@@ -1380,17 +1460,13 @@ body.menu-open {
   }
 
   .accent-bar {
-    width: 5px;
+    width: 8px;
     height: clamp(22px, 3.13vw, 24px);
   }
 
-  .slider-controls {
-    gap: 8px;
-  }
-
   .slider-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     font-size: 18px;
   }
 
@@ -1409,7 +1485,7 @@ body.menu-open {
     height: clamp(200px, calc(20.356vw + 123.7px), 280px);
 
     flex: 0 0 var(--side-card-width);
-
+    box-shadow: 4px 4px 0 $text-primary;
     border-width: 2px;
     border-radius: clamp(16px, 3vw, 20px);
   }
@@ -1471,7 +1547,7 @@ body.menu-open {
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 32%;
+      width: 30%;
     }
 
     th:nth-child(3),
@@ -1481,7 +1557,7 @@ body.menu-open {
 
     th:nth-child(4),
     td:nth-child(4) {
-      width: 20%;
+      width: 22%;
     }
 
     th:nth-child(5),
@@ -1496,12 +1572,12 @@ body.menu-open {
 
     th {
       padding: 0 6px;
-      font-size: 11px;
+      font-size: 14px;
       line-height: 1.1;
     }
 
     tbody tr {
-      height: 56px;
+      height: 60px;
     }
 
     /* Figma tablet/mobile preview shows three leaderboard rows. */
@@ -1511,8 +1587,8 @@ body.menu-open {
 
     td {
       height: 56px;
-      padding: 0 6px;
-      font-size: 11px;
+      padding: 0 20px;
+      font-size: 14px;
       line-height: 1.2;
     }
 
@@ -1530,7 +1606,7 @@ body.menu-open {
     padding-bottom: 32px;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 8px;
   }
 
   .developer-illustration {
@@ -1584,7 +1660,7 @@ body.menu-open {
   }
 
   .footer {
-    padding: 32px clamp(16px, calc(6.11vw - 6.9px), 40px) 24px;
+    padding: 50px 40px;
   }
 
   .footer-main {
@@ -1598,7 +1674,7 @@ body.menu-open {
   }
 
   .footer-logo {
-    margin-bottom: 16px;
+    margin-bottom: 30px;
   }
 
   .footer-description {
@@ -1607,17 +1683,23 @@ body.menu-open {
 
   .footer-nav {
     width: 100%;
-    justify-content: space-between;
-    gap: 24px;
+    justify-content: flex-start;
+    gap: 45px;
   }
-
+  .footer-socials {
+    gap: 17px;
+    a {
+      width: 32px;
+      height: 32px;
+    }
+  }
   .footer-column {
     min-width: 0;
   }
 
   .footer-bottom {
     margin-top: 28px;
-    padding-top: 20px;
+    padding-top: 30px;
     gap: 12px;
     flex-wrap: wrap;
   }
@@ -1655,15 +1737,15 @@ body.menu-open {
     gap: 0;
   }
 
-  .burger-button--active {
-    top: 14px;
-    right: 14px;
-  }
-
   .mobile-menu {
     width: 320px;
     max-width: calc(100vw - 55px);
-    padding: 20px;
+    padding: 24px;
+  }
+
+  .burger-button--active {
+    top: 14px;
+    right: 14px;
   }
 
   .mobile-menu-nav {
@@ -1870,7 +1952,6 @@ body.menu-open {
     }
   }
 
-  /* Нижняя часть как в Figma */
   .footer-bottom {
     margin-top: 24px;
     padding-top: 12px;
