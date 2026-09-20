@@ -1086,7 +1086,7 @@ body.menu-open {
   flex-direction: column;
   gap: 8px;
 
-  > span {
+  > label {
     color: $text-primary;
     font-size: 13px;
     font-weight: 700;
@@ -1312,11 +1312,7 @@ body.menu-open {
   }
 
   .game-overlay {
-    padding: 12px;
-
-    h3 {
-      font-size: 15px;
-    }
+    display: none;
   }
 
   .game-info {
