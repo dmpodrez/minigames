@@ -2,17 +2,17 @@ export function renderApp(): void {
   document.body.innerHTML = `
     <div class="app">
       <header class="header">
-        <a class="logo" href="#" aria-label="MiniGames home">
+        <a class="logo" href="#home" data-page-link="home" aria-label="MiniGames home">
           <img src="/assets/svg/logo.svg" alt="" />
           <span>MiniGames</span>
         </a>
 
         <!-- Desktop navigation -->
         <nav class="nav" aria-label="Main navigation">
-          <a href="#">Home</a>
-          <a href="#library">Library</a>
-          <a href="#">Tournaments</a>
-          <a href="#">Community</a>
+          <a href="#home" data-page-link="home">Home</a>
+          <a href="#library" data-page-link="library">Library</a>
+          <a href="#home">Tournaments</a>
+          <a href="#home">Community</a>
 
           <button
             class="login-button auth-open"
@@ -62,17 +62,17 @@ export function renderApp(): void {
       >
         <aside class="mobile-menu" aria-label="Mobile navigation">
           <div class="mobile-menu-header">
-            <a class="logo" href="#">
+            <a class="logo" href="#home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
           </div>
 
           <nav class="mobile-menu-nav">
-            <a href="#">Home</a>
-            <a href="#">Library</a>
-            <a href="#">Tournaments</a>
-            <a href="#">Community</a>
+            <a href="#home" data-page-link="home">Home</a>
+            <a href="#library" data-page-link="library">Library</a>
+            <a href="#home">Tournaments</a>
+            <a href="#home">Community</a>
           </nav>
 
           <div class="mobile-menu-actions">
@@ -95,7 +95,7 @@ export function renderApp(): void {
         </aside>
       </div>
 
-      <main>
+      <main id="home-page" data-page-view="home">
         <section class="hero">
           <div class="hero-content">
             <h1>Take a Short Break & Have Fun</h1>
@@ -111,7 +111,7 @@ export function renderApp(): void {
               </span>
             </p>
 
-            <a class="hero-button" href="#library">Browse Library</a>
+            <a class="hero-button" href="#library" data-page-link="library">Browse Library</a>
           </div>
         </section>
 
@@ -221,10 +221,139 @@ export function renderApp(): void {
         </section>
       </main>
 
+
+      <main
+        id="library-page"
+        class="library-page"
+        data-page-view="library"
+        hidden
+      >
+        <section class="library-section" aria-labelledby="library-title">
+          <div class="library-container">
+            <div class="library-heading">
+              <div>
+                <div class="library-title-row">
+                  <span class="accent-bar"></span>
+                  <h1 id="library-title">Game Library</h1>
+                </div>
+
+                <p class="library-subtitle">
+                  Find your next quick break — cozy puzzles, strategy, cards,
+                  farm and arcade games.
+                </p>
+              </div>
+
+              <div class="library-sort">
+                <span class="library-sort-label">Sort by</span>
+
+                <button
+                  class="library-sort-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                >
+                  <span class="library-sort-value">Newest</span>
+                  <span class="library-sort-chevron" aria-hidden="true">⌄</span>
+                </button>
+
+                <div
+                  class="library-sort-menu"
+                  role="listbox"
+                  aria-label="Sort games"
+                  hidden
+                >
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="true"
+                    data-sort-value="Newest"
+                  >
+                    Newest
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    data-sort-value="Highest Rated"
+                  >
+                    Highest Rated
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    data-sort-value="Most Popular"
+                  >
+                    Most Popular
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="library-chips"
+              role="group"
+              aria-label="Game categories"
+            >
+              <button
+                class="library-chip library-chip--active"
+                type="button"
+                aria-pressed="true"
+              >
+                All Games
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Puzzle
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Card
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Match
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Farm
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Strategy
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Arcade
+              </button>
+            </div>
+
+            <div class="library-grid" aria-live="polite"></div>
+
+            <nav class="library-pagination" aria-label="Library pagination">
+              <button
+                class="pagination-arrow pagination-prev"
+                type="button"
+                aria-label="Previous page"
+                disabled
+              >
+                ←
+              </button>
+
+              <div class="pagination-pages"></div>
+
+              <button
+                class="pagination-arrow pagination-next"
+                type="button"
+                aria-label="Next page"
+              >
+                →
+              </button>
+            </nav>
+          </div>
+        </section>
+      </main>
+
       <footer class="footer">
         <div class="footer-main">
           <div class="footer-brand">
-            <a class="footer-logo" href="#">
+            <a class="footer-logo" href="#home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
@@ -240,10 +369,10 @@ export function renderApp(): void {
               <h3>Explore</h3>
 
               <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#library">Library</a></li>
-                <li><a href="#">Categories</a></li>
-                <li><a href="#">Tournaments</a></li>
+                <li><a href="#home" data-page-link="home">Home</a></li>
+                <li><a href="#library" data-page-link="library">Library</a></li>
+                <li><a href="#home">Categories</a></li>
+                <li><a href="#home">Tournaments</a></li>
               </ul>
             </div>
 
