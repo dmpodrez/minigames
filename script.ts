@@ -8,6 +8,7 @@ interface Game {
   cardImage: string;
   rating: number;
   likesCount: number;
+  featured: boolean;
 }
 
 interface GamesResponse {
@@ -63,7 +64,7 @@ async function loadGames(): Promise<void> {
 
   const result: GamesResponse = await response.json();
 
-  games = result.data;
+  games = result.data.filter((game) => game.featured);
   currentIndex = 0;
 
   renderGames();
@@ -97,7 +98,7 @@ function renderGames(): void {
         .join(" ");
 
       return `
-        <article class="${cardClasses}">
+        <article class="${cardClasses}" data-slider-card>
           <img
             class="game-image"
             src="${game.cardImage}"
@@ -125,6 +126,8 @@ function renderGames(): void {
       `;
     })
     .join("");
+
+  window.requestAnimationFrame(syncStory2SliderOverlays);
 }
 
 async function changeSlide(direction: SlideDirection): Promise<void> {
@@ -955,3 +958,104 @@ commentLikes.forEach((button) => {
     button.firstChild?.replaceWith(nextActive ? "♥ " : "♡ ");
   });
 });
+
+/* =========================
+   STORY 2 — SLIDER AUTOPLAY
+   ========================= */
+
+const STORY_2_AUTOPLAY_MS = 4000;
+let story2AutoplayTimer: number | null = null;
+let story2AutoplayStartedAt = 0;
+let story2AutoplayRemaining = STORY_2_AUTOPLAY_MS;
+let story2PointerStartX = 0;
+let story2PointerStartY = 0;
+let story2Holding = false;
+
+function clearStory2Autoplay(): void {
+  if (story2AutoplayTimer !== null) {
+    window.clearTimeout(story2AutoplayTimer);
+    story2AutoplayTimer = null;
+  }
+}
+
+function scheduleStory2Autoplay(delay = STORY_2_AUTOPLAY_MS): void {
+  clearStory2Autoplay();
+  story2AutoplayRemaining = delay;
+  story2AutoplayStartedAt = performance.now();
+
+  story2AutoplayTimer = window.setTimeout(() => {
+    if (!story2Holding) {
+      void changeSlide("next");
+      scheduleStory2Autoplay();
+    }
+  }, delay);
+}
+
+function pauseStory2Autoplay(): void {
+  if (story2AutoplayTimer === null) {
+    return;
+  }
+
+  const elapsed = performance.now() - story2AutoplayStartedAt;
+  story2AutoplayRemaining = Math.max(0, story2AutoplayRemaining - elapsed);
+  clearStory2Autoplay();
+}
+
+function resetStory2Autoplay(): void {
+  scheduleStory2Autoplay(STORY_2_AUTOPLAY_MS);
+}
+
+function syncStory2SliderOverlays(): void {
+  gamesTrack.querySelectorAll<HTMLElement>(".game-card").forEach((card) => {
+    const overlay = card.querySelector<HTMLElement>(".game-overlay");
+
+    if (!overlay) {
+      return;
+    }
+
+    const showInfo = card.getBoundingClientRect().width >= 288;
+    overlay.classList.toggle("game-overlay--hidden", !showInfo);
+  });
+}
+
+nextButton.addEventListener("click", resetStory2Autoplay);
+prevButton.addEventListener("click", resetStory2Autoplay);
+
+gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
+  story2Holding = true;
+  story2PointerStartX = event.clientX;
+  story2PointerStartY = event.clientY;
+  pauseStory2Autoplay();
+});
+
+gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
+  const deltaX = event.clientX - story2PointerStartX;
+  const deltaY = event.clientY - story2PointerStartY;
+  const didSwipe =
+    Math.abs(deltaX) >= SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY);
+
+  story2Holding = false;
+
+  if (didSwipe) {
+    resetStory2Autoplay();
+  } else {
+    scheduleStory2Autoplay(story2AutoplayRemaining);
+  }
+});
+
+gamesViewport.addEventListener("pointercancel", () => {
+  story2Holding = false;
+  scheduleStory2Autoplay(story2AutoplayRemaining);
+});
+
+gamesTrack.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (target instanceof Element && target.closest(".game-card")) {
+    openGameDetailsDialog();
+  }
+});
+
+window.addEventListener("resize", syncStory2SliderOverlays);
+window.requestAnimationFrame(syncStory2SliderOverlays);
+scheduleStory2Autoplay();
