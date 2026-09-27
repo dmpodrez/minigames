@@ -577,3 +577,276 @@ window.addEventListener("resize", () => {
     closeMobileMenu();
   }
 });
+
+/* =========================
+   STORY 2 — SPA + LIBRARY
+   ========================= */
+
+type PageName = "home" | "library";
+
+interface LibraryGame extends Game {
+  slug: string;
+  category: string;
+  price: string;
+  shortDescription: string;
+  featured: boolean;
+}
+
+interface LibraryGamesResponse {
+  data: LibraryGame[];
+}
+
+const homePage = getElement<HTMLElement>('[data-page-view="home"]');
+const libraryPage = getElement<HTMLElement>('[data-page-view="library"]');
+const pageLinks =
+  document.querySelectorAll<HTMLAnchorElement>("[data-page-link]");
+const libraryGrid = getElement<HTMLElement>(".library-grid");
+const libraryChips =
+  document.querySelectorAll<HTMLButtonElement>(".library-chip");
+const librarySort = getElement<HTMLElement>(".library-sort");
+const librarySortTrigger = getElement<HTMLButtonElement>(
+  ".library-sort-trigger",
+);
+const librarySortValue = getElement<HTMLElement>(".library-sort-value");
+const librarySortMenu = getElement<HTMLElement>(".library-sort-menu");
+const librarySortOptions =
+  librarySortMenu.querySelectorAll<HTMLButtonElement>("[data-sort-value]");
+const paginationPages = getElement<HTMLElement>(".pagination-pages");
+const paginationPrev = getElement<HTMLButtonElement>(".pagination-prev");
+const paginationNext = getElement<HTMLButtonElement>(".pagination-next");
+
+let libraryGames: LibraryGame[] = [];
+let libraryPageNumber = 1;
+const LIBRARY_PAGE_COUNT = 6;
+
+function setActiveNavigation(page: PageName): void {
+  pageLinks.forEach((link) => {
+    const isActive = link.dataset.pageLink === page;
+    link.classList.toggle("page-link--active", isActive);
+
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function showPage(page: PageName): void {
+  homePage.hidden = page !== "home";
+  libraryPage.hidden = page !== "library";
+  setActiveNavigation(page);
+
+  if (page === "library") {
+    closeMobileMenu();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+pageLinks.forEach((link) => {
+  link.addEventListener("click", (event: MouseEvent) => {
+    const page = link.dataset.pageLink;
+
+    if (page !== "home" && page !== "library") {
+      return;
+    }
+
+    event.preventDefault();
+    showPage(page);
+  });
+});
+
+function libraryCardTemplate(game: LibraryGame): string {
+  return `
+    <article class="library-card">
+      <div class="library-card-image-wrap">
+        <img
+          class="library-card-image"
+          src="${game.cardImage}"
+          alt="${game.name}"
+        >
+      </div>
+
+      <div class="library-card-body">
+        <div class="library-card-heading">
+          <div>
+            <p class="library-card-category">${game.category}</p>
+            <h2>${game.name}</h2>
+          </div>
+
+          <span class="library-card-price">${game.price}</span>
+        </div>
+
+        <p class="library-card-description">
+          ${game.shortDescription}
+        </p>
+
+        <div class="library-card-meta">
+          <span>
+            <img src="/assets/svg/star.svg" alt="">
+            ${game.rating}
+          </span>
+
+          <span>
+            <img src="/assets/svg/heart.svg" alt="">
+            ${formatLikes(game.likesCount)}
+          </span>
+        </div>
+
+        <button
+          class="library-details-button"
+          type="button"
+          data-game-details-open
+        >
+          Details
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function renderLibraryCards(): void {
+  libraryGrid.innerHTML = libraryGames
+    .slice(0, 12)
+    .map(libraryCardTemplate)
+    .join("");
+}
+
+async function loadLibraryGames(): Promise<void> {
+  const response = await fetch("/assets/data/all-games-seed.json");
+
+  if (!response.ok) {
+    throw new Error(`Failed to load library games: ${response.status}`);
+  }
+
+  const result: LibraryGamesResponse = await response.json();
+  libraryGames = result.data;
+  renderLibraryCards();
+}
+
+libraryChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    libraryChips.forEach((item) => {
+      const isCurrent = item === chip;
+      item.classList.toggle("library-chip--active", isCurrent);
+      item.setAttribute("aria-pressed", String(isCurrent));
+    });
+  });
+});
+
+function closeSortMenu(): void {
+  librarySortMenu.hidden = true;
+  librarySortTrigger.setAttribute("aria-expanded", "false");
+}
+
+librarySortTrigger.addEventListener("click", () => {
+  const shouldOpen = librarySortMenu.hidden;
+  librarySortMenu.hidden = !shouldOpen;
+  librarySortTrigger.setAttribute("aria-expanded", String(shouldOpen));
+});
+
+librarySortOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    const value = option.dataset.sortValue;
+
+    if (!value) {
+      return;
+    }
+
+    librarySortValue.textContent = value;
+
+    librarySortOptions.forEach((item) => {
+      item.setAttribute("aria-selected", String(item === option));
+    });
+
+    closeSortMenu();
+  });
+});
+
+document.addEventListener("click", (event: MouseEvent) => {
+  if (
+    !librarySortMenu.hidden &&
+    event.target instanceof Node &&
+    !librarySort.contains(event.target)
+  ) {
+    closeSortMenu();
+  }
+});
+
+function visiblePaginationNumbers(): number[] {
+  const visibleCount = window.innerWidth <= 600 ? 3 : 4;
+  const half = Math.floor(visibleCount / 2);
+
+  let start = Math.max(1, libraryPageNumber - half);
+  let end = start + visibleCount - 1;
+
+  if (end > LIBRARY_PAGE_COUNT) {
+    end = LIBRARY_PAGE_COUNT;
+    start = Math.max(1, end - visibleCount + 1);
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function renderPagination(): void {
+  paginationPages.innerHTML = visiblePaginationNumbers()
+    .map(
+      (page) => `
+        <button
+          class="pagination-page ${
+            page === libraryPageNumber ? "pagination-page--active" : ""
+          }"
+          type="button"
+          data-page-number="${page}"
+          aria-label="Page ${page}"
+          ${page === libraryPageNumber ? 'aria-current="page"' : ""}
+        >
+          ${page}
+        </button>
+      `,
+    )
+    .join("");
+
+  paginationPrev.disabled = libraryPageNumber === 1;
+  paginationNext.disabled = libraryPageNumber === LIBRARY_PAGE_COUNT;
+}
+
+function setLibraryPage(page: number): void {
+  libraryPageNumber = Math.min(LIBRARY_PAGE_COUNT, Math.max(1, page));
+  renderPagination();
+}
+
+paginationPages.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const page = Number(target.dataset.pageNumber);
+
+  if (Number.isInteger(page)) {
+    setLibraryPage(page);
+  }
+});
+
+paginationPrev.addEventListener("click", () => {
+  if (!paginationPrev.disabled) {
+    setLibraryPage(libraryPageNumber - 1);
+  }
+});
+
+paginationNext.addEventListener("click", () => {
+  if (!paginationNext.disabled) {
+    setLibraryPage(libraryPageNumber + 1);
+  }
+});
+
+window.addEventListener("resize", renderPagination);
+
+loadLibraryGames().catch((error: unknown) => {
+  console.error(error);
+});
+renderPagination();
+showPage("home");
