@@ -732,5 +732,162 @@ export function renderApp(): void {
         </div>
       </div>
     </dialog>
+
+
+    <dialog class="game-details-dialog">
+      <article class="game-details-card">
+        <div class="game-details-hero">
+          <img
+            src="/assets/images/games/tukoni-forest-keepers-hero.jpg"
+            alt="Tukoni: Forest Keepers"
+          />
+
+          <button
+            class="game-details-close"
+            type="button"
+            aria-label="Close game details"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="game-details-content">
+          <header class="game-details-header">
+            <div>
+              <p class="game-details-eyebrow">Featured game</p>
+              <h2>Tukoni: Forest Keepers</h2>
+            </div>
+
+            <div class="game-details-rating" aria-label="Rating 4.9">
+              <img src="/assets/svg/star.svg" alt="" />
+              <strong>4.9</strong>
+            </div>
+          </header>
+
+          <p class="game-details-description">
+            Tukoni: Forest Keepers — a cozy hand-drawn puzzle-adventure.
+            You are Traveller, a little forest spirit on an important mission.
+            Wander storybook meadows, visit mushroom villages, solve gentle
+            hand-crafted puzzles, brew herbal teas and help the Tukoni forest
+            prepare peacefully for the coming winter.
+          </p>
+
+          <div class="game-details-badges" aria-label="Game information">
+            <span>Puzzle</span>
+            <span>Solo</span>
+            <span>40–90 min</span>
+            <span>Free</span>
+          </div>
+
+          <div class="game-details-actions">
+            <button class="game-play-button" type="button">Play Now</button>
+
+            <button
+              class="game-favorite-button"
+              type="button"
+              aria-pressed="false"
+            >
+              ♡ Add to Favorites
+            </button>
+          </div>
+
+          <section class="game-records" aria-labelledby="records-title">
+            <h3 id="records-title">Top Records</h3>
+
+            <ol>
+              <li>
+                <span class="record-position">#1</span>
+                <span>ForestSpirit</span>
+                <strong>356,700</strong>
+              </li>
+              <li>
+                <span class="record-position">#2</span>
+                <span>TeaBrewer</span>
+                <strong>332,400</strong>
+              </li>
+              <li>
+                <span class="record-position">#3</span>
+                <span>HerbalistPath</span>
+                <strong>308,900</strong>
+              </li>
+            </ol>
+          </section>
+
+          <section class="game-comments" aria-labelledby="comments-title">
+            <h3 id="comments-title">Comments</h3>
+
+            <form class="comment-form">
+              <label for="game-comment">Share your thoughts</label>
+
+              <textarea
+                id="game-comment"
+                rows="1"
+                maxlength="500"
+                placeholder="Write a comment..."
+              ></textarea>
+
+              <button type="submit">Submit</button>
+            </form>
+
+            <div class="comment-list">
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>ForestDweller</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by ForestDweller"
+                  >
+                    ♡ <span>12</span>
+                  </button>
+                </div>
+                <p>
+                  The hand-drawn art is absolutely magical. Every location
+                  feels like a page from a children's storybook.
+                </p>
+              </article>
+
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>HerbalTeaLover</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by HerbalTeaLover"
+                  >
+                    ♡ <span>5</span>
+                  </button>
+                </div>
+                <p>
+                  Perfect cozy evening game. The puzzles are gentle but
+                  satisfying.
+                </p>
+              </article>
+
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>CottageCoreMia</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by CottageCoreMia"
+                  >
+                    ♡ <span>8</span>
+                  </button>
+                </div>
+                <p>
+                  I want to live inside this game forever. The atmosphere is
+                  pure warmth and calm.
+                </p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </article>
+    </dialog>
+
   `;
 }
