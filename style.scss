@@ -3116,3 +3116,34 @@ body.menu-open {
     transform: translateY(16px) scale(0.98);
   }
 }
+
+/* =========================
+   STORY 2 — SLIDER STATES
+   ========================= */
+
+.game-card {
+  cursor: pointer;
+  transition:
+    width 0.28s ease,
+    flex-basis 0.28s ease,
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.game-overlay:not(.game-overlay--hidden) {
+  display: flex;
+}
+
+.game-overlay--hidden {
+  display: none !important;
+}
+
+.game-overlay h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
