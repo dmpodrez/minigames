@@ -2,17 +2,17 @@ export function renderApp(): void {
   document.body.innerHTML = `
     <div class="app">
       <header class="header">
-        <a class="logo" href="#" aria-label="MiniGames home">
+        <a class="logo" href="#home" data-page-link="home" aria-label="MiniGames home">
           <img src="/assets/svg/logo.svg" alt="" />
           <span>MiniGames</span>
         </a>
 
         <!-- Desktop navigation -->
         <nav class="nav" aria-label="Main navigation">
-          <a href="#">Home</a>
-          <a href="#library">Library</a>
-          <a href="#">Tournaments</a>
-          <a href="#">Community</a>
+          <a href="#home" data-page-link="home">Home</a>
+          <a href="#library" data-page-link="library">Library</a>
+          <a href="#home">Tournaments</a>
+          <a href="#home">Community</a>
 
           <button
             class="login-button auth-open"
@@ -62,17 +62,17 @@ export function renderApp(): void {
       >
         <aside class="mobile-menu" aria-label="Mobile navigation">
           <div class="mobile-menu-header">
-            <a class="logo" href="#">
+            <a class="logo" href="#home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
           </div>
 
           <nav class="mobile-menu-nav">
-            <a href="#">Home</a>
-            <a href="#">Library</a>
-            <a href="#">Tournaments</a>
-            <a href="#">Community</a>
+            <a href="#home" data-page-link="home">Home</a>
+            <a href="#library" data-page-link="library">Library</a>
+            <a href="#home">Tournaments</a>
+            <a href="#home">Community</a>
           </nav>
 
           <div class="mobile-menu-actions">
@@ -95,7 +95,7 @@ export function renderApp(): void {
         </aside>
       </div>
 
-      <main>
+      <main id="home-page" data-page-view="home">
         <section class="hero">
           <div class="hero-content">
             <h1>Take a Short Break & Have Fun</h1>
@@ -111,7 +111,7 @@ export function renderApp(): void {
               </span>
             </p>
 
-            <a class="hero-button" href="#library">Browse Library</a>
+            <a class="hero-button" href="#library" data-page-link="library">Browse Library</a>
           </div>
         </section>
 
@@ -221,10 +221,139 @@ export function renderApp(): void {
         </section>
       </main>
 
+
+      <main
+        id="library-page"
+        class="library-page"
+        data-page-view="library"
+        hidden
+      >
+        <section class="library-section" aria-labelledby="library-title">
+          <div class="library-container">
+            <div class="library-heading">
+              <div>
+                <div class="library-title-row">
+                  <span class="accent-bar"></span>
+                  <h1 id="library-title">Game Library</h1>
+                </div>
+
+                <p class="library-subtitle">
+                  Find your next quick break — cozy puzzles, strategy, cards,
+                  farm and arcade games.
+                </p>
+              </div>
+
+              <div class="library-sort">
+                <span class="library-sort-label">Sort by</span>
+
+                <button
+                  class="library-sort-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                >
+                  <span class="library-sort-value">Newest</span>
+                  <span class="library-sort-chevron" aria-hidden="true">⌄</span>
+                </button>
+
+                <div
+                  class="library-sort-menu"
+                  role="listbox"
+                  aria-label="Sort games"
+                  hidden
+                >
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="true"
+                    data-sort-value="Newest"
+                  >
+                    Newest
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    data-sort-value="Highest Rated"
+                  >
+                    Highest Rated
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    data-sort-value="Most Popular"
+                  >
+                    Most Popular
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="library-chips"
+              role="group"
+              aria-label="Game categories"
+            >
+              <button
+                class="library-chip library-chip--active"
+                type="button"
+                aria-pressed="true"
+              >
+                All Games
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Puzzle
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Card
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Match
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Farm
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Strategy
+              </button>
+              <button class="library-chip" type="button" aria-pressed="false">
+                Arcade
+              </button>
+            </div>
+
+            <div class="library-grid" aria-live="polite"></div>
+
+            <nav class="library-pagination" aria-label="Library pagination">
+              <button
+                class="pagination-arrow pagination-prev"
+                type="button"
+                aria-label="Previous page"
+                disabled
+              >
+                ←
+              </button>
+
+              <div class="pagination-pages"></div>
+
+              <button
+                class="pagination-arrow pagination-next"
+                type="button"
+                aria-label="Next page"
+              >
+                →
+              </button>
+            </nav>
+          </div>
+        </section>
+      </main>
+
       <footer class="footer">
         <div class="footer-main">
           <div class="footer-brand">
-            <a class="footer-logo" href="#">
+            <a class="footer-logo" href="#home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
@@ -240,10 +369,10 @@ export function renderApp(): void {
               <h3>Explore</h3>
 
               <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#library">Library</a></li>
-                <li><a href="#">Categories</a></li>
-                <li><a href="#">Tournaments</a></li>
+                <li><a href="#home" data-page-link="home">Home</a></li>
+                <li><a href="#library" data-page-link="library">Library</a></li>
+                <li><a href="#home">Categories</a></li>
+                <li><a href="#home">Tournaments</a></li>
               </ul>
             </div>
 
@@ -603,5 +732,162 @@ export function renderApp(): void {
         </div>
       </div>
     </dialog>
+
+
+    <dialog class="game-details-dialog">
+      <article class="game-details-card">
+        <div class="game-details-hero">
+          <img
+            src="/assets/images/games/tukoni-forest-keepers-hero.jpg"
+            alt="Tukoni: Forest Keepers"
+          />
+
+          <button
+            class="game-details-close"
+            type="button"
+            aria-label="Close game details"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="game-details-content">
+          <header class="game-details-header">
+            <div>
+              <p class="game-details-eyebrow">Featured game</p>
+              <h2>Tukoni: Forest Keepers</h2>
+            </div>
+
+            <div class="game-details-rating" aria-label="Rating 4.9">
+              <img src="/assets/svg/star.svg" alt="" />
+              <strong>4.9</strong>
+            </div>
+          </header>
+
+          <p class="game-details-description">
+            Tukoni: Forest Keepers — a cozy hand-drawn puzzle-adventure.
+            You are Traveller, a little forest spirit on an important mission.
+            Wander storybook meadows, visit mushroom villages, solve gentle
+            hand-crafted puzzles, brew herbal teas and help the Tukoni forest
+            prepare peacefully for the coming winter.
+          </p>
+
+          <div class="game-details-badges" aria-label="Game information">
+            <span>Puzzle</span>
+            <span>Solo</span>
+            <span>40–90 min</span>
+            <span>Free</span>
+          </div>
+
+          <div class="game-details-actions">
+            <button class="game-play-button" type="button">Play Now</button>
+
+            <button
+              class="game-favorite-button"
+              type="button"
+              aria-pressed="false"
+            >
+              ♡ Add to Favorites
+            </button>
+          </div>
+
+          <section class="game-records" aria-labelledby="records-title">
+            <h3 id="records-title">Top Records</h3>
+
+            <ol>
+              <li>
+                <span class="record-position">#1</span>
+                <span>ForestSpirit</span>
+                <strong>356,700</strong>
+              </li>
+              <li>
+                <span class="record-position">#2</span>
+                <span>TeaBrewer</span>
+                <strong>332,400</strong>
+              </li>
+              <li>
+                <span class="record-position">#3</span>
+                <span>HerbalistPath</span>
+                <strong>308,900</strong>
+              </li>
+            </ol>
+          </section>
+
+          <section class="game-comments" aria-labelledby="comments-title">
+            <h3 id="comments-title">Comments</h3>
+
+            <form class="comment-form">
+              <label for="game-comment">Share your thoughts</label>
+
+              <textarea
+                id="game-comment"
+                rows="1"
+                maxlength="500"
+                placeholder="Write a comment..."
+              ></textarea>
+
+              <button type="submit">Submit</button>
+            </form>
+
+            <div class="comment-list">
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>ForestDweller</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by ForestDweller"
+                  >
+                    ♡ <span>12</span>
+                  </button>
+                </div>
+                <p>
+                  The hand-drawn art is absolutely magical. Every location
+                  feels like a page from a children's storybook.
+                </p>
+              </article>
+
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>HerbalTeaLover</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by HerbalTeaLover"
+                  >
+                    ♡ <span>5</span>
+                  </button>
+                </div>
+                <p>
+                  Perfect cozy evening game. The puzzles are gentle but
+                  satisfying.
+                </p>
+              </article>
+
+              <article class="comment-item">
+                <div class="comment-heading">
+                  <strong>CottageCoreMia</strong>
+                  <button
+                    class="comment-like"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Like comment by CottageCoreMia"
+                  >
+                    ♡ <span>8</span>
+                  </button>
+                </div>
+                <p>
+                  I want to live inside this game forever. The atmosphere is
+                  pure warmth and calm.
+                </p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </article>
+    </dialog>
+
   `;
 }

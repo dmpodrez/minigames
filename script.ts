@@ -8,6 +8,7 @@ interface Game {
   cardImage: string;
   rating: number;
   likesCount: number;
+  featured: boolean;
 }
 
 interface GamesResponse {
@@ -63,7 +64,7 @@ async function loadGames(): Promise<void> {
 
   const result: GamesResponse = await response.json();
 
-  games = result.data;
+  games = result.data.filter((game) => game.featured);
   currentIndex = 0;
 
   renderGames();
@@ -97,7 +98,7 @@ function renderGames(): void {
         .join(" ");
 
       return `
-        <article class="${cardClasses}">
+        <article class="${cardClasses}" data-slider-card>
           <img
             class="game-image"
             src="${game.cardImage}"
@@ -125,6 +126,8 @@ function renderGames(): void {
       `;
     })
     .join("");
+
+  window.requestAnimationFrame(syncStory2SliderOverlays);
 }
 
 async function changeSlide(direction: SlideDirection): Promise<void> {
@@ -577,3 +580,482 @@ window.addEventListener("resize", () => {
     closeMobileMenu();
   }
 });
+
+/* =========================
+   STORY 2 — SPA + LIBRARY
+   ========================= */
+
+type PageName = "home" | "library";
+
+interface LibraryGame extends Game {
+  slug: string;
+  category: string;
+  price: string;
+  shortDescription: string;
+  featured: boolean;
+}
+
+interface LibraryGamesResponse {
+  data: LibraryGame[];
+}
+
+const homePage = getElement<HTMLElement>('[data-page-view="home"]');
+const libraryPage = getElement<HTMLElement>('[data-page-view="library"]');
+const pageLinks =
+  document.querySelectorAll<HTMLAnchorElement>("[data-page-link]");
+const libraryGrid = getElement<HTMLElement>(".library-grid");
+const libraryChips =
+  document.querySelectorAll<HTMLButtonElement>(".library-chip");
+const librarySort = getElement<HTMLElement>(".library-sort");
+const librarySortTrigger = getElement<HTMLButtonElement>(
+  ".library-sort-trigger",
+);
+const librarySortValue = getElement<HTMLElement>(".library-sort-value");
+const librarySortMenu = getElement<HTMLElement>(".library-sort-menu");
+const librarySortOptions =
+  librarySortMenu.querySelectorAll<HTMLButtonElement>("[data-sort-value]");
+const paginationPages = getElement<HTMLElement>(".pagination-pages");
+const paginationPrev = getElement<HTMLButtonElement>(".pagination-prev");
+const paginationNext = getElement<HTMLButtonElement>(".pagination-next");
+
+let libraryGames: LibraryGame[] = [];
+let libraryPageNumber = 1;
+const LIBRARY_PAGE_COUNT = 6;
+
+function setActiveNavigation(page: PageName): void {
+  pageLinks.forEach((link) => {
+    const isActive = link.dataset.pageLink === page;
+    link.classList.toggle("page-link--active", isActive);
+
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function showPage(page: PageName): void {
+  homePage.hidden = page !== "home";
+  libraryPage.hidden = page !== "library";
+  setActiveNavigation(page);
+
+  if (page === "library") {
+    closeMobileMenu();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+pageLinks.forEach((link) => {
+  link.addEventListener("click", (event: MouseEvent) => {
+    const page = link.dataset.pageLink;
+
+    if (page !== "home" && page !== "library") {
+      return;
+    }
+
+    event.preventDefault();
+    showPage(page);
+  });
+});
+
+function libraryCardTemplate(game: LibraryGame): string {
+  return `
+    <article class="library-card">
+      <div class="library-card-image-wrap">
+        <img
+          class="library-card-image"
+          src="${game.cardImage}"
+          alt="${game.name}"
+        >
+      </div>
+
+      <div class="library-card-body">
+        <div class="library-card-heading">
+          <div>
+            <p class="library-card-category">${game.category}</p>
+            <h2>${game.name}</h2>
+          </div>
+
+          <span class="library-card-price">${game.price}</span>
+        </div>
+
+        <p class="library-card-description">
+          ${game.shortDescription}
+        </p>
+
+        <div class="library-card-meta">
+          <span>
+            <img src="/assets/svg/star.svg" alt="">
+            ${game.rating}
+          </span>
+
+          <span>
+            <img src="/assets/svg/heart.svg" alt="">
+            ${formatLikes(game.likesCount)}
+          </span>
+        </div>
+
+        <button
+          class="library-details-button"
+          type="button"
+          data-game-details-open
+        >
+          Details
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function renderLibraryCards(): void {
+  libraryGrid.innerHTML = libraryGames
+    .slice(0, 12)
+    .map(libraryCardTemplate)
+    .join("");
+}
+
+async function loadLibraryGames(): Promise<void> {
+  const response = await fetch("/assets/data/all-games-seed.json");
+
+  if (!response.ok) {
+    throw new Error(`Failed to load library games: ${response.status}`);
+  }
+
+  const result: LibraryGamesResponse = await response.json();
+  libraryGames = result.data;
+  renderLibraryCards();
+}
+
+libraryChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    libraryChips.forEach((item) => {
+      const isCurrent = item === chip;
+      item.classList.toggle("library-chip--active", isCurrent);
+      item.setAttribute("aria-pressed", String(isCurrent));
+    });
+  });
+});
+
+function closeSortMenu(): void {
+  librarySortMenu.hidden = true;
+  librarySortTrigger.setAttribute("aria-expanded", "false");
+}
+
+librarySortTrigger.addEventListener("click", () => {
+  const shouldOpen = librarySortMenu.hidden;
+  librarySortMenu.hidden = !shouldOpen;
+  librarySortTrigger.setAttribute("aria-expanded", String(shouldOpen));
+});
+
+librarySortOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    const value = option.dataset.sortValue;
+
+    if (!value) {
+      return;
+    }
+
+    librarySortValue.textContent = value;
+
+    librarySortOptions.forEach((item) => {
+      item.setAttribute("aria-selected", String(item === option));
+    });
+
+    closeSortMenu();
+  });
+});
+
+document.addEventListener("click", (event: MouseEvent) => {
+  if (
+    !librarySortMenu.hidden &&
+    event.target instanceof Node &&
+    !librarySort.contains(event.target)
+  ) {
+    closeSortMenu();
+  }
+});
+
+function visiblePaginationNumbers(): number[] {
+  const visibleCount = window.innerWidth <= 600 ? 3 : 4;
+  const half = Math.floor(visibleCount / 2);
+
+  let start = Math.max(1, libraryPageNumber - half);
+  let end = start + visibleCount - 1;
+
+  if (end > LIBRARY_PAGE_COUNT) {
+    end = LIBRARY_PAGE_COUNT;
+    start = Math.max(1, end - visibleCount + 1);
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function renderPagination(): void {
+  paginationPages.innerHTML = visiblePaginationNumbers()
+    .map(
+      (page) => `
+        <button
+          class="pagination-page ${
+            page === libraryPageNumber ? "pagination-page--active" : ""
+          }"
+          type="button"
+          data-page-number="${page}"
+          aria-label="Page ${page}"
+          ${page === libraryPageNumber ? 'aria-current="page"' : ""}
+        >
+          ${page}
+        </button>
+      `,
+    )
+    .join("");
+
+  paginationPrev.disabled = libraryPageNumber === 1;
+  paginationNext.disabled = libraryPageNumber === LIBRARY_PAGE_COUNT;
+}
+
+function setLibraryPage(page: number): void {
+  libraryPageNumber = Math.min(LIBRARY_PAGE_COUNT, Math.max(1, page));
+  renderPagination();
+}
+
+paginationPages.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const page = Number(target.dataset.pageNumber);
+
+  if (Number.isInteger(page)) {
+    setLibraryPage(page);
+  }
+});
+
+paginationPrev.addEventListener("click", () => {
+  if (!paginationPrev.disabled) {
+    setLibraryPage(libraryPageNumber - 1);
+  }
+});
+
+paginationNext.addEventListener("click", () => {
+  if (!paginationNext.disabled) {
+    setLibraryPage(libraryPageNumber + 1);
+  }
+});
+
+window.addEventListener("resize", renderPagination);
+
+loadLibraryGames().catch((error: unknown) => {
+  console.error(error);
+});
+renderPagination();
+showPage("home");
+
+/* =========================
+   STORY 2 — GAME DETAILS
+   ========================= */
+
+const gameDetailsDialog = getElement<HTMLDialogElement>(".game-details-dialog");
+const gameDetailsClose = getElement<HTMLButtonElement>(".game-details-close");
+const favoriteButton = getElement<HTMLButtonElement>(".game-favorite-button");
+const commentForm = getElement<HTMLFormElement>(".comment-form");
+const commentTextarea = getElement<HTMLTextAreaElement>("#game-comment");
+const commentLikes =
+  document.querySelectorAll<HTMLButtonElement>(".comment-like");
+
+function resetGameDetailsState(): void {
+  favoriteButton.classList.remove("game-favorite-button--active");
+  favoriteButton.setAttribute("aria-pressed", "false");
+  favoriteButton.textContent = "♡ Add to Favorites";
+
+  commentTextarea.value = "";
+  commentTextarea.style.height = "";
+  commentTextarea.style.overflowY = "hidden";
+
+  commentLikes.forEach((button) => {
+    button.classList.remove("comment-like--active");
+    button.setAttribute("aria-pressed", "false");
+    button.firstChild?.replaceWith("♡ ");
+  });
+}
+
+function openGameDetailsDialog(): void {
+  resetGameDetailsState();
+
+  if (!gameDetailsDialog.open) {
+    gameDetailsDialog.showModal();
+  }
+}
+
+function closeGameDetailsDialog(): void {
+  if (!gameDetailsDialog.open) {
+    return;
+  }
+
+  gameDetailsDialog.classList.add("game-details-dialog--closing");
+
+  window.setTimeout(() => {
+    gameDetailsDialog.close();
+    gameDetailsDialog.classList.remove("game-details-dialog--closing");
+    resetGameDetailsState();
+  }, 180);
+}
+
+document.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (target instanceof Element && target.closest("[data-game-details-open]")) {
+    openGameDetailsDialog();
+  }
+});
+
+gameDetailsClose.addEventListener("click", closeGameDetailsDialog);
+
+gameDetailsDialog.addEventListener("click", (event: MouseEvent) => {
+  if (event.target === gameDetailsDialog) {
+    closeGameDetailsDialog();
+  }
+});
+
+gameDetailsDialog.addEventListener("cancel", (event: Event) => {
+  event.preventDefault();
+  closeGameDetailsDialog();
+});
+
+favoriteButton.addEventListener("click", () => {
+  const isActive = favoriteButton.getAttribute("aria-pressed") === "true";
+  const nextActive = !isActive;
+
+  favoriteButton.setAttribute("aria-pressed", String(nextActive));
+  favoriteButton.classList.toggle("game-favorite-button--active", nextActive);
+  favoriteButton.textContent = nextActive
+    ? "♥ Added to Favorites"
+    : "♡ Add to Favorites";
+});
+
+commentTextarea.addEventListener("input", () => {
+  commentTextarea.style.height = "auto";
+  const nextHeight = Math.min(commentTextarea.scrollHeight, 88);
+  commentTextarea.style.height = `${nextHeight}px`;
+  commentTextarea.style.overflowY =
+    commentTextarea.scrollHeight > 88 ? "auto" : "hidden";
+});
+
+commentForm.addEventListener("submit", (event: SubmitEvent) => {
+  event.preventDefault();
+});
+
+commentLikes.forEach((button) => {
+  button.addEventListener("click", () => {
+    const isActive = button.getAttribute("aria-pressed") === "true";
+    const nextActive = !isActive;
+
+    button.setAttribute("aria-pressed", String(nextActive));
+    button.classList.toggle("comment-like--active", nextActive);
+    button.firstChild?.replaceWith(nextActive ? "♥ " : "♡ ");
+  });
+});
+
+/* =========================
+   STORY 2 — SLIDER AUTOPLAY
+   ========================= */
+
+const STORY_2_AUTOPLAY_MS = 4000;
+let story2AutoplayTimer: number | null = null;
+let story2AutoplayStartedAt = 0;
+let story2AutoplayRemaining = STORY_2_AUTOPLAY_MS;
+let story2PointerStartX = 0;
+let story2PointerStartY = 0;
+let story2Holding = false;
+
+function clearStory2Autoplay(): void {
+  if (story2AutoplayTimer !== null) {
+    window.clearTimeout(story2AutoplayTimer);
+    story2AutoplayTimer = null;
+  }
+}
+
+function scheduleStory2Autoplay(delay = STORY_2_AUTOPLAY_MS): void {
+  clearStory2Autoplay();
+  story2AutoplayRemaining = delay;
+  story2AutoplayStartedAt = performance.now();
+
+  story2AutoplayTimer = window.setTimeout(() => {
+    if (!story2Holding) {
+      void changeSlide("next");
+      scheduleStory2Autoplay();
+    }
+  }, delay);
+}
+
+function pauseStory2Autoplay(): void {
+  if (story2AutoplayTimer === null) {
+    return;
+  }
+
+  const elapsed = performance.now() - story2AutoplayStartedAt;
+  story2AutoplayRemaining = Math.max(0, story2AutoplayRemaining - elapsed);
+  clearStory2Autoplay();
+}
+
+function resetStory2Autoplay(): void {
+  scheduleStory2Autoplay(STORY_2_AUTOPLAY_MS);
+}
+
+function syncStory2SliderOverlays(): void {
+  gamesTrack.querySelectorAll<HTMLElement>(".game-card").forEach((card) => {
+    const overlay = card.querySelector<HTMLElement>(".game-overlay");
+
+    if (!overlay) {
+      return;
+    }
+
+    const showInfo = card.getBoundingClientRect().width >= 288;
+    overlay.classList.toggle("game-overlay--hidden", !showInfo);
+  });
+}
+
+nextButton.addEventListener("click", resetStory2Autoplay);
+prevButton.addEventListener("click", resetStory2Autoplay);
+
+gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
+  story2Holding = true;
+  story2PointerStartX = event.clientX;
+  story2PointerStartY = event.clientY;
+  pauseStory2Autoplay();
+});
+
+gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
+  const deltaX = event.clientX - story2PointerStartX;
+  const deltaY = event.clientY - story2PointerStartY;
+  const didSwipe =
+    Math.abs(deltaX) >= SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY);
+
+  story2Holding = false;
+
+  if (didSwipe) {
+    resetStory2Autoplay();
+  } else {
+    scheduleStory2Autoplay(story2AutoplayRemaining);
+  }
+});
+
+gamesViewport.addEventListener("pointercancel", () => {
+  story2Holding = false;
+  scheduleStory2Autoplay(story2AutoplayRemaining);
+});
+
+gamesTrack.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (target instanceof Element && target.closest(".game-card")) {
+    openGameDetailsDialog();
+  }
+});
+
+window.addEventListener("resize", syncStory2SliderOverlays);
+window.requestAnimationFrame(syncStory2SliderOverlays);
+scheduleStory2Autoplay();
