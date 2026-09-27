@@ -850,3 +850,108 @@ loadLibraryGames().catch((error: unknown) => {
 });
 renderPagination();
 showPage("home");
+
+/* =========================
+   STORY 2 — GAME DETAILS
+   ========================= */
+
+const gameDetailsDialog = getElement<HTMLDialogElement>(".game-details-dialog");
+const gameDetailsClose = getElement<HTMLButtonElement>(".game-details-close");
+const favoriteButton = getElement<HTMLButtonElement>(".game-favorite-button");
+const commentForm = getElement<HTMLFormElement>(".comment-form");
+const commentTextarea = getElement<HTMLTextAreaElement>("#game-comment");
+const commentLikes =
+  document.querySelectorAll<HTMLButtonElement>(".comment-like");
+
+function resetGameDetailsState(): void {
+  favoriteButton.classList.remove("game-favorite-button--active");
+  favoriteButton.setAttribute("aria-pressed", "false");
+  favoriteButton.textContent = "♡ Add to Favorites";
+
+  commentTextarea.value = "";
+  commentTextarea.style.height = "";
+  commentTextarea.style.overflowY = "hidden";
+
+  commentLikes.forEach((button) => {
+    button.classList.remove("comment-like--active");
+    button.setAttribute("aria-pressed", "false");
+    button.firstChild?.replaceWith("♡ ");
+  });
+}
+
+function openGameDetailsDialog(): void {
+  resetGameDetailsState();
+
+  if (!gameDetailsDialog.open) {
+    gameDetailsDialog.showModal();
+  }
+}
+
+function closeGameDetailsDialog(): void {
+  if (!gameDetailsDialog.open) {
+    return;
+  }
+
+  gameDetailsDialog.classList.add("game-details-dialog--closing");
+
+  window.setTimeout(() => {
+    gameDetailsDialog.close();
+    gameDetailsDialog.classList.remove("game-details-dialog--closing");
+    resetGameDetailsState();
+  }, 180);
+}
+
+document.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (target instanceof Element && target.closest("[data-game-details-open]")) {
+    openGameDetailsDialog();
+  }
+});
+
+gameDetailsClose.addEventListener("click", closeGameDetailsDialog);
+
+gameDetailsDialog.addEventListener("click", (event: MouseEvent) => {
+  if (event.target === gameDetailsDialog) {
+    closeGameDetailsDialog();
+  }
+});
+
+gameDetailsDialog.addEventListener("cancel", (event: Event) => {
+  event.preventDefault();
+  closeGameDetailsDialog();
+});
+
+favoriteButton.addEventListener("click", () => {
+  const isActive = favoriteButton.getAttribute("aria-pressed") === "true";
+  const nextActive = !isActive;
+
+  favoriteButton.setAttribute("aria-pressed", String(nextActive));
+  favoriteButton.classList.toggle("game-favorite-button--active", nextActive);
+  favoriteButton.textContent = nextActive
+    ? "♥ Added to Favorites"
+    : "♡ Add to Favorites";
+});
+
+commentTextarea.addEventListener("input", () => {
+  commentTextarea.style.height = "auto";
+  const nextHeight = Math.min(commentTextarea.scrollHeight, 88);
+  commentTextarea.style.height = `${nextHeight}px`;
+  commentTextarea.style.overflowY =
+    commentTextarea.scrollHeight > 88 ? "auto" : "hidden";
+});
+
+commentForm.addEventListener("submit", (event: SubmitEvent) => {
+  event.preventDefault();
+});
+
+commentLikes.forEach((button) => {
+  button.addEventListener("click", () => {
+    const isActive = button.getAttribute("aria-pressed") === "true";
+    const nextActive = !isActive;
+
+    button.setAttribute("aria-pressed", String(nextActive));
+    button.classList.toggle("comment-like--active", nextActive);
+    button.firstChild?.replaceWith(nextActive ? "♥ " : "♡ ");
+  });
+});
