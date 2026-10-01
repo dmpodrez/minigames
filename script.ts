@@ -216,13 +216,19 @@ let swipePointerId: number | null = null;
 const SWIPE_THRESHOLD = 40;
 
 gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
-  if (!isCompactSlider() || event.pointerType === "mouse") {
+  if (!event.isPrimary) {
+    return;
+  }
+
+  if (event.pointerType === "mouse" && event.button !== 0) {
     return;
   }
 
   swipeStartX = event.clientX;
   swipeStartY = event.clientY;
   swipePointerId = event.pointerId;
+
+  gamesViewport.setPointerCapture(event.pointerId);
 });
 
 gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
@@ -234,6 +240,10 @@ gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
   const deltaY = event.clientY - swipeStartY;
 
   swipePointerId = null;
+
+  if (gamesViewport.hasPointerCapture(event.pointerId)) {
+    gamesViewport.releasePointerCapture(event.pointerId);
+  }
 
   if (Math.abs(deltaY) >= Math.abs(deltaX)) {
     return;
@@ -963,13 +973,25 @@ commentLikes.forEach((button) => {
    STORY 2 — SLIDER AUTOPLAY
    ========================= */
 
+/* =========================
+   STORY 2 — SLIDER AUTOPLAY
+   ========================= */
+
 const STORY_2_AUTOPLAY_MS = 4000;
+const LONG_PRESS_THRESHOLD = 400;
+
 let story2AutoplayTimer: number | null = null;
 let story2AutoplayStartedAt = 0;
 let story2AutoplayRemaining = STORY_2_AUTOPLAY_MS;
+
 let story2PointerStartX = 0;
 let story2PointerStartY = 0;
+let story2PointerId: number | null = null;
+let story2PressStartedAt = 0;
 let story2Holding = false;
+
+let suppressSliderClick = false;
+let suppressSliderClickTimer: number | null = null;
 
 function clearStory2Autoplay(): void {
   if (story2AutoplayTimer !== null) {
@@ -980,6 +1002,7 @@ function clearStory2Autoplay(): void {
 
 function scheduleStory2Autoplay(delay = STORY_2_AUTOPLAY_MS): void {
   clearStory2Autoplay();
+
   story2AutoplayRemaining = delay;
   story2AutoplayStartedAt = performance.now();
 
@@ -997,12 +1020,27 @@ function pauseStory2Autoplay(): void {
   }
 
   const elapsed = performance.now() - story2AutoplayStartedAt;
+
   story2AutoplayRemaining = Math.max(0, story2AutoplayRemaining - elapsed);
+
   clearStory2Autoplay();
 }
 
 function resetStory2Autoplay(): void {
   scheduleStory2Autoplay(STORY_2_AUTOPLAY_MS);
+}
+
+function suppressNextSliderClick(): void {
+  suppressSliderClick = true;
+
+  if (suppressSliderClickTimer !== null) {
+    window.clearTimeout(suppressSliderClickTimer);
+  }
+
+  suppressSliderClickTimer = window.setTimeout(() => {
+    suppressSliderClick = false;
+    suppressSliderClickTimer = null;
+  }, 300);
 }
 
 function syncStory2SliderOverlays(): void {
@@ -1014,41 +1052,120 @@ function syncStory2SliderOverlays(): void {
     }
 
     const showInfo = card.getBoundingClientRect().width >= 288;
+
     overlay.classList.toggle("game-overlay--hidden", !showInfo);
   });
 }
 
 nextButton.addEventListener("click", resetStory2Autoplay);
+
 prevButton.addEventListener("click", resetStory2Autoplay);
 
 gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
-  story2Holding = true;
+  if (!event.isPrimary) {
+    return;
+  }
+
+  if (event.pointerType === "mouse" && event.button !== 0) {
+    return;
+  }
+
+  story2PointerId = event.pointerId;
   story2PointerStartX = event.clientX;
   story2PointerStartY = event.clientY;
+  story2PressStartedAt = performance.now();
+  story2Holding = true;
+
   pauseStory2Autoplay();
+
+  gamesViewport.setPointerCapture(event.pointerId);
 });
 
 gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
+  if (event.pointerId !== story2PointerId) {
+    return;
+  }
+
   const deltaX = event.clientX - story2PointerStartX;
+
   const deltaY = event.clientY - story2PointerStartY;
+
+  const pressDuration = performance.now() - story2PressStartedAt;
+
   const didSwipe =
     Math.abs(deltaX) >= SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY);
 
   story2Holding = false;
+  story2PointerId = null;
+
+  if (gamesViewport.hasPointerCapture(event.pointerId)) {
+    gamesViewport.releasePointerCapture(event.pointerId);
+  }
 
   if (didSwipe) {
+    suppressNextSliderClick();
+
+    /*
+     * Touch swipe is already handled by the original
+     * mobile swipe logic above.
+     *
+     * Mouse swipe was missing in Story 2,
+     * so we handle it here.
+     */
+    if (event.pointerType === "mouse") {
+      if (deltaX < 0) {
+        void changeSlide("next");
+      } else {
+        void changeSlide("previous");
+      }
+    }
+
     resetStory2Autoplay();
-  } else {
-    scheduleStory2Autoplay(story2AutoplayRemaining);
+    return;
   }
+
+  /*
+   * A long press pauses autoplay but must NOT
+   * open the Game Details dialog after release.
+   */
+  if (pressDuration >= LONG_PRESS_THRESHOLD) {
+    suppressNextSliderClick();
+  }
+
+  scheduleStory2Autoplay(story2AutoplayRemaining);
 });
 
-gamesViewport.addEventListener("pointercancel", () => {
+gamesViewport.addEventListener("pointercancel", (event: PointerEvent) => {
+  if (event.pointerId !== story2PointerId) {
+    return;
+  }
+
   story2Holding = false;
+  story2PointerId = null;
+
+  if (gamesViewport.hasPointerCapture(event.pointerId)) {
+    gamesViewport.releasePointerCapture(event.pointerId);
+  }
+
   scheduleStory2Autoplay(story2AutoplayRemaining);
 });
 
 gamesTrack.addEventListener("click", (event: MouseEvent) => {
+  /*
+   * Prevent opening Game Details after
+   * swipe or press-and-hold.
+   */
+  if (suppressSliderClick) {
+    suppressSliderClick = false;
+
+    if (suppressSliderClickTimer !== null) {
+      window.clearTimeout(suppressSliderClickTimer);
+      suppressSliderClickTimer = null;
+    }
+
+    return;
+  }
+
   const target = event.target;
 
   if (target instanceof Element && target.closest(".game-card")) {
@@ -1057,5 +1174,7 @@ gamesTrack.addEventListener("click", (event: MouseEvent) => {
 });
 
 window.addEventListener("resize", syncStory2SliderOverlays);
+
 window.requestAnimationFrame(syncStory2SliderOverlays);
+
 scheduleStory2Autoplay();
