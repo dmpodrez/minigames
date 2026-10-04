@@ -103,6 +103,7 @@ function renderGames(): void {
             class="game-image"
             src="${game.cardImage}"
             alt="${game.name}"
+            draggable="false"
           >
 
           <div
@@ -208,62 +209,7 @@ nextButton.addEventListener("click", () => {
 prevButton.addEventListener("click", () => {
   void changeSlide("previous");
 });
-
-let swipeStartX = 0;
-let swipeStartY = 0;
-let swipePointerId: number | null = null;
-
 const SWIPE_THRESHOLD = 40;
-
-gamesViewport.addEventListener("pointerdown", (event: PointerEvent) => {
-  if (!event.isPrimary) {
-    return;
-  }
-
-  if (event.pointerType === "mouse" && event.button !== 0) {
-    return;
-  }
-
-  swipeStartX = event.clientX;
-  swipeStartY = event.clientY;
-  swipePointerId = event.pointerId;
-
-  gamesViewport.setPointerCapture(event.pointerId);
-});
-
-gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
-  if (event.pointerId !== swipePointerId) {
-    return;
-  }
-
-  const deltaX = event.clientX - swipeStartX;
-  const deltaY = event.clientY - swipeStartY;
-
-  swipePointerId = null;
-
-  if (gamesViewport.hasPointerCapture(event.pointerId)) {
-    gamesViewport.releasePointerCapture(event.pointerId);
-  }
-
-  if (Math.abs(deltaY) >= Math.abs(deltaX)) {
-    return;
-  }
-
-  if (Math.abs(deltaX) < SWIPE_THRESHOLD) {
-    return;
-  }
-
-  if (deltaX < 0) {
-    void changeSlide("next");
-    return;
-  }
-
-  void changeSlide("previous");
-});
-
-gamesViewport.addEventListener("pointercancel", () => {
-  swipePointerId = null;
-});
 
 /* =========================
    RESPONSIVE
@@ -973,10 +919,6 @@ commentLikes.forEach((button) => {
    STORY 2 — SLIDER AUTOPLAY
    ========================= */
 
-/* =========================
-   STORY 2 — SLIDER AUTOPLAY
-   ========================= */
-
 const STORY_2_AUTOPLAY_MS = 4000;
 const LONG_PRESS_THRESHOLD = 400;
 
@@ -1105,19 +1047,10 @@ gamesViewport.addEventListener("pointerup", (event: PointerEvent) => {
   if (didSwipe) {
     suppressNextSliderClick();
 
-    /*
-     * Touch swipe is already handled by the original
-     * mobile swipe logic above.
-     *
-     * Mouse swipe was missing in Story 2,
-     * so we handle it here.
-     */
-    if (event.pointerType === "mouse") {
-      if (deltaX < 0) {
-        void changeSlide("next");
-      } else {
-        void changeSlide("previous");
-      }
+    if (deltaX < 0) {
+      void changeSlide("next");
+    } else {
+      void changeSlide("previous");
     }
 
     resetStory2Autoplay();
@@ -1163,6 +1096,8 @@ gamesTrack.addEventListener("click", (event: MouseEvent) => {
       suppressSliderClickTimer = null;
     }
 
+    event.preventDefault();
+    event.stopPropagation();
     return;
   }
 
