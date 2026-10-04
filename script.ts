@@ -423,58 +423,6 @@ function getInitials(name: string): string {
 }
 void loadLeaderboard();
 
-document.addEventListener("click", (event: MouseEvent) => {
-  const target = event.target;
-
-  if (!(target instanceof Element)) {
-    return;
-  }
-
-  const retryButton = target.closest<HTMLButtonElement>("[data-api-retry]");
-
-  if (!retryButton) {
-    return;
-  }
-
-  const action = retryButton.dataset.apiRetry;
-
-  if (action === "featured") {
-    void loadGames();
-  }
-
-  if (action === "leaderboard") {
-    void loadLeaderboard();
-  }
-
-  if (action === "categories") {
-    void initializeLibrary();
-  }
-
-  if (action === "library") {
-    void loadLibraryGames();
-  }
-
-  if (action === "game-details" && currentGameSlug) {
-    const requestId = ++gameDetailsRequestId;
-    renderGameDetailsLoading();
-    void loadGameDetailsData(currentGameSlug, requestId);
-    void loadGameCommentsData(currentGameSlug, requestId);
-  }
-
-  if (action === "game-comments" && currentGameSlug) {
-    const requestId = gameDetailsRequestId;
-    commentList.innerHTML = Array.from(
-      { length: 3 },
-      () => `
-        <article class="comment-item" aria-hidden="true">
-          <span class="api-skeleton api-skeleton--line"></span>
-        </article>
-      `,
-    ).join("");
-    void loadGameCommentsData(currentGameSlug, requestId);
-  }
-});
-
 type AuthMode = "login" | "register";
 
 const authDialog = getElement<HTMLDialogElement>(".auth-dialog");
@@ -492,6 +440,10 @@ const authSwitchButtons =
 
 const authForms = document.querySelectorAll<HTMLFormElement>(".auth-form");
 
+function isAuthMode(value: string | null | undefined): value is AuthMode {
+  return value === "login" || value === "register";
+}
+
 function setAuthMode(mode: AuthMode): void {
   authTabs.forEach((tab) => {
     const isActive = tab.dataset.authTab === mode;
@@ -506,7 +458,7 @@ function setAuthMode(mode: AuthMode): void {
   });
 }
 
-function openAuthDialog(mode: AuthMode): void {
+function openAuthDialogUi(mode: AuthMode): void {
   setAuthMode(mode);
 
   if (!authDialog.open) {
@@ -514,52 +466,66 @@ function openAuthDialog(mode: AuthMode): void {
   }
 }
 
-function closeAuthDialog(): void {
-  if (!authDialog.open) {
-    return;
+function closeAuthDialogUi(): void {
+  if (authDialog.open) {
+    authDialog.close();
   }
 
-  authDialog.classList.add("auth-dialog--closing");
+  authDialog.classList.remove("auth-dialog--closing");
+}
 
-  window.setTimeout(() => {
-    authDialog.close();
-    authDialog.classList.remove("auth-dialog--closing");
-  }, 200);
+function updateAuthUrl(mode: AuthMode | null, replace = false): void {
+  const url = new URL(window.location.href);
+
+  if (mode) {
+    url.searchParams.set("auth", mode);
+    url.searchParams.delete("game");
+  } else {
+    url.searchParams.delete("auth");
+  }
+
+  writeUrl(url, replace);
 }
 
 authOpenButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const mode = button.dataset.authMode as AuthMode;
+    const mode = button.dataset.authMode;
 
-    openAuthDialog(mode);
+    if (isAuthMode(mode)) {
+      updateAuthUrl(mode);
+    }
   });
 });
 
 authTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
-    const mode = tab.dataset.authTab as AuthMode;
+    const mode = tab.dataset.authTab;
 
-    setAuthMode(mode);
+    if (isAuthMode(mode)) {
+      updateAuthUrl(mode, true);
+    }
   });
 });
 
 authSwitchButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const mode = button.dataset.authSwitch as AuthMode;
+    const mode = button.dataset.authSwitch;
 
-    setAuthMode(mode);
+    if (isAuthMode(mode)) {
+      updateAuthUrl(mode, true);
+    }
   });
 });
 
 authDialog.addEventListener("click", (event: MouseEvent) => {
   if (event.target === authDialog) {
-    closeAuthDialog();
+    updateAuthUrl(null, true);
   }
 });
 
 authDialog.addEventListener("cancel", (event: Event) => {
   event.preventDefault();
-  closeAuthDialog();
+  updateAuthUrl(null, true);
 });
 
 authForms.forEach((form) => {
@@ -567,6 +533,7 @@ authForms.forEach((form) => {
     event.preventDefault();
   });
 });
+
 const passwordToggleButtons =
   document.querySelectorAll<HTMLButtonElement>(".password-toggle");
 
@@ -678,13 +645,15 @@ window.addEventListener("resize", () => {
 });
 
 /* =========================
-   STORY 3 — LIBRARY API
+   STORY 3 — ROUTING + LIBRARY API
    ========================= */
 
-type PageName = "home" | "library";
+type PageName = "home" | "library" | "not-found";
 
 const homePage = getElement<HTMLElement>('[data-page-view="home"]');
 const libraryPage = getElement<HTMLElement>('[data-page-view="library"]');
+const notFoundPage = getElement<HTMLElement>('[data-page-view="not-found"]');
+const returnHomeButton = getElement<HTMLButtonElement>("[data-return-home]");
 const pageLinks =
   document.querySelectorAll<HTMLAnchorElement>("[data-page-link]");
 const libraryGrid = getElement<HTMLElement>(".library-grid");
@@ -715,6 +684,50 @@ let libraryCategory = "all";
 let librarySortOrder: GameSort = "rating-desc";
 let libraryPageNumber = 1;
 let libraryTotalPages = 1;
+let activePage: PageName | null = null;
+
+function routeUrlString(url: URL): string {
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function writeUrl(url: URL, replace = false): void {
+  const nextUrl = routeUrlString(url);
+
+  if (replace) {
+    window.history.replaceState({}, "", nextUrl);
+  } else {
+    window.history.pushState({}, "", nextUrl);
+  }
+
+  void applyRoute();
+}
+
+function navigateToPath(pathname: "/home" | "/library"): void {
+  const url = new URL(window.location.href);
+  url.pathname = pathname;
+  url.search = "";
+  url.hash = "";
+  writeUrl(url);
+}
+
+function isGameSort(value: string | null | undefined): value is GameSort {
+  return (
+    value === "rating-desc" ||
+    value === "rating-asc" ||
+    value === "name-asc" ||
+    value === "name-desc"
+  );
+}
+
+function parsePageNumber(value: string | null): number {
+  if (!value) {
+    return 1;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+}
 
 function setActiveNavigation(page: PageName): void {
   pageLinks.forEach((link) => {
@@ -730,15 +743,19 @@ function setActiveNavigation(page: PageName): void {
 }
 
 function showPage(page: PageName): void {
+  const pageChanged = activePage !== page;
+
   homePage.hidden = page !== "home";
   libraryPage.hidden = page !== "library";
+  notFoundPage.hidden = page !== "not-found";
   setActiveNavigation(page);
+  closeMobileMenu();
 
-  if (page === "library") {
-    closeMobileMenu();
+  activePage = page;
+
+  if (pageChanged) {
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 pageLinks.forEach((link) => {
@@ -750,8 +767,12 @@ pageLinks.forEach((link) => {
     }
 
     event.preventDefault();
-    showPage(page);
+    navigateToPath(page === "library" ? "/library" : "/home");
   });
+});
+
+returnHomeButton.addEventListener("click", () => {
+  navigateToPath("/home");
 });
 
 function libraryCardTemplate(game: Game): string {
@@ -863,21 +884,6 @@ async function loadCategories(): Promise<boolean> {
       return false;
     }
 
-    const defaultCategory =
-      libraryCategories.find((category) => category.isDefault) ??
-      libraryCategories[0];
-
-    const categoryStillExists = libraryCategories.some(
-      (category) => category.slug === libraryCategory,
-    );
-
-    if (!categoryStillExists) {
-      libraryCategory = defaultCategory.slug;
-    } else if (libraryCategory === "all") {
-      libraryCategory = defaultCategory.slug;
-    }
-
-    renderCategories();
     return true;
   } catch {
     libraryCategories = [];
@@ -963,6 +969,19 @@ function renderPagination(): void {
   paginationNext.disabled = libraryPageNumber >= safeTotalPages;
 }
 
+function replaceLibraryUrlFromState(): void {
+  if (window.location.pathname !== "/library") {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("category", libraryCategory);
+  url.searchParams.set("sort", librarySortOrder);
+  url.searchParams.set("page", String(libraryPageNumber));
+
+  window.history.replaceState({}, "", routeUrlString(url));
+}
+
 async function loadLibraryGames(): Promise<void> {
   libraryGrid.innerHTML = librarySkeletonMarkup();
 
@@ -979,6 +998,7 @@ async function loadLibraryGames(): Promise<void> {
 
     renderLibraryCards(result.data);
     renderPagination();
+    replaceLibraryUrlFromState();
   } catch {
     libraryTotalPages = 1;
     libraryPageNumber = 1;
@@ -992,17 +1012,55 @@ async function loadLibraryGames(): Promise<void> {
   }
 }
 
-async function initializeLibrary(): Promise<void> {
-  librarySortOrder = "rating-desc";
-  libraryPageNumber = 1;
+async function syncLibraryFromUrl(url: URL): Promise<void> {
+  if (libraryCategories.length === 0) {
+    await loadCategories();
+  }
+
+  const defaultCategory =
+    libraryCategories.find((category) => category.isDefault)?.slug ?? "all";
+  const requestedCategory = url.searchParams.get("category");
+  const knownCategory = libraryCategories.some(
+    (category) => category.slug === requestedCategory,
+  );
+
+  libraryCategory = knownCategory
+    ? (requestedCategory ?? defaultCategory)
+    : defaultCategory;
+
+  const requestedSort = url.searchParams.get("sort");
+  librarySortOrder = isGameSort(requestedSort) ? requestedSort : "rating-desc";
+
+  libraryPageNumber = parsePageNumber(url.searchParams.get("page"));
+
+  renderCategories();
   renderSortOptions();
   renderPagination();
 
-  const categoriesLoaded = await loadCategories();
+  const canonicalUrl = new URL(window.location.href);
+  canonicalUrl.searchParams.set("category", libraryCategory);
+  canonicalUrl.searchParams.set("sort", librarySortOrder);
+  canonicalUrl.searchParams.set("page", String(libraryPageNumber));
+  window.history.replaceState({}, "", routeUrlString(canonicalUrl));
 
-  if (categoriesLoaded) {
-    await loadLibraryGames();
-  }
+  await loadLibraryGames();
+}
+
+function pushLibraryState(
+  next: Partial<{
+    category: string;
+    sort: GameSort;
+    page: number;
+  }>,
+): void {
+  const url = new URL(window.location.href);
+  url.pathname = "/library";
+  url.searchParams.set("category", next.category ?? libraryCategory);
+  url.searchParams.set("sort", next.sort ?? librarySortOrder);
+  url.searchParams.set("page", String(next.page ?? libraryPageNumber));
+  url.searchParams.delete("game");
+  url.searchParams.delete("auth");
+  writeUrl(url);
 }
 
 libraryChips.addEventListener("click", (event: MouseEvent) => {
@@ -1024,10 +1082,10 @@ libraryChips.addEventListener("click", (event: MouseEvent) => {
     return;
   }
 
-  libraryCategory = category;
-  libraryPageNumber = 1;
-  renderCategories();
-  void loadLibraryGames();
+  pushLibraryState({
+    category,
+    page: 1,
+  });
 });
 
 function closeSortMenu(): void {
@@ -1056,20 +1114,15 @@ librarySortMenu.addEventListener("click", (event: MouseEvent) => {
 
   const value = option.dataset.sortValue;
 
-  if (
-    value !== "rating-desc" &&
-    value !== "rating-asc" &&
-    value !== "name-asc" &&
-    value !== "name-desc"
-  ) {
+  if (!isGameSort(value)) {
     return;
   }
 
-  librarySortOrder = value;
-  libraryPageNumber = 1;
-  renderSortOptions();
   closeSortMenu();
-  void loadLibraryGames();
+  pushLibraryState({
+    sort: value,
+    page: 1,
+  });
 });
 
 document.addEventListener("click", (event: MouseEvent) => {
@@ -1090,9 +1143,9 @@ function setLibraryPage(page: number): void {
     return;
   }
 
-  libraryPageNumber = nextPage;
-  renderPagination();
-  void loadLibraryGames();
+  pushLibraryState({
+    page: nextPage,
+  });
 }
 
 paginationPages.addEventListener("click", (event: MouseEvent) => {
@@ -1122,9 +1175,6 @@ paginationNext.addEventListener("click", () => {
 });
 
 window.addEventListener("resize", renderPagination);
-
-void initializeLibrary();
-showPage("home");
 
 /* =========================
    STORY 3 — GAME DETAILS API
@@ -1439,19 +1489,28 @@ function openGameDetailsDialog(slug: string): void {
   void loadGameCommentsData(slug, requestId);
 }
 
-function closeGameDetailsDialog(): void {
-  if (!gameDetailsDialog.open) {
-    return;
-  }
-
+function closeGameDetailsDialogUi(): void {
   gameDetailsRequestId += 1;
   currentGameSlug = null;
-  gameDetailsDialog.classList.add("game-details-dialog--closing");
 
-  window.setTimeout(() => {
+  if (gameDetailsDialog.open) {
     gameDetailsDialog.close();
-    gameDetailsDialog.classList.remove("game-details-dialog--closing");
-  }, 180);
+  }
+
+  gameDetailsDialog.classList.remove("game-details-dialog--closing");
+}
+
+function navigateToGame(slug: string): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set("game", slug);
+  url.searchParams.delete("auth");
+  writeUrl(url);
+}
+
+function closeGameFromUrl(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("game");
+  writeUrl(url, true);
 }
 
 document.addEventListener("click", (event: MouseEvent) => {
@@ -1472,21 +1531,21 @@ document.addEventListener("click", (event: MouseEvent) => {
     opener.closest<HTMLElement>("[data-game-slug]")?.dataset.gameSlug;
 
   if (slug) {
-    openGameDetailsDialog(slug);
+    navigateToGame(slug);
   }
 });
 
-gameDetailsClose.addEventListener("click", closeGameDetailsDialog);
+gameDetailsClose.addEventListener("click", closeGameFromUrl);
 
 gameDetailsDialog.addEventListener("click", (event: MouseEvent) => {
   if (event.target === gameDetailsDialog) {
-    closeGameDetailsDialog();
+    closeGameFromUrl();
   }
 });
 
 gameDetailsDialog.addEventListener("cancel", (event: Event) => {
   event.preventDefault();
-  closeGameDetailsDialog();
+  closeGameFromUrl();
 });
 
 /* =========================
@@ -1685,7 +1744,7 @@ gamesTrack.addEventListener("click", (event: MouseEvent) => {
   const slug = card?.dataset.gameSlug;
 
   if (slug) {
-    openGameDetailsDialog(slug);
+    navigateToGame(slug);
   }
 });
 
@@ -1694,3 +1753,125 @@ window.addEventListener("resize", syncStory2SliderOverlays);
 window.requestAnimationFrame(syncStory2SliderOverlays);
 
 scheduleStory2Autoplay();
+
+/* =========================
+   STORY 3 — HISTORY ROUTER
+   ========================= */
+
+function normalizedPathname(): string {
+  const trimmed = window.location.pathname.replace(/\/+$/, "");
+
+  return trimmed || "/";
+}
+
+async function applyRoute(): Promise<void> {
+  const url = new URL(window.location.href);
+  const pathname = normalizedPathname();
+
+  let page: PageName;
+
+  if (pathname === "/" || pathname === "/home") {
+    page = "home";
+  } else if (pathname === "/library") {
+    page = "library";
+  } else {
+    page = "not-found";
+  }
+
+  showPage(page);
+
+  if (page === "not-found") {
+    closeAuthDialogUi();
+    closeGameDetailsDialogUi();
+    return;
+  }
+
+  if (page === "library") {
+    await syncLibraryFromUrl(url);
+  }
+
+  const authMode = url.searchParams.get("auth");
+
+  if (isAuthMode(authMode)) {
+    if (gameDetailsDialog.open) {
+      closeGameDetailsDialogUi();
+    }
+
+    openAuthDialogUi(authMode);
+  } else {
+    closeAuthDialogUi();
+  }
+
+  const gameSlug = url.searchParams.get("game");
+
+  if (gameSlug) {
+    if (authDialog.open) {
+      closeAuthDialogUi();
+    }
+
+    if (currentGameSlug !== gameSlug || !gameDetailsDialog.open) {
+      openGameDetailsDialog(gameSlug);
+    }
+  } else {
+    closeGameDetailsDialogUi();
+  }
+}
+
+window.addEventListener("popstate", () => {
+  void applyRoute();
+});
+
+void applyRoute();
+
+document.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const retryButton = target.closest<HTMLButtonElement>("[data-api-retry]");
+
+  if (!retryButton) {
+    return;
+  }
+
+  const action = retryButton.dataset.apiRetry;
+
+  if (action === "featured") {
+    void loadGames();
+  }
+
+  if (action === "leaderboard") {
+    void loadLeaderboard();
+  }
+
+  if (action === "categories") {
+    libraryCategories = [];
+    void applyRoute();
+  }
+
+  if (action === "library") {
+    void loadLibraryGames();
+  }
+
+  if (action === "game-details" && currentGameSlug) {
+    const requestId = ++gameDetailsRequestId;
+    renderGameDetailsLoading();
+    void loadGameDetailsData(currentGameSlug, requestId);
+    void loadGameCommentsData(currentGameSlug, requestId);
+  }
+
+  if (action === "game-comments" && currentGameSlug) {
+    const requestId = gameDetailsRequestId;
+    commentList.innerHTML = Array.from(
+      { length: 3 },
+      () => `
+        <article class="comment-item" aria-hidden="true">
+          <span class="api-skeleton api-skeleton--line"></span>
+        </article>
+      `,
+    ).join("");
+    void loadGameCommentsData(currentGameSlug, requestId);
+  }
+});
