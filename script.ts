@@ -1,19 +1,13 @@
 import "./style.scss";
+import {
+  getFeaturedGames,
+  getLeaderboard,
+  type Game,
+  type Player,
+} from "./api";
 import { renderApp } from "./view";
 
 renderApp();
-
-interface Game {
-  name: string;
-  cardImage: string;
-  rating: number;
-  likesCount: number;
-  featured: boolean;
-}
-
-interface GamesResponse {
-  data: Game[];
-}
 
 function getElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -23,6 +17,69 @@ function getElement<T extends Element>(selector: string): T {
   }
 
   return element;
+}
+
+type SnackbarVariant = "success" | "error";
+
+const snackbar = document.createElement("div");
+snackbar.className = "api-snackbar";
+snackbar.setAttribute("role", "status");
+snackbar.setAttribute("aria-live", "polite");
+document.body.append(snackbar);
+
+let snackbarTimer: number | null = null;
+
+function showSnackbar(message: string, variant: SnackbarVariant): void {
+  snackbar.textContent = message;
+  snackbar.className = `api-snackbar api-snackbar--${variant} api-snackbar--visible`;
+
+  if (snackbarTimer !== null) {
+    window.clearTimeout(snackbarTimer);
+  }
+
+  snackbarTimer = window.setTimeout(() => {
+    snackbar.classList.remove("api-snackbar--visible");
+    snackbarTimer = null;
+  }, 3200);
+}
+
+function apiStateMarkup(
+  message: string,
+  kind: "empty" | "error",
+  retryAction?: string,
+): string {
+  const retryButton = retryAction
+    ? `<button type="button" class="api-state__retry" data-api-retry="${retryAction}">Retry</button>`
+    : "";
+
+  return `
+    <div class="api-state api-state--${kind}">
+      <strong>${message}</strong>
+      ${retryButton}
+    </div>
+  `;
+}
+
+function sliderSkeletonMarkup(): string {
+  return Array.from(
+    { length: isCompactSlider() ? 3 : 5 },
+    () => `
+      <article class="game-card api-skeleton-card" aria-hidden="true">
+        <span class="api-skeleton api-skeleton--fill"></span>
+      </article>
+    `,
+  ).join("");
+}
+
+function leaderboardSkeletonMarkup(): string {
+  return Array.from(
+    { length: 5 },
+    () => `
+      <tr class="api-skeleton-row" aria-hidden="true">
+        ${Array.from({ length: 6 }, () => '<td><span class="api-skeleton api-skeleton--line"></span></td>').join("")}
+      </tr>
+    `,
+  ).join("");
 }
 
 const gamesTrack = getElement<HTMLElement>(".games-track");
@@ -56,18 +113,31 @@ function wrapIndex(index: number): number {
 }
 
 async function loadGames(): Promise<void> {
-  const response = await fetch("/assets/data/all-games-seed.json");
+  games = [];
+  gamesTrack.innerHTML = sliderSkeletonMarkup();
 
-  if (!response.ok) {
-    throw new Error(`Failed to load games: ${response.status}`);
+  try {
+    const result = await getFeaturedGames();
+    games = result.data;
+    currentIndex = 0;
+
+    if (games.length === 0) {
+      gamesTrack.innerHTML = apiStateMarkup(
+        "No featured games found.",
+        "empty",
+      );
+      return;
+    }
+
+    renderGames();
+  } catch {
+    gamesTrack.innerHTML = apiStateMarkup(
+      "Featured games could not be loaded.",
+      "error",
+      "featured",
+    );
+    showSnackbar("Failed to load featured games.", "error");
   }
-
-  const result: GamesResponse = await response.json();
-
-  games = result.data.filter((game) => game.featured);
-  currentIndex = 0;
-
-  renderGames();
 }
 
 function renderGames(): void {
@@ -233,33 +303,40 @@ window.addEventListener("resize", () => {
   }
 });
 
-loadGames().catch((error: unknown) => {
-  console.error(error);
-});
+void loadGames();
 
-interface Player {
-  rank: number;
-  playerName: string;
-  gamesPlayed: number;
-  totalScore: number;
-  streakDays: number;
-  favoriteGameSlug: string;
-  favoriteGameName: string;
-}
-
-interface LeaderboardResponse {
-  data: Player[];
-}
 async function loadLeaderboard(): Promise<void> {
-  const response = await fetch("/assets/data/leaderboard.json");
+  leaderboardBody.innerHTML = leaderboardSkeletonMarkup();
 
-  if (!response.ok) {
-    throw new Error(`Failed to load leaderboard: ${response.status}`);
+  try {
+    const result = await getLeaderboard();
+
+    if (result.data.length === 0) {
+      leaderboardBody.innerHTML = `
+        <tr>
+          <td colspan="6">
+            ${apiStateMarkup("No leaderboard data found.", "empty")}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    renderLeaderboard(result.data);
+  } catch {
+    leaderboardBody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          ${apiStateMarkup(
+            "Leaderboard could not be loaded.",
+            "error",
+            "leaderboard",
+          )}
+        </td>
+      </tr>
+    `;
+    showSnackbar("Failed to load leaderboard.", "error");
   }
-
-  const result: LeaderboardResponse = await response.json();
-
-  renderLeaderboard(result.data);
 }
 function renderLeaderboard(players: Player[]): void {
   leaderboardBody.innerHTML = players
@@ -331,8 +408,30 @@ function getInitials(name: string): string {
 
   return name.slice(0, 2).toUpperCase();
 }
-loadLeaderboard().catch((error: unknown) => {
-  console.error(error);
+void loadLeaderboard();
+
+document.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const retryButton = target.closest<HTMLButtonElement>("[data-api-retry]");
+
+  if (!retryButton) {
+    return;
+  }
+
+  const action = retryButton.dataset.apiRetry;
+
+  if (action === "featured") {
+    void loadGames();
+  }
+
+  if (action === "leaderboard") {
+    void loadLeaderboard();
+  }
 });
 
 type AuthMode = "login" | "register";
