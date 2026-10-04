@@ -440,6 +440,17 @@ body.menu-open {
   width: 100%;
   overflow: hidden;
   touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.game-card img {
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .games-track {
