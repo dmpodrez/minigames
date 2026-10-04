@@ -1,11 +1,16 @@
 import "./style.scss";
 import {
+  ApiError,
   getCategories,
   getFeaturedGames,
+  getGameComments,
+  getGameDetails,
   getGames,
   getLeaderboard,
   type Category,
   type Game,
+  type GameComment,
+  type GameDetails,
   type GameSort,
   type Player,
 } from "./api";
@@ -172,7 +177,11 @@ function renderGames(): void {
         .join(" ");
 
       return `
-        <article class="${cardClasses}" data-slider-card>
+        <article
+          class="${cardClasses}"
+          data-slider-card
+          data-game-slug="${game.slug}"
+        >
           <img
             class="game-image"
             src="${game.cardImage}"
@@ -443,6 +452,26 @@ document.addEventListener("click", (event: MouseEvent) => {
 
   if (action === "library") {
     void loadLibraryGames();
+  }
+
+  if (action === "game-details" && currentGameSlug) {
+    const requestId = ++gameDetailsRequestId;
+    renderGameDetailsLoading();
+    void loadGameDetailsData(currentGameSlug, requestId);
+    void loadGameCommentsData(currentGameSlug, requestId);
+  }
+
+  if (action === "game-comments" && currentGameSlug) {
+    const requestId = gameDetailsRequestId;
+    commentList.innerHTML = Array.from(
+      { length: 3 },
+      () => `
+        <article class="comment-item" aria-hidden="true">
+          <span class="api-skeleton api-skeleton--line"></span>
+        </article>
+      `,
+    ).join("");
+    void loadGameCommentsData(currentGameSlug, requestId);
   }
 });
 
@@ -1098,39 +1127,316 @@ void initializeLibrary();
 showPage("home");
 
 /* =========================
-   STORY 2 — GAME DETAILS
+   STORY 3 — GAME DETAILS API
    ========================= */
 
 const gameDetailsDialog = getElement<HTMLDialogElement>(".game-details-dialog");
 const gameDetailsClose = getElement<HTMLButtonElement>(".game-details-close");
+const gameDetailsHeroImage = getElement<HTMLImageElement>(
+  ".game-details-hero > img",
+);
+const gameDetailsEyebrow = getElement<HTMLElement>(".game-details-eyebrow");
+const gameDetailsTitle = getElement<HTMLElement>(".game-details-header h2");
+const gameDetailsRating = getElement<HTMLElement>(
+  ".game-details-rating strong",
+);
+const gameDetailsDescription = getElement<HTMLElement>(
+  ".game-details-description",
+);
+const gameDetailsBadges = getElement<HTMLElement>(".game-details-badges");
+const gameRecordsList = getElement<HTMLOListElement>(".game-records ol");
+const commentsTitle = getElement<HTMLElement>("#comments-title");
+const commentList = getElement<HTMLElement>(".comment-list");
 const favoriteButton = getElement<HTMLButtonElement>(".game-favorite-button");
 const commentForm = getElement<HTMLFormElement>(".comment-form");
-const commentTextarea = getElement<HTMLTextAreaElement>("#game-comment");
-const commentLikes =
-  document.querySelectorAll<HTMLButtonElement>(".comment-like");
 
-function resetGameDetailsState(): void {
-  favoriteButton.classList.remove("game-favorite-button--active");
-  favoriteButton.setAttribute("aria-pressed", "false");
-  favoriteButton.textContent = "♡ Add to Favorites";
+let currentGameSlug: string | null = null;
+let gameDetailsRequestId = 0;
 
-  commentTextarea.value = "";
-  commentTextarea.style.height = "";
-  commentTextarea.style.overflowY = "hidden";
-
-  commentLikes.forEach((button) => {
-    button.classList.remove("comment-like--active");
-    button.setAttribute("aria-pressed", "false");
-    button.firstChild?.replaceWith("♡ ");
-  });
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-function openGameDetailsDialog(): void {
-  resetGameDetailsState();
+function formatRelativeTime(timestamp: string): string {
+  const createdAt = new Date(timestamp).getTime();
+
+  if (!Number.isFinite(createdAt)) {
+    return "";
+  }
+
+  const elapsedMs = Math.max(0, Date.now() - createdAt);
+  const minute = 60_000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const week = 7 * day;
+  const month = 30 * day;
+  const year = 365 * day;
+
+  if (elapsedMs < minute) {
+    return "just now";
+  }
+
+  if (elapsedMs < hour) {
+    const minutes = Math.floor(elapsedMs / minute);
+    return `${minutes} min ago`;
+  }
+
+  if (elapsedMs < day) {
+    const hours = Math.floor(elapsedMs / hour);
+    return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  }
+
+  if (elapsedMs < week) {
+    const days = Math.floor(elapsedMs / day);
+    return `${days} ${days === 1 ? "day" : "days"} ago`;
+  }
+
+  if (elapsedMs < month) {
+    const weeks = Math.min(3, Math.floor(elapsedMs / week));
+    return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
+  }
+
+  if (elapsedMs < year) {
+    const months = Math.min(11, Math.floor(elapsedMs / month));
+    return `${months} ${months === 1 ? "month" : "months"} ago`;
+  }
+
+  const years = Math.floor(elapsedMs / year);
+  return `${years} ${years === 1 ? "year" : "years"} ago`;
+}
+
+function renderGameDetailsLoading(): void {
+  gameDetailsHeroImage.removeAttribute("src");
+  gameDetailsHeroImage.alt = "";
+  gameDetailsHeroImage.classList.add("game-details-hero-image--loading");
+
+  gameDetailsEyebrow.textContent = "Loading";
+  gameDetailsTitle.textContent = "Loading game…";
+  gameDetailsRating.textContent = "—";
+  gameDetailsDescription.innerHTML =
+    '<span class="api-skeleton api-skeleton--line"></span>';
+  gameDetailsBadges.innerHTML = Array.from(
+    { length: 4 },
+    () => '<span class="api-skeleton game-details-badge-skeleton"></span>',
+  ).join("");
+  gameRecordsList.innerHTML = Array.from(
+    { length: 3 },
+    () => `
+      <li aria-hidden="true">
+        <span class="api-skeleton api-skeleton--line"></span>
+        <span class="api-skeleton api-skeleton--line"></span>
+        <span class="api-skeleton api-skeleton--line"></span>
+      </li>
+    `,
+  ).join("");
+  commentsTitle.textContent = "Comments";
+  commentList.innerHTML = Array.from(
+    { length: 3 },
+    () => `
+      <article class="comment-item" aria-hidden="true">
+        <span class="api-skeleton api-skeleton--line"></span>
+        <p><span class="api-skeleton api-skeleton--line"></span></p>
+      </article>
+    `,
+  ).join("");
+
+  favoriteButton.disabled = true;
+  favoriteButton.textContent = "♡ Favorites available after sign in";
+  commentForm.hidden = true;
+}
+
+function renderGameDetails(details: GameDetails): void {
+  gameDetailsHeroImage.classList.remove("game-details-hero-image--loading");
+  gameDetailsHeroImage.src = details.heroImage;
+  gameDetailsHeroImage.alt = details.name;
+
+  gameDetailsEyebrow.textContent = details.specs.genre || "Game details";
+  gameDetailsTitle.textContent = details.name;
+  gameDetailsRating.textContent = String(details.rating);
+  gameDetailsDescription.textContent = details.fullDescription;
+
+  const badges = [
+    details.specs.genre,
+    details.specs.players,
+    details.specs.duration,
+    details.specs.price,
+  ].filter(Boolean);
+
+  gameDetailsBadges.innerHTML = badges
+    .map((badge) => `<span>${escapeHtml(badge)}</span>`)
+    .join("");
+
+  if (details.topRecords.length === 0) {
+    gameRecordsList.innerHTML = `
+      <li>
+        <span></span>
+        <span>No records yet.</span>
+        <span></span>
+      </li>
+    `;
+  } else {
+    gameRecordsList.innerHTML = details.topRecords
+      .map(
+        (record) => `
+          <li>
+            <span class="record-position">#${record.position}</span>
+            <span>${escapeHtml(record.playerName)}</span>
+            <strong>${record.score.toLocaleString("en-US")}</strong>
+          </li>
+        `,
+      )
+      .join("");
+  }
+
+  favoriteButton.disabled = true;
+  favoriteButton.setAttribute("aria-pressed", "false");
+  favoriteButton.textContent = `♡ ${formatLikes(details.likesCount)} likes`;
+  commentForm.hidden = true;
+}
+
+function renderGameNotFound(): void {
+  gameDetailsHeroImage.classList.remove("game-details-hero-image--loading");
+  gameDetailsHeroImage.removeAttribute("src");
+  gameDetailsHeroImage.alt = "";
+  gameDetailsEyebrow.textContent = "404";
+  gameDetailsTitle.textContent = "Game Not Found";
+  gameDetailsRating.textContent = "—";
+  gameDetailsDescription.textContent =
+    "The requested game does not exist or is no longer available.";
+  gameDetailsBadges.innerHTML = "";
+  gameRecordsList.innerHTML = "";
+  commentsTitle.textContent = "Comments";
+  commentList.innerHTML = "";
+  favoriteButton.disabled = true;
+  commentForm.hidden = true;
+}
+
+function renderGameDetailsError(): void {
+  gameDetailsHeroImage.classList.remove("game-details-hero-image--loading");
+  gameDetailsHeroImage.removeAttribute("src");
+  gameDetailsHeroImage.alt = "";
+  gameDetailsEyebrow.textContent = "Error";
+  gameDetailsTitle.textContent = "Game details unavailable";
+  gameDetailsRating.textContent = "—";
+  gameDetailsDescription.innerHTML = apiStateMarkup(
+    "Game details could not be loaded.",
+    "error",
+    "game-details",
+  );
+  gameDetailsBadges.innerHTML = "";
+  gameRecordsList.innerHTML = "";
+  favoriteButton.disabled = true;
+  commentForm.hidden = true;
+}
+
+function renderComments(comments: GameComment[], totalItems: number): void {
+  commentsTitle.textContent = `Comments (${totalItems})`;
+
+  if (comments.length === 0) {
+    commentList.innerHTML = apiStateMarkup("No comments yet.", "empty");
+    return;
+  }
+
+  commentList.innerHTML = comments
+    .map(
+      (comment) => `
+        <article class="comment-item">
+          <div class="comment-heading">
+            <div class="comment-author">
+              <strong>${escapeHtml(comment.authorName)}</strong>
+              <time datetime="${escapeHtml(comment.createdAt)}">
+                ${formatRelativeTime(comment.createdAt)}
+              </time>
+            </div>
+
+            <span class="comment-like comment-like--readonly">
+              ♡ ${comment.likesCount}
+            </span>
+          </div>
+
+          <p>${escapeHtml(comment.text)}</p>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderCommentsError(): void {
+  commentsTitle.textContent = "Comments";
+  commentList.innerHTML = apiStateMarkup(
+    "Comments could not be loaded.",
+    "error",
+    "game-comments",
+  );
+}
+
+async function loadGameDetailsData(
+  slug: string,
+  requestId: number,
+): Promise<void> {
+  try {
+    const result = await getGameDetails(slug);
+
+    if (requestId !== gameDetailsRequestId) {
+      return;
+    }
+
+    renderGameDetails(result.data);
+  } catch (error: unknown) {
+    if (requestId !== gameDetailsRequestId) {
+      return;
+    }
+
+    if (error instanceof ApiError && error.status === 404) {
+      renderGameNotFound();
+      return;
+    }
+
+    renderGameDetailsError();
+    showSnackbar("Failed to load game details.", "error");
+  }
+}
+
+async function loadGameCommentsData(
+  slug: string,
+  requestId: number,
+): Promise<void> {
+  try {
+    const result = await getGameComments(slug);
+
+    if (requestId !== gameDetailsRequestId) {
+      return;
+    }
+
+    renderComments(result.data, result.meta?.totalItems ?? result.data.length);
+  } catch {
+    if (requestId !== gameDetailsRequestId) {
+      return;
+    }
+
+    renderCommentsError();
+    showSnackbar("Failed to load game comments.", "error");
+  }
+}
+
+function openGameDetailsDialog(slug: string): void {
+  currentGameSlug = slug;
+  gameDetailsRequestId += 1;
+  const requestId = gameDetailsRequestId;
+
+  renderGameDetailsLoading();
 
   if (!gameDetailsDialog.open) {
     gameDetailsDialog.showModal();
   }
+
+  void loadGameDetailsData(slug, requestId);
+  void loadGameCommentsData(slug, requestId);
 }
 
 function closeGameDetailsDialog(): void {
@@ -1138,20 +1444,35 @@ function closeGameDetailsDialog(): void {
     return;
   }
 
+  gameDetailsRequestId += 1;
+  currentGameSlug = null;
   gameDetailsDialog.classList.add("game-details-dialog--closing");
 
   window.setTimeout(() => {
     gameDetailsDialog.close();
     gameDetailsDialog.classList.remove("game-details-dialog--closing");
-    resetGameDetailsState();
   }, 180);
 }
 
 document.addEventListener("click", (event: MouseEvent) => {
   const target = event.target;
 
-  if (target instanceof Element && target.closest("[data-game-details-open]")) {
-    openGameDetailsDialog();
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const opener = target.closest<HTMLElement>("[data-game-details-open]");
+
+  if (!opener) {
+    return;
+  }
+
+  const slug =
+    opener.dataset.gameSlug ??
+    opener.closest<HTMLElement>("[data-game-slug]")?.dataset.gameSlug;
+
+  if (slug) {
+    openGameDetailsDialog(slug);
   }
 });
 
@@ -1166,40 +1487,6 @@ gameDetailsDialog.addEventListener("click", (event: MouseEvent) => {
 gameDetailsDialog.addEventListener("cancel", (event: Event) => {
   event.preventDefault();
   closeGameDetailsDialog();
-});
-
-favoriteButton.addEventListener("click", () => {
-  const isActive = favoriteButton.getAttribute("aria-pressed") === "true";
-  const nextActive = !isActive;
-
-  favoriteButton.setAttribute("aria-pressed", String(nextActive));
-  favoriteButton.classList.toggle("game-favorite-button--active", nextActive);
-  favoriteButton.textContent = nextActive
-    ? "♥ Added to Favorites"
-    : "♡ Add to Favorites";
-});
-
-commentTextarea.addEventListener("input", () => {
-  commentTextarea.style.height = "auto";
-  const nextHeight = Math.min(commentTextarea.scrollHeight, 88);
-  commentTextarea.style.height = `${nextHeight}px`;
-  commentTextarea.style.overflowY =
-    commentTextarea.scrollHeight > 88 ? "auto" : "hidden";
-});
-
-commentForm.addEventListener("submit", (event: SubmitEvent) => {
-  event.preventDefault();
-});
-
-commentLikes.forEach((button) => {
-  button.addEventListener("click", () => {
-    const isActive = button.getAttribute("aria-pressed") === "true";
-    const nextActive = !isActive;
-
-    button.setAttribute("aria-pressed", String(nextActive));
-    button.classList.toggle("comment-like--active", nextActive);
-    button.firstChild?.replaceWith(nextActive ? "♥ " : "♡ ");
-  });
 });
 
 /* =========================
@@ -1390,8 +1677,15 @@ gamesTrack.addEventListener("click", (event: MouseEvent) => {
 
   const target = event.target;
 
-  if (target instanceof Element && target.closest(".game-card")) {
-    openGameDetailsDialog();
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const card = target.closest<HTMLElement>(".game-card[data-game-slug]");
+  const slug = card?.dataset.gameSlug;
+
+  if (slug) {
+    openGameDetailsDialog(slug);
   }
 });
 
