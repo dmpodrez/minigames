@@ -1,8 +1,12 @@
 import "./style.scss";
 import {
+  getCategories,
   getFeaturedGames,
+  getGames,
   getLeaderboard,
+  type Category,
   type Game,
+  type GameSort,
   type Player,
 } from "./api";
 import { renderApp } from "./view";
@@ -432,6 +436,14 @@ document.addEventListener("click", (event: MouseEvent) => {
   if (action === "leaderboard") {
     void loadLeaderboard();
   }
+
+  if (action === "categories") {
+    void initializeLibrary();
+  }
+
+  if (action === "library") {
+    void loadLibraryGames();
+  }
 });
 
 type AuthMode = "login" | "register";
@@ -637,45 +649,43 @@ window.addEventListener("resize", () => {
 });
 
 /* =========================
-   STORY 2 — SPA + LIBRARY
+   STORY 3 — LIBRARY API
    ========================= */
 
 type PageName = "home" | "library";
-
-interface LibraryGame extends Game {
-  slug: string;
-  category: string;
-  price: string;
-  shortDescription: string;
-  featured: boolean;
-}
-
-interface LibraryGamesResponse {
-  data: LibraryGame[];
-}
 
 const homePage = getElement<HTMLElement>('[data-page-view="home"]');
 const libraryPage = getElement<HTMLElement>('[data-page-view="library"]');
 const pageLinks =
   document.querySelectorAll<HTMLAnchorElement>("[data-page-link]");
 const libraryGrid = getElement<HTMLElement>(".library-grid");
-const libraryChips =
-  document.querySelectorAll<HTMLButtonElement>(".library-chip");
+const libraryChips = getElement<HTMLElement>(".library-chips");
 const librarySort = getElement<HTMLElement>(".library-sort");
 const librarySortTrigger = getElement<HTMLButtonElement>(
   ".library-sort-trigger",
 );
 const librarySortValue = getElement<HTMLElement>(".library-sort-value");
 const librarySortMenu = getElement<HTMLElement>(".library-sort-menu");
-const librarySortOptions =
-  librarySortMenu.querySelectorAll<HTMLButtonElement>("[data-sort-value]");
 const paginationPages = getElement<HTMLElement>(".pagination-pages");
 const paginationPrev = getElement<HTMLButtonElement>(".pagination-prev");
 const paginationNext = getElement<HTMLButtonElement>(".pagination-next");
 
-let libraryGames: LibraryGame[] = [];
+const LIBRARY_PAGE_SIZE = 6;
+const LIBRARY_SORT_OPTIONS: ReadonlyArray<{
+  value: GameSort;
+  label: string;
+}> = [
+  { value: "rating-desc", label: "Highest Rated" },
+  { value: "rating-asc", label: "Lowest Rated" },
+  { value: "name-asc", label: "Name A–Z" },
+  { value: "name-desc", label: "Name Z–A" },
+];
+
+let libraryCategories: Category[] = [];
+let libraryCategory = "all";
+let librarySortOrder: GameSort = "rating-desc";
 let libraryPageNumber = 1;
-const LIBRARY_PAGE_COUNT = 6;
+let libraryTotalPages = 1;
 
 function setActiveNavigation(page: PageName): void {
   pageLinks.forEach((link) => {
@@ -715,14 +725,15 @@ pageLinks.forEach((link) => {
   });
 });
 
-function libraryCardTemplate(game: LibraryGame): string {
+function libraryCardTemplate(game: Game): string {
   return `
-    <article class="library-card">
+    <article class="library-card" data-game-slug="${game.slug}">
       <div class="library-card-image-wrap">
         <img
           class="library-card-image"
           src="${game.cardImage}"
           alt="${game.name}"
+          draggable="false"
         >
       </div>
 
@@ -756,6 +767,7 @@ function libraryCardTemplate(game: LibraryGame): string {
           class="library-details-button"
           type="button"
           data-game-details-open
+          data-game-slug="${game.slug}"
         >
           Details
         </button>
@@ -764,83 +776,133 @@ function libraryCardTemplate(game: LibraryGame): string {
   `;
 }
 
-function renderLibraryCards(): void {
-  libraryGrid.innerHTML = libraryGames
-    .slice(0, 12)
-    .map(libraryCardTemplate)
+function librarySkeletonMarkup(): string {
+  return Array.from(
+    { length: LIBRARY_PAGE_SIZE },
+    () => `
+      <article class="library-card library-card--skeleton" aria-hidden="true">
+        <div class="library-card-image-wrap">
+          <span class="api-skeleton api-skeleton--fill"></span>
+        </div>
+        <div class="library-card-body">
+          <span class="api-skeleton api-skeleton--line"></span>
+          <br>
+          <span class="api-skeleton api-skeleton--line"></span>
+          <br>
+          <span class="api-skeleton api-skeleton--line"></span>
+        </div>
+      </article>
+    `,
+  ).join("");
+}
+
+function renderCategories(): void {
+  libraryChips.innerHTML = libraryCategories
+    .map((category) => {
+      const isActive = category.slug === libraryCategory;
+
+      return `
+        <button
+          class="library-chip ${isActive ? "library-chip--active" : ""}"
+          type="button"
+          data-category="${category.slug}"
+          aria-pressed="${String(isActive)}"
+        >
+          ${category.label}
+        </button>
+      `;
+    })
     .join("");
 }
 
-async function loadLibraryGames(): Promise<void> {
-  const response = await fetch("/assets/data/all-games-seed.json");
-
-  if (!response.ok) {
-    throw new Error(`Failed to load library games: ${response.status}`);
-  }
-
-  const result: LibraryGamesResponse = await response.json();
-  libraryGames = result.data;
-  renderLibraryCards();
+function categorySkeletonMarkup(): string {
+  return Array.from(
+    { length: 6 },
+    () => '<span class="api-skeleton library-chip-skeleton"></span>',
+  ).join("");
 }
 
-libraryChips.forEach((chip) => {
-  chip.addEventListener("click", () => {
-    libraryChips.forEach((item) => {
-      const isCurrent = item === chip;
-      item.classList.toggle("library-chip--active", isCurrent);
-      item.setAttribute("aria-pressed", String(isCurrent));
-    });
-  });
-});
+async function loadCategories(): Promise<boolean> {
+  libraryChips.innerHTML = categorySkeletonMarkup();
 
-function closeSortMenu(): void {
-  librarySortMenu.hidden = true;
-  librarySortTrigger.setAttribute("aria-expanded", "false");
-}
+  try {
+    const result = await getCategories();
+    libraryCategories = result.data;
 
-librarySortTrigger.addEventListener("click", () => {
-  const shouldOpen = librarySortMenu.hidden;
-  librarySortMenu.hidden = !shouldOpen;
-  librarySortTrigger.setAttribute("aria-expanded", String(shouldOpen));
-});
-
-librarySortOptions.forEach((option) => {
-  option.addEventListener("click", () => {
-    const value = option.dataset.sortValue;
-
-    if (!value) {
-      return;
+    if (libraryCategories.length === 0) {
+      libraryChips.innerHTML = apiStateMarkup("No categories found.", "empty");
+      return false;
     }
 
-    librarySortValue.textContent = value;
+    const defaultCategory =
+      libraryCategories.find((category) => category.isDefault) ??
+      libraryCategories[0];
 
-    librarySortOptions.forEach((item) => {
-      item.setAttribute("aria-selected", String(item === option));
-    });
+    const categoryStillExists = libraryCategories.some(
+      (category) => category.slug === libraryCategory,
+    );
 
-    closeSortMenu();
-  });
-});
+    if (!categoryStillExists) {
+      libraryCategory = defaultCategory.slug;
+    } else if (libraryCategory === "all") {
+      libraryCategory = defaultCategory.slug;
+    }
 
-document.addEventListener("click", (event: MouseEvent) => {
-  if (
-    !librarySortMenu.hidden &&
-    event.target instanceof Node &&
-    !librarySort.contains(event.target)
-  ) {
-    closeSortMenu();
+    renderCategories();
+    return true;
+  } catch {
+    libraryCategories = [];
+    libraryChips.innerHTML = apiStateMarkup(
+      "Categories could not be loaded.",
+      "error",
+      "categories",
+    );
+    showSnackbar("Failed to load categories.", "error");
+    return false;
   }
-});
+}
+
+function renderSortOptions(): void {
+  librarySortMenu.innerHTML = LIBRARY_SORT_OPTIONS.map((option) => {
+    const selected = option.value === librarySortOrder;
+
+    return `
+      <button
+        type="button"
+        role="option"
+        aria-selected="${String(selected)}"
+        data-sort-value="${option.value}"
+      >
+        ${option.label}
+      </button>
+    `;
+  }).join("");
+
+  const current =
+    LIBRARY_SORT_OPTIONS.find((option) => option.value === librarySortOrder) ??
+    LIBRARY_SORT_OPTIONS[0];
+
+  librarySortValue.textContent = current.label;
+}
+
+function renderLibraryCards(games: Game[]): void {
+  if (games.length === 0) {
+    libraryGrid.innerHTML = apiStateMarkup("Data Not Found", "empty");
+    return;
+  }
+
+  libraryGrid.innerHTML = games.map(libraryCardTemplate).join("");
+}
 
 function visiblePaginationNumbers(): number[] {
   const visibleCount = window.innerWidth <= 600 ? 3 : 4;
+  const safeTotalPages = Math.max(1, libraryTotalPages);
   const half = Math.floor(visibleCount / 2);
 
   let start = Math.max(1, libraryPageNumber - half);
-  let end = start + visibleCount - 1;
+  const end = Math.min(safeTotalPages, start + visibleCount - 1);
 
-  if (end > LIBRARY_PAGE_COUNT) {
-    end = LIBRARY_PAGE_COUNT;
+  if (end - start + 1 < visibleCount) {
     start = Math.max(1, end - visibleCount + 1);
   }
 
@@ -848,6 +910,8 @@ function visiblePaginationNumbers(): number[] {
 }
 
 function renderPagination(): void {
+  const safeTotalPages = Math.max(1, libraryTotalPages);
+
   paginationPages.innerHTML = visiblePaginationNumbers()
     .map(
       (page) => `
@@ -866,13 +930,140 @@ function renderPagination(): void {
     )
     .join("");
 
-  paginationPrev.disabled = libraryPageNumber === 1;
-  paginationNext.disabled = libraryPageNumber === LIBRARY_PAGE_COUNT;
+  paginationPrev.disabled = libraryPageNumber <= 1;
+  paginationNext.disabled = libraryPageNumber >= safeTotalPages;
 }
 
-function setLibraryPage(page: number): void {
-  libraryPageNumber = Math.min(LIBRARY_PAGE_COUNT, Math.max(1, page));
+async function loadLibraryGames(): Promise<void> {
+  libraryGrid.innerHTML = librarySkeletonMarkup();
+
+  try {
+    const result = await getGames({
+      category: libraryCategory,
+      sort: librarySortOrder,
+      page: libraryPageNumber,
+      limit: LIBRARY_PAGE_SIZE,
+    });
+
+    libraryPageNumber = Math.max(1, result.meta.page || 1);
+    libraryTotalPages = Math.max(1, result.meta.totalPages || 1);
+
+    renderLibraryCards(result.data);
+    renderPagination();
+  } catch {
+    libraryTotalPages = 1;
+    libraryPageNumber = 1;
+    libraryGrid.innerHTML = apiStateMarkup(
+      "Library games could not be loaded.",
+      "error",
+      "library",
+    );
+    renderPagination();
+    showSnackbar("Failed to load Library games.", "error");
+  }
+}
+
+async function initializeLibrary(): Promise<void> {
+  librarySortOrder = "rating-desc";
+  libraryPageNumber = 1;
+  renderSortOptions();
   renderPagination();
+
+  const categoriesLoaded = await loadCategories();
+
+  if (categoriesLoaded) {
+    await loadLibraryGames();
+  }
+}
+
+libraryChips.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const chip = target.closest<HTMLButtonElement>("[data-category]");
+
+  if (!chip) {
+    return;
+  }
+
+  const category = chip.dataset.category;
+
+  if (!category || category === libraryCategory) {
+    return;
+  }
+
+  libraryCategory = category;
+  libraryPageNumber = 1;
+  renderCategories();
+  void loadLibraryGames();
+});
+
+function closeSortMenu(): void {
+  librarySortMenu.hidden = true;
+  librarySortTrigger.setAttribute("aria-expanded", "false");
+}
+
+librarySortTrigger.addEventListener("click", () => {
+  const shouldOpen = librarySortMenu.hidden;
+  librarySortMenu.hidden = !shouldOpen;
+  librarySortTrigger.setAttribute("aria-expanded", String(shouldOpen));
+});
+
+librarySortMenu.addEventListener("click", (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const option = target.closest<HTMLButtonElement>("[data-sort-value]");
+
+  if (!option) {
+    return;
+  }
+
+  const value = option.dataset.sortValue;
+
+  if (
+    value !== "rating-desc" &&
+    value !== "rating-asc" &&
+    value !== "name-asc" &&
+    value !== "name-desc"
+  ) {
+    return;
+  }
+
+  librarySortOrder = value;
+  libraryPageNumber = 1;
+  renderSortOptions();
+  closeSortMenu();
+  void loadLibraryGames();
+});
+
+document.addEventListener("click", (event: MouseEvent) => {
+  if (
+    !librarySortMenu.hidden &&
+    event.target instanceof Node &&
+    !librarySort.contains(event.target)
+  ) {
+    closeSortMenu();
+  }
+});
+
+function setLibraryPage(page: number): void {
+  const safeTotalPages = Math.max(1, libraryTotalPages);
+  const nextPage = Math.min(safeTotalPages, Math.max(1, page));
+
+  if (nextPage === libraryPageNumber) {
+    return;
+  }
+
+  libraryPageNumber = nextPage;
+  renderPagination();
+  void loadLibraryGames();
 }
 
 paginationPages.addEventListener("click", (event: MouseEvent) => {
@@ -903,10 +1094,7 @@ paginationNext.addEventListener("click", () => {
 
 window.addEventListener("resize", renderPagination);
 
-loadLibraryGames().catch((error: unknown) => {
-  console.error(error);
-});
-renderPagination();
+void initializeLibrary();
 showPage("home");
 
 /* =========================

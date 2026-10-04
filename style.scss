@@ -3259,3 +3259,26 @@ body.menu-open {
     background-position: -200% 0;
   }
 }
+
+/* =========================
+   STORY 3 — LIBRARY API
+   ========================= */
+
+.library-chip-skeleton {
+  width: 112px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.library-card--skeleton {
+  min-height: 360px;
+}
+
+.library-grid > .api-state {
+  grid-column: 1 / -1;
+}
+
+.library-chips > .api-state {
+  min-width: min(100%, 520px);
+}
