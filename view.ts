@@ -2,15 +2,15 @@ export function renderApp(): void {
   document.body.innerHTML = `
     <div class="app">
       <header class="header">
-        <a class="logo" href="#home" data-page-link="home" aria-label="MiniGames home">
+        <a class="logo" href="/home" data-page-link="home" aria-label="MiniGames home">
           <img src="/assets/svg/logo.svg" alt="" />
           <span>MiniGames</span>
         </a>
 
         <!-- Desktop navigation -->
         <nav class="nav" aria-label="Main navigation">
-          <a href="#home" data-page-link="home">Home</a>
-          <a href="#library" data-page-link="library">Library</a>
+          <a href="/home" data-page-link="home">Home</a>
+          <a href="/library" data-page-link="library">Library</a>
           <a href="#home">Tournaments</a>
           <a href="#home">Community</a>
 
@@ -62,15 +62,15 @@ export function renderApp(): void {
       >
         <aside class="mobile-menu" aria-label="Mobile navigation">
           <div class="mobile-menu-header">
-            <a class="logo" href="#home" data-page-link="home">
+            <a class="logo" href="/home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
           </div>
 
           <nav class="mobile-menu-nav">
-            <a href="#home" data-page-link="home">Home</a>
-            <a href="#library" data-page-link="library">Library</a>
+            <a href="/home" data-page-link="home">Home</a>
+            <a href="/library" data-page-link="library">Library</a>
             <a href="#home">Tournaments</a>
             <a href="#home">Community</a>
           </nav>
@@ -111,7 +111,7 @@ export function renderApp(): void {
               </span>
             </p>
 
-            <a class="hero-button" href="#library" data-page-link="library">Browse Library</a>
+            <a class="hero-button" href="/library" data-page-link="library">Browse Library</a>
           </div>
         </section>
 
@@ -350,10 +350,29 @@ export function renderApp(): void {
         </section>
       </main>
 
+
+      <main
+        id="not-found-page"
+        class="not-found-page"
+        data-page-view="not-found"
+        hidden
+      >
+        <section class="not-found-card">
+          <p class="not-found-code">404</p>
+          <h1>Page Not Found</h1>
+          <p>
+            The page you requested does not exist.
+          </p>
+          <button class="not-found-home" type="button" data-return-home>
+            Return to Home Page
+          </button>
+        </section>
+      </main>
+
       <footer class="footer">
         <div class="footer-main">
           <div class="footer-brand">
-            <a class="footer-logo" href="#home" data-page-link="home">
+            <a class="footer-logo" href="/home" data-page-link="home">
               <img src="/assets/svg/logo.svg" alt="" />
               <span>MiniGames</span>
             </a>
@@ -369,8 +388,8 @@ export function renderApp(): void {
               <h3>Explore</h3>
 
               <ul>
-                <li><a href="#home" data-page-link="home">Home</a></li>
-                <li><a href="#library" data-page-link="library">Library</a></li>
+                <li><a href="/home" data-page-link="home">Home</a></li>
+                <li><a href="/library" data-page-link="library">Library</a></li>
                 <li><a href="#home">Categories</a></li>
                 <li><a href="#home">Tournaments</a></li>
               </ul>

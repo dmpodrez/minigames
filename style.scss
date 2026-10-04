@@ -440,6 +440,17 @@ body.menu-open {
   width: 100%;
   overflow: hidden;
   touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.game-card img {
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .games-track {
@@ -3146,4 +3157,231 @@ body.menu-open {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* =========================
+   STORY 3 — API FEEDBACK
+   ========================= */
+
+.api-state {
+  width: 100%;
+  min-height: 112px;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  border: 2px solid $text-primary;
+  border-radius: 16px;
+  background: $white;
+  color: $text-primary;
+  text-align: center;
+}
+
+.api-state__retry {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 2px solid $text-primary;
+  border-radius: 10px;
+  background: $primary;
+  color: $text-primary;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.api-skeleton {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(36, 33, 69, 0.08) 25%,
+    rgba(36, 33, 69, 0.16) 50%,
+    rgba(36, 33, 69, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: api-skeleton-loading 1.2s linear infinite;
+}
+
+.api-skeleton--fill {
+  width: 100%;
+  height: 100%;
+}
+
+.api-skeleton--line {
+  width: 100%;
+  height: 18px;
+}
+
+.api-skeleton-row td {
+  height: 60px;
+}
+
+.api-snackbar {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 14px 18px;
+  border: 2px solid $text-primary;
+  border-radius: 12px;
+  background: $white;
+  color: $text-primary;
+  font-weight: 700;
+  box-shadow: 4px 4px 0 $text-primary;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.api-snackbar--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.api-snackbar--error {
+  background: #ffe7e7;
+}
+
+.api-snackbar--success {
+  background: #e7ffe9;
+}
+
+@keyframes api-skeleton-loading {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* =========================
+   STORY 3 — LIBRARY API
+   ========================= */
+
+.library-chip-skeleton {
+  width: 112px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.library-card--skeleton {
+  min-height: 360px;
+}
+
+.library-grid > .api-state {
+  grid-column: 1 / -1;
+}
+
+.library-chips > .api-state {
+  min-width: min(100%, 520px);
+}
+
+/* =========================
+   STORY 3 — GAME DETAILS API
+   ========================= */
+
+.game-details-hero-image--loading {
+  background: linear-gradient(
+    90deg,
+    rgba(36, 33, 69, 0.08) 25%,
+    rgba(36, 33, 69, 0.16) 50%,
+    rgba(36, 33, 69, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: api-skeleton-loading 1.2s linear infinite;
+}
+
+.game-details-badge-skeleton {
+  width: 92px;
+  min-height: 30px;
+  border: 0;
+}
+
+.comment-author {
+  display: grid;
+  gap: 4px;
+}
+
+.comment-author time {
+  color: $text-secondary;
+  font-size: 12px;
+}
+
+.comment-like--readonly {
+  cursor: default;
+}
+
+.game-favorite-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.game-comments .api-state,
+.game-details-description .api-state {
+  min-height: 96px;
+}
+
+/* =========================
+   STORY 3 — ROUTER / 404
+   ========================= */
+
+.not-found-page {
+  min-height: 68vh;
+  padding: clamp(48px, 8vw, 112px) 24px;
+  display: grid;
+  place-items: center;
+  background: $background;
+}
+
+.not-found-card {
+  width: min(640px, 100%);
+  padding: clamp(32px, 6vw, 64px);
+  border: 2px solid $text-primary;
+  border-radius: 20px;
+  background: $white;
+  box-shadow: 6px 6px 0 $text-primary;
+  text-align: center;
+
+  h1 {
+    margin: 8px 0 12px;
+    font-size: clamp(32px, 6vw, 56px);
+  }
+
+  p:not(.not-found-code) {
+    margin: 0;
+    color: $text-secondary;
+  }
+}
+
+.not-found-code {
+  margin: 0;
+  color: $tertiary;
+  font-size: clamp(56px, 10vw, 96px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.not-found-home {
+  min-height: 48px;
+  margin-top: 28px;
+  padding: 0 24px;
+  border: 2px solid $text-primary;
+  border-radius: 12px;
+  background: $primary;
+  color: $text-primary;
+  font: inherit;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 $text-primary;
+  cursor: pointer;
+}
+
+.not-found-home:hover {
+  background: $hover;
 }
