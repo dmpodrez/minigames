@@ -15,7 +15,10 @@ import {
   type Player,
 } from "./api";
 import { renderApp } from "./view";
-
+import {
+  setupAuthFormValidation,
+  type AuthFormMode,
+} from "./auth-form-validation";
 renderApp();
 
 function getElement<T extends Element>(selector: string): T {
@@ -439,12 +442,27 @@ const authSwitchButtons =
   document.querySelectorAll<HTMLButtonElement>("[data-auth-switch]");
 
 const authForms = document.querySelectorAll<HTMLFormElement>(".auth-form");
+const authFormControllers = Array.from(authPanels)
+  .map((panel) => {
+    const mode = panel.dataset.authPanel;
+    const form = panel.querySelector<HTMLFormElement>(".auth-form");
 
+    if ((mode !== "login" && mode !== "register") || !form) {
+      return null;
+    }
+
+    return setupAuthFormValidation(form, mode as AuthFormMode);
+  })
+  .filter(
+    (controller): controller is ReturnType<typeof setupAuthFormValidation> =>
+      controller !== null,
+  );
 function isAuthMode(value: string | null | undefined): value is AuthMode {
   return value === "login" || value === "register";
 }
 
 function setAuthMode(mode: AuthMode): void {
+  authFormControllers.forEach((controller) => controller.reset());
   authTabs.forEach((tab) => {
     const isActive = tab.dataset.authTab === mode;
 
