@@ -15,10 +15,8 @@ import {
   type Player,
 } from "./api";
 import { renderApp } from "./view";
-import {
-  setupAuthFormValidation,
-  type AuthFormMode,
-} from "./auth-form-validation";
+import { setupAuthFormValidation } from "./auth-form-validation";
+import { setupAuthFlow } from "./auth-flow";
 renderApp();
 
 function getElement<T extends Element>(selector: string): T {
@@ -441,28 +439,27 @@ const authPanels = document.querySelectorAll<HTMLElement>("[data-auth-panel]");
 const authSwitchButtons =
   document.querySelectorAll<HTMLButtonElement>("[data-auth-switch]");
 
-const authForms = document.querySelectorAll<HTMLFormElement>(".auth-form");
-const authFormControllers = Array.from(authPanels)
-  .map((panel) => {
-    const mode = panel.dataset.authPanel;
-    const form = panel.querySelector<HTMLFormElement>(".auth-form");
+const loginForm = getElement<HTMLFormElement>(
+  '[data-auth-panel="login"] .auth-form',
+);
 
-    if ((mode !== "login" && mode !== "register") || !form) {
-      return null;
-    }
+const registerForm = getElement<HTMLFormElement>(
+  '[data-auth-panel="register"] .auth-form',
+);
 
-    return setupAuthFormValidation(form, mode as AuthFormMode);
-  })
-  .filter(
-    (controller): controller is ReturnType<typeof setupAuthFormValidation> =>
-      controller !== null,
-  );
+const loginFormController = setupAuthFormValidation(loginForm, "login");
+
+const registerFormController = setupAuthFormValidation(
+  registerForm,
+  "register",
+);
 function isAuthMode(value: string | null | undefined): value is AuthMode {
   return value === "login" || value === "register";
 }
 
 function setAuthMode(mode: AuthMode): void {
-  authFormControllers.forEach((controller) => controller.reset());
+  loginFormController.reset();
+  registerFormController.reset();
   authTabs.forEach((tab) => {
     const isActive = tab.dataset.authTab === mode;
 
@@ -504,7 +501,24 @@ function updateAuthUrl(mode: AuthMode | null, replace = false): void {
 
   writeUrl(url, replace);
 }
+const authFlow = setupAuthFlow({
+  dialog: authDialog,
+  loginForm,
+  registerForm,
+  validateLogin: loginFormController.validate,
+  validateRegister: registerFormController.validate,
 
+  onSuccess: (user) => {
+    const name = user.displayName ?? user.email;
+
+    showSnackbar(`Welcome, ${name}!`, "success");
+    updateAuthUrl(null, true);
+  },
+
+  onError: (message) => {
+    showSnackbar(message, "error");
+  },
+});
 authOpenButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const mode = button.dataset.authMode;
@@ -544,12 +558,6 @@ authDialog.addEventListener("click", (event: MouseEvent) => {
 authDialog.addEventListener("cancel", (event: Event) => {
   event.preventDefault();
   updateAuthUrl(null, true);
-});
-
-authForms.forEach((form) => {
-  form.addEventListener("submit", (event: SubmitEvent) => {
-    event.preventDefault();
-  });
 });
 
 const passwordToggleButtons =
@@ -634,7 +642,24 @@ mobileMenuOverlay.addEventListener("click", (event: MouseEvent) => {
     closeMobileMenu();
   }
 });
+authDialog.addEventListener("click", (event: MouseEvent) => {
+  if (authFlow.isPending()) {
+    return;
+  }
 
+  if (event.target === authDialog) {
+    updateAuthUrl(null, true);
+  }
+});
+authDialog.addEventListener("cancel", (event: Event) => {
+  event.preventDefault();
+
+  if (authFlow.isPending()) {
+    return;
+  }
+
+  updateAuthUrl(null, true);
+});
 /* Close after clicking navigation link */
 mobileMenuLinks.forEach((link) => {
   link.addEventListener("click", closeMobileMenu);
