@@ -305,7 +305,66 @@ img {
 body.menu-open {
   overflow: hidden;
 }
+.auth-profile {
+  display: flex;
+  align-items: center;
+  gap: $s2-space-sm;
+}
 
+.auth-profile__avatar {
+  width: $s4-profile-avatar-size;
+  height: $s4-profile-avatar-size;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: $s2-border solid $text-primary;
+  border-radius: $s2-radius-pill;
+  background-color: $primary;
+}
+
+.auth-profile__initials {
+  font-size: $s4-profile-font-size;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.auth-profile__avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-profile__name {
+  max-width: $s4-profile-name-max-width;
+  overflow: hidden;
+  font-size: $s4-profile-font-size;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-profile__logout {
+  padding: $s2-space-sm $s2-space-md;
+  border: $s2-border solid $text-primary;
+  border-radius: $s2-radius-sm;
+  background-color: transparent;
+  color: $text-primary;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-profile--mobile-header {
+  .auth-profile__avatar {
+    width: $s4-profile-avatar-mobile-size;
+    height: $s4-profile-avatar-mobile-size;
+  }
+}
+
+.auth-profile--mobile-menu {
+  flex-wrap: wrap;
+}
 /* =========================
    HERO
    ========================= */
