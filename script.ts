@@ -17,6 +17,8 @@ import {
 import { renderApp } from "./view";
 import { setupAuthFormValidation } from "./auth-form-validation";
 import { setupAuthFlow } from "./auth-flow";
+import { createSessionManager } from "./session-manager";
+import { setupProfileUi } from "./profile-ui";
 renderApp();
 
 function getElement<T extends Element>(selector: string): T {
@@ -501,6 +503,32 @@ function updateAuthUrl(mode: AuthMode | null, replace = false): void {
 
   writeUrl(url, replace);
 }
+const profileUi = setupProfileUi({
+  onLogout: async () => {
+    try {
+      await sessionManager.logout();
+
+      showSnackbar("You have been logged out.", "success");
+    } catch {
+      showSnackbar(
+        "You are logged out locally, but Firebase sign-out failed.",
+        "error",
+      );
+    }
+  },
+});
+
+const sessionManager = createSessionManager({
+  onSessionChange: (session) => {
+    profileUi.render(session);
+  },
+
+  onExpired: () => {
+    showSnackbar("Your session has expired. Please sign in again.", "error");
+  },
+});
+
+void sessionManager.restore();
 const authFlow = setupAuthFlow({
   dialog: authDialog,
   loginForm,
@@ -509,15 +537,21 @@ const authFlow = setupAuthFlow({
   validateRegister: registerFormController.validate,
 
   onSuccess: (user) => {
-    const name = user.displayName ?? user.email;
+    const session = sessionManager.start(user);
 
-    showSnackbar(`Welcome, ${name}!`, "success");
+    showSnackbar(`Welcome, ${session.displayName}!`, "success");
+
     updateAuthUrl(null, true);
   },
 
   onError: (message) => {
     showSnackbar(message, "error");
   },
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && sessionManager.getSession()) {
+    void sessionManager.check();
+  }
 });
 authOpenButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -1808,6 +1842,9 @@ function normalizedPathname(): string {
 }
 
 async function applyRoute(): Promise<void> {
+  if (sessionManager.getSession()) {
+    await sessionManager.check();
+  }
   const url = new URL(window.location.href);
   const pathname = normalizedPathname();
 
@@ -1834,8 +1871,17 @@ async function applyRoute(): Promise<void> {
   }
 
   const authMode = url.searchParams.get("auth");
+  const activeSession = sessionManager.getSession();
 
-  if (isAuthMode(authMode)) {
+  if (isAuthMode(authMode) && activeSession) {
+    url.searchParams.delete("auth");
+
+    window.history.replaceState({}, "", routeUrlString(url));
+
+    closeAuthDialogUi();
+
+    showSnackbar("You are already signed in.", "success");
+  } else if (isAuthMode(authMode)) {
     if (gameDetailsDialog.open) {
       closeGameDetailsDialogUi();
     }

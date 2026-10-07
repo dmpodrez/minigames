@@ -19,29 +19,66 @@ function createAuthUi() {
   document.body.innerHTML = `
     <dialog class="auth-dialog">
       <form class="login-form">
-        <input name="email" value="user@example.com" />
-        <input name="password" value="abcdef" />
-        <button type="submit">Login</button>
+        <input
+          name="email"
+          value="user@example.com"
+        />
+        <input
+          name="password"
+          value="abcdef"
+        />
+        <button
+          class="login-submit"
+          type="submit"
+        >
+          Login
+        </button>
       </form>
 
       <form class="register-form">
-        <input name="username" value="Alex99" />
-        <input name="email" value="alex@example.com" />
-        <input name="password" value="Abc123!" />
-        <button type="submit">Register</button>
+        <input
+          name="username"
+          value="Alex99"
+        />
+        <input
+          name="email"
+          value="alex@example.com"
+        />
+        <input
+          name="password"
+          value="Abc123!"
+        />
+        <button
+          class="register-submit"
+          type="submit"
+        >
+          Register
+        </button>
       </form>
 
-      <button class="google-button" type="button">
+      <button
+        class="google-button"
+        type="button"
+      >
         Google
       </button>
     </dialog>
   `;
 
   return {
-    dialog: document.querySelector<HTMLDialogElement>("dialog")!,
+    dialog: document.querySelector<HTMLDialogElement>(".auth-dialog")!,
     loginForm: document.querySelector<HTMLFormElement>(".login-form")!,
     registerForm: document.querySelector<HTMLFormElement>(".register-form")!,
   };
+}
+
+function submit(form: HTMLFormElement): void {
+  form.dispatchEvent(
+    new Event("submit", {
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
 }
 
 describe("auth flow", () => {
@@ -69,21 +106,18 @@ describe("auth flow", () => {
       onError: vi.fn(),
     });
 
-    ui.loginForm.dispatchEvent(
-      new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    submit(ui.loginForm);
 
     await vi.waitFor(() => {
       expect(loginWithEmailMock).toHaveBeenCalledWith(
         "user@example.com",
         "abcdef",
       );
-    });
 
-    expect(onSuccess).toHaveBeenCalledOnce();
+      expect(onSuccess).toHaveBeenCalledOnce();
+
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
+    });
   });
 
   it("registers with email, password and username", async () => {
@@ -103,12 +137,7 @@ describe("auth flow", () => {
       onError: vi.fn(),
     });
 
-    ui.registerForm.dispatchEvent(
-      new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    submit(ui.registerForm);
 
     await vi.waitFor(() => {
       expect(registerWithEmailMock).toHaveBeenCalledWith(
@@ -116,6 +145,8 @@ describe("auth flow", () => {
         "Abc123!",
         "Alex99",
       );
+
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
     });
   });
 
@@ -130,14 +161,12 @@ describe("auth flow", () => {
       onError: vi.fn(),
     });
 
-    ui.loginForm.dispatchEvent(
-      new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    submit(ui.loginForm);
+    submit(ui.registerForm);
 
     expect(loginWithEmailMock).not.toHaveBeenCalled();
+
+    expect(registerWithEmailMock).not.toHaveBeenCalled();
   });
 
   it("locks controls while authentication is pending", async () => {
@@ -166,24 +195,17 @@ describe("auth flow", () => {
       onError: vi.fn(),
     });
 
-    ui.loginForm.dispatchEvent(
-      new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    submit(ui.loginForm);
 
     await vi.waitFor(() => {
       expect(ui.dialog.getAttribute("aria-busy")).toBe("true");
     });
 
-    const controls = ui.dialog.querySelectorAll<
-      HTMLInputElement | HTMLButtonElement
-    >("input, button");
-
-    controls.forEach((control) => {
-      expect(control.disabled).toBe(true);
-    });
+    ui.dialog
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>("input, button")
+      .forEach((control) => {
+        expect(control.disabled).toBe(true);
+      });
 
     resolveLogin?.({
       email: "user@example.com",
@@ -217,10 +239,12 @@ describe("auth flow", () => {
 
     await vi.waitFor(() => {
       expect(loginWithGoogleMock).toHaveBeenCalledOnce();
+
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
     });
   });
 
-  it("keeps the dialog usable after authentication failure", async () => {
+  it("restores controls after authentication failure", async () => {
     const ui = createAuthUi();
     const onError = vi.fn();
 
@@ -234,19 +258,85 @@ describe("auth flow", () => {
       onError,
     });
 
-    ui.loginForm.dispatchEvent(
-      new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    submit(ui.loginForm);
+
+    await vi.waitFor(() => {
+      expect(onError).toHaveBeenCalledWith("Invalid credentials");
+
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
+    });
+
+    ui.dialog
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>("input, button")
+      .forEach((control) => {
+        expect(control.disabled).toBe(false);
+      });
+  });
+
+  it("uses fallback message for non-Error rejection", async () => {
+    const ui = createAuthUi();
+    const onError = vi.fn();
+
+    loginWithEmailMock.mockRejectedValue("firebase-error");
+
+    setupAuthFlow({
+      ...ui,
+      validateLogin: () => true,
+      validateRegister: () => true,
+      onSuccess: vi.fn(),
+      onError,
+    });
+
+    submit(ui.loginForm);
 
     await vi.waitFor(() => {
       expect(onError).toHaveBeenCalledWith(
         "Authentication failed. Please try again.",
       );
+
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
+    });
+  });
+
+  it("prevents duplicate requests while pending", async () => {
+    const ui = createAuthUi();
+
+    let resolveLogin:
+      | ((value: {
+          email: string;
+          displayName: string;
+          avatarUrl: null;
+        }) => void)
+      | undefined;
+
+    loginWithEmailMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+
+    setupAuthFlow({
+      ...ui,
+      validateLogin: () => true,
+      validateRegister: () => true,
+      onSuccess: vi.fn(),
+      onError: vi.fn(),
     });
 
-    expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
+    submit(ui.loginForm);
+    submit(ui.loginForm);
+
+    expect(loginWithEmailMock).toHaveBeenCalledTimes(1);
+
+    resolveLogin?.({
+      email: "user@example.com",
+      displayName: "User",
+      avatarUrl: null,
+    });
+
+    await vi.waitFor(() => {
+      expect(ui.dialog.getAttribute("aria-busy")).toBe("false");
+    });
   });
 });

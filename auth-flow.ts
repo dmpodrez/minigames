@@ -72,8 +72,13 @@ export function setupAuthFlow(options: AuthFlowOptions): AuthFlowController {
       const user = await action();
 
       await options.onSuccess(user);
-    } catch {
-      options.onError("Authentication failed. Please try again.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Authentication failed. Please try again.";
+
+      options.onError(message);
     } finally {
       setPending(false);
     }
@@ -87,6 +92,7 @@ export function setupAuthFlow(options: AuthFlowOptions): AuthFlowController {
     }
 
     const email = getInput(options.loginForm, "email").value.trim();
+
     const password = getInput(options.loginForm, "password").value;
 
     void run(() => loginWithEmail(email, password));
@@ -100,7 +106,9 @@ export function setupAuthFlow(options: AuthFlowOptions): AuthFlowController {
     }
 
     const username = getInput(options.registerForm, "username").value.trim();
+
     const email = getInput(options.registerForm, "email").value.trim();
+
     const password = getInput(options.registerForm, "password").value;
 
     void run(() => registerWithEmail(email, password, username));

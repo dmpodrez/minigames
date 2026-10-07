@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCtWAAjGXTiNzOHVkH6Yi2rXO_2Mp1B2PU",
+  apiKey: "AIzaSyCtWAAjGXTiNzOHVkH6Yi2rXO_2MplB2PU",
   authDomain: "minigames-dmpodrez.firebaseapp.com",
   projectId: "minigames-dmpodrez",
   storageBucket: "minigames-dmpodrez.firebasestorage.app",
