@@ -6,14 +6,23 @@ import {
   getGameComments,
   getGameDetails,
   getGames,
+  createGameComment,
   getLeaderboard,
   type Category,
   type Game,
   type GameComment,
   type GameDetails,
   type GameSort,
+  toggleGameFavorite,
+  toggleCommentLike,
   type Player,
 } from "./api";
+import {
+  createAvatarTokenResolver,
+  getCommentInitial,
+  resolveCommentAuthorName,
+  validateCommentText,
+} from "./comment-utils";
 import { renderApp } from "./view";
 import { setupAuthFormValidation } from "./auth-form-validation";
 import { setupAuthFlow } from "./auth-flow";
@@ -31,7 +40,7 @@ function getElement<T extends Element>(selector: string): T {
   return element;
 }
 
-type SnackbarVariant = "success" | "error";
+type SnackbarVariant = "success" | "error" | "warning";
 
 const snackbar = document.createElement("div");
 snackbar.className = "api-snackbar";
@@ -42,6 +51,16 @@ document.body.append(snackbar);
 let snackbarTimer: number | null = null;
 
 function showSnackbar(message: string, variant: SnackbarVariant): void {
+  const openDialogs = Array.from(
+    document.querySelectorAll<HTMLDialogElement>("dialog[open]"),
+  );
+
+  const snackbarHost = openDialogs[openDialogs.length - 1] ?? document.body;
+
+  if (snackbar.parentElement !== snackbarHost) {
+    snackbarHost.append(snackbar);
+  }
+
   snackbar.textContent = message;
   snackbar.className = `api-snackbar api-snackbar--${variant} api-snackbar--visible`;
 
@@ -496,12 +515,22 @@ function updateAuthUrl(mode: AuthMode | null, replace = false): void {
 
   if (mode) {
     url.searchParams.set("auth", mode);
-    url.searchParams.delete("game");
   } else {
     url.searchParams.delete("auth");
   }
 
   writeUrl(url, replace);
+}
+function openAuthForProtectedAction(message: string): void {
+  const url = new URL(window.location.href);
+
+  url.searchParams.set("auth", "login");
+
+  window.history.pushState({}, "", routeUrlString(url));
+
+  openAuthDialogUi("login");
+
+  showSnackbar(message, "warning");
 }
 const profileUi = setupProfileUi({
   onLogout: async () => {
@@ -1276,9 +1305,22 @@ const commentsTitle = getElement<HTMLElement>("#comments-title");
 const commentList = getElement<HTMLElement>(".comment-list");
 const favoriteButton = getElement<HTMLButtonElement>(".game-favorite-button");
 const commentForm = getElement<HTMLFormElement>(".comment-form");
+const commentTextarea = getElement<HTMLTextAreaElement>("#game-comment");
 
+const commentSubmitButton = getElement<HTMLButtonElement>(
+  ".comment-form button[type='submit']",
+);
+
+const commentFormAvatar = getElement<HTMLElement>(".comment-form-avatar");
+
+const commentFormName = getElement<HTMLElement>(".comment-form-name");
 let currentGameSlug: string | null = null;
 let gameDetailsRequestId = 0;
+let commentRequestPending = false;
+const pendingCommentLikes = new Set<string>();
+
+let resolveCommentAvatarToken = createAvatarTokenResolver();
+let favoriteRequestPending = false;
 
 function escapeHtml(value: string): string {
   return value
@@ -1376,7 +1418,40 @@ function renderGameDetailsLoading(): void {
   favoriteButton.textContent = "♡ Favorites available after sign in";
   commentForm.hidden = true;
 }
+function resetCommentTextarea(): void {
+  commentTextarea.value = "";
+  commentTextarea.style.height = "";
+  commentTextarea.style.overflowY = "hidden";
+}
 
+function autoExpandCommentTextarea(): void {
+  commentTextarea.style.height = "auto";
+  commentTextarea.style.height = `${commentTextarea.scrollHeight}px`;
+
+  commentTextarea.style.overflowY =
+    commentTextarea.scrollHeight > commentTextarea.clientHeight
+      ? "auto"
+      : "hidden";
+}
+
+function renderCommentForm(): void {
+  const session = sessionManager.getSession();
+
+  if (!session) {
+    commentForm.hidden = true;
+    return;
+  }
+
+  const authorName = resolveCommentAuthorName(
+    session.displayName,
+    session.email,
+  );
+
+  commentForm.hidden = false;
+  commentFormAvatar.textContent = getCommentInitial(authorName);
+
+  commentFormName.textContent = authorName;
+}
 function renderGameDetails(details: GameDetails): void {
   gameDetailsHeroImage.classList.remove("game-details-hero-image--loading");
   gameDetailsHeroImage.src = details.heroImage;
@@ -1420,10 +1495,25 @@ function renderGameDetails(details: GameDetails): void {
       .join("");
   }
 
-  favoriteButton.disabled = true;
-  favoriteButton.setAttribute("aria-pressed", "false");
-  favoriteButton.textContent = `♡ ${formatLikes(details.likesCount)} likes`;
-  commentForm.hidden = true;
+  const session = sessionManager.getSession();
+
+  favoriteButton.disabled = false;
+
+  if (session) {
+    favoriteButton.setAttribute(
+      "aria-pressed",
+      String(details.isLikedByCurrentUser),
+    );
+
+    favoriteButton.textContent = details.isLikedByCurrentUser
+      ? `♥ Remove from Favorites · ${formatLikes(details.likesCount)}`
+      : `♡ Add to Favorites · ${formatLikes(details.likesCount)}`;
+  } else {
+    favoriteButton.setAttribute("aria-pressed", "false");
+    favoriteButton.textContent = "♡ Add to Favorites";
+  }
+
+  renderCommentForm();
 }
 
 function renderGameNotFound(): void {
@@ -1464,33 +1554,75 @@ function renderGameDetailsError(): void {
 function renderComments(comments: GameComment[], totalItems: number): void {
   commentsTitle.textContent = `Comments (${totalItems})`;
 
+  commentList.replaceChildren();
+
   if (comments.length === 0) {
     commentList.innerHTML = apiStateMarkup("No comments yet.", "empty");
     return;
   }
 
-  commentList.innerHTML = comments
-    .map(
-      (comment) => `
-        <article class="comment-item">
-          <div class="comment-heading">
-            <div class="comment-author">
-              <strong>${escapeHtml(comment.authorName)}</strong>
-              <time datetime="${escapeHtml(comment.createdAt)}">
-                ${formatRelativeTime(comment.createdAt)}
-              </time>
-            </div>
+  comments.forEach((comment) => {
+    const article = document.createElement("article");
 
-            <span class="comment-like comment-like--readonly">
-              ♡ ${comment.likesCount}
-            </span>
-          </div>
+    article.className = "comment-item";
 
-          <p>${escapeHtml(comment.text)}</p>
-        </article>
-      `,
-    )
-    .join("");
+    const heading = document.createElement("div");
+
+    heading.className = "comment-heading";
+
+    const authorBlock = document.createElement("div");
+
+    authorBlock.className = "comment-author";
+
+    const avatar = document.createElement("span");
+
+    avatar.className = `comment-avatar ${resolveCommentAvatarToken(
+      comment.authorName,
+    )}`;
+
+    avatar.textContent = getCommentInitial(comment.authorName);
+
+    avatar.setAttribute("aria-hidden", "true");
+
+    const authorText = document.createElement("div");
+
+    const authorName = document.createElement("strong");
+
+    authorName.textContent = comment.authorName;
+
+    const time = document.createElement("time");
+
+    time.dateTime = comment.createdAt;
+    time.textContent = formatRelativeTime(comment.createdAt);
+
+    authorText.append(authorName, time);
+    authorBlock.append(avatar, authorText);
+
+    const likeButton = document.createElement("button");
+
+    likeButton.type = "button";
+    likeButton.className = "comment-like";
+    likeButton.dataset.commentId = comment.commentId;
+
+    likeButton.setAttribute(
+      "aria-pressed",
+      String(comment.isLikedByCurrentUser),
+    );
+
+    if (comment.isLikedByCurrentUser) {
+      likeButton.classList.add("comment-like--active");
+    }
+
+    likeButton.textContent = `${comment.isLikedByCurrentUser ? "♥" : "♡"} ${comment.likesCount}`;
+
+    const text = document.createElement("p");
+
+    text.textContent = comment.text;
+
+    heading.append(authorBlock, likeButton);
+    article.append(heading, text);
+    commentList.append(article);
+  });
 }
 
 function renderCommentsError(): void {
@@ -1501,13 +1633,288 @@ function renderCommentsError(): void {
     "game-comments",
   );
 }
+commentTextarea.addEventListener("input", autoExpandCommentTextarea);
 
+commentTextarea.addEventListener("keydown", (event: KeyboardEvent) => {
+  if (event.key === "Enter" && !event.shiftKey && !commentRequestPending) {
+    event.preventDefault();
+    commentForm.requestSubmit();
+  }
+});
+
+commentForm.addEventListener("submit", async (event: SubmitEvent) => {
+  commentList.addEventListener("click", async (event: MouseEvent) => {
+    const target = event.target;
+
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const likeButton = target.closest<HTMLButtonElement>(
+      ".comment-like[data-comment-id]",
+    );
+
+    if (!likeButton) {
+      return;
+    }
+
+    const commentId = likeButton.dataset.commentId;
+
+    if (!commentId || pendingCommentLikes.has(commentId)) {
+      return;
+    }
+
+    const session = await sessionManager.check();
+
+    if (!session) {
+      openAuthForProtectedAction("Please sign in to like comments.");
+      return;
+    }
+
+    pendingCommentLikes.add(commentId);
+
+    const previousText = likeButton.textContent;
+
+    const previousPressed = likeButton.getAttribute("aria-pressed");
+
+    const wasActive = likeButton.classList.contains("comment-like--active");
+
+    likeButton.disabled = true;
+    likeButton.textContent = "Updating…";
+
+    try {
+      const result = await toggleCommentLike(commentId, session.email);
+
+      const { isLikedByCurrentUser, likesCount } = result.data;
+
+      likeButton.setAttribute("aria-pressed", String(isLikedByCurrentUser));
+
+      likeButton.classList.toggle("comment-like--active", isLikedByCurrentUser);
+
+      likeButton.textContent = `${isLikedByCurrentUser ? "♥" : "♡"} ${likesCount}`;
+
+      showSnackbar(
+        isLikedByCurrentUser ? "Comment liked." : "Comment like removed.",
+        "success",
+      );
+    } catch (error) {
+      likeButton.textContent = previousText;
+
+      if (previousPressed !== null) {
+        likeButton.setAttribute("aria-pressed", previousPressed);
+      }
+
+      likeButton.classList.toggle("comment-like--active", wasActive);
+
+      if (error instanceof ApiError) {
+        showSnackbar("Comment like could not be updated.", "error");
+      } else {
+        showSnackbar(
+          "The comment like result is unknown. Please check its current state before trying again.",
+          "warning",
+        );
+      }
+    } finally {
+      pendingCommentLikes.delete(commentId);
+
+      likeButton.disabled = false;
+    }
+  });
+  event.preventDefault();
+
+  if (commentRequestPending || !currentGameSlug) {
+    return;
+  }
+
+  const session = await sessionManager.check();
+
+  if (!session) {
+    openAuthForProtectedAction("Please sign in to leave a comment.");
+    return;
+  }
+
+  const validation = validateCommentText(commentTextarea.value);
+
+  if (!validation.valid) {
+    showSnackbar(validation.message, "warning");
+    return;
+  }
+
+  const authorName = resolveCommentAuthorName(
+    session.displayName,
+    session.email,
+  );
+
+  commentRequestPending = true;
+  commentTextarea.disabled = true;
+  commentSubmitButton.disabled = true;
+
+  try {
+    await createGameComment(currentGameSlug, {
+      userEmail: session.email,
+      authorName,
+      text: validation.text,
+    });
+
+    resetCommentTextarea();
+
+    showSnackbar("Comment posted successfully.", "success");
+
+    const requestId = gameDetailsRequestId;
+
+    await loadGameCommentsData(currentGameSlug, requestId);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      showSnackbar(
+        "Comment could not be submitted. Please try again.",
+        "error",
+      );
+    } else {
+      showSnackbar(
+        "Comment submission result is unknown. Check the comments before trying again.",
+        "warning",
+      );
+    }
+  } finally {
+    commentRequestPending = false;
+    commentTextarea.disabled = false;
+    commentSubmitButton.disabled = false;
+  }
+});
+favoriteButton.addEventListener("click", async () => {
+  if (!currentGameSlug || favoriteRequestPending) {
+    return;
+  }
+
+  const session = await sessionManager.check();
+
+  if (!session) {
+    openAuthForProtectedAction(
+      "Please sign in to add games to your favorites.",
+    );
+    return;
+  }
+
+  favoriteRequestPending = true;
+  favoriteButton.disabled = true;
+
+  const previousText = favoriteButton.textContent;
+
+  favoriteButton.textContent = "Updating…";
+
+  try {
+    const result = await toggleGameFavorite(currentGameSlug, session.email);
+
+    favoriteButton.setAttribute(
+      "aria-pressed",
+      String(result.data.isFavorited),
+    );
+
+    favoriteButton.textContent = result.data.isFavorited
+      ? `♥ Remove from Favorites · ${formatLikes(result.data.likesCount)}`
+      : `♡ Add to Favorites · ${formatLikes(result.data.likesCount)}`;
+
+    showSnackbar(
+      result.data.isFavorited
+        ? "Game added to favorites."
+        : "Game removed from favorites.",
+      "success",
+    );
+  } catch {
+    favoriteButton.textContent = previousText;
+
+    showSnackbar(
+      "Favorites could not be updated. Please check the current state before trying again.",
+      "error",
+    );
+  } finally {
+    favoriteRequestPending = false;
+    favoriteButton.disabled = false;
+  }
+});
+commentList.addEventListener("click", async (event: MouseEvent) => {
+  const target = event.target;
+
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const likeButton = target.closest<HTMLButtonElement>(
+    ".comment-like[data-comment-id]",
+  );
+
+  if (!likeButton) {
+    return;
+  }
+
+  const commentId = likeButton.dataset.commentId;
+
+  if (!commentId || pendingCommentLikes.has(commentId)) {
+    return;
+  }
+
+  const session = await sessionManager.check();
+
+  if (!session) {
+    openAuthForProtectedAction("Please sign in to like comments.");
+    return;
+  }
+
+  pendingCommentLikes.add(commentId);
+
+  const previousText = likeButton.textContent;
+  const previousPressed = likeButton.getAttribute("aria-pressed");
+
+  const wasActive = likeButton.classList.contains("comment-like--active");
+
+  likeButton.disabled = true;
+  likeButton.textContent = "Updating…";
+
+  try {
+    const result = await toggleCommentLike(commentId, session.email);
+
+    const { isLikedByCurrentUser, likesCount } = result.data;
+
+    likeButton.setAttribute("aria-pressed", String(isLikedByCurrentUser));
+
+    likeButton.classList.toggle("comment-like--active", isLikedByCurrentUser);
+
+    likeButton.textContent = `${isLikedByCurrentUser ? "♥" : "♡"} ${likesCount}`;
+
+    showSnackbar(
+      isLikedByCurrentUser ? "Comment liked." : "Comment like removed.",
+      "success",
+    );
+  } catch (error) {
+    likeButton.textContent = previousText;
+
+    if (previousPressed !== null) {
+      likeButton.setAttribute("aria-pressed", previousPressed);
+    }
+
+    likeButton.classList.toggle("comment-like--active", wasActive);
+
+    if (error instanceof ApiError) {
+      showSnackbar("Comment like could not be updated.", "error");
+    } else {
+      showSnackbar(
+        "The comment like result is unknown. Please check its current state before trying again.",
+        "warning",
+      );
+    }
+  } finally {
+    pendingCommentLikes.delete(commentId);
+    likeButton.disabled = false;
+  }
+});
 async function loadGameDetailsData(
   slug: string,
   requestId: number,
 ): Promise<void> {
   try {
-    const result = await getGameDetails(slug);
+    const session = sessionManager.getSession();
+
+    const result = await getGameDetails(slug, session?.email);
 
     if (requestId !== gameDetailsRequestId) {
       return;
@@ -1534,13 +1941,20 @@ async function loadGameCommentsData(
   requestId: number,
 ): Promise<void> {
   try {
-    const result = await getGameComments(slug);
+    const session = sessionManager.getSession();
+
+    const result = await getGameComments(slug, session?.email);
 
     if (requestId !== gameDetailsRequestId) {
       return;
     }
 
-    renderComments(result.data, result.meta?.totalItems ?? result.data.length);
+    renderComments(
+      result.data,
+      result.meta?.totalComments ??
+        result.meta?.totalItems ??
+        result.data.length,
+    );
   } catch {
     if (requestId !== gameDetailsRequestId) {
       return;
@@ -1552,7 +1966,14 @@ async function loadGameCommentsData(
 }
 
 function openGameDetailsDialog(slug: string): void {
+  favoriteRequestPending = false;
   currentGameSlug = slug;
+  commentRequestPending = false;
+  pendingCommentLikes.clear();
+
+  resolveCommentAvatarToken = createAvatarTokenResolver();
+
+  resetCommentTextarea();
   gameDetailsRequestId += 1;
   const requestId = gameDetailsRequestId;
 
@@ -1870,6 +2291,16 @@ async function applyRoute(): Promise<void> {
     await syncLibraryFromUrl(url);
   }
 
+  const gameSlug = url.searchParams.get("game");
+
+  if (gameSlug) {
+    if (currentGameSlug !== gameSlug || !gameDetailsDialog.open) {
+      openGameDetailsDialog(gameSlug);
+    }
+  } else {
+    closeGameDetailsDialogUi();
+  }
+
   const authMode = url.searchParams.get("auth");
   const activeSession = sessionManager.getSession();
 
@@ -1882,27 +2313,9 @@ async function applyRoute(): Promise<void> {
 
     showSnackbar("You are already signed in.", "success");
   } else if (isAuthMode(authMode)) {
-    if (gameDetailsDialog.open) {
-      closeGameDetailsDialogUi();
-    }
-
     openAuthDialogUi(authMode);
   } else {
     closeAuthDialogUi();
-  }
-
-  const gameSlug = url.searchParams.get("game");
-
-  if (gameSlug) {
-    if (authDialog.open) {
-      closeAuthDialogUi();
-    }
-
-    if (currentGameSlug !== gameSlug || !gameDetailsDialog.open) {
-      openGameDetailsDialog(gameSlug);
-    }
-  } else {
-    closeGameDetailsDialogUi();
   }
 }
 

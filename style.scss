@@ -3113,7 +3113,59 @@ body.menu-open {
     }
   }
 }
+.comment-form-user,
+.comment-author {
+  display: flex;
+  align-items: center;
+  gap: $s2-space-sm;
+}
 
+.comment-form-avatar,
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: $s2-border solid $text-primary;
+  border-radius: $s2-radius-pill;
+  color: $text-primary;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.avatar-random-1 {
+  background: $avatar-random-1;
+}
+
+.avatar-random-2 {
+  background: $avatar-random-2;
+}
+
+.avatar-random-3 {
+  background: $avatar-random-3;
+}
+
+.avatar-random-4 {
+  background: $avatar-random-4;
+}
+
+.avatar-random-5 {
+  background: $avatar-random-5;
+}
+
+.comment-form-avatar {
+  background: $primary;
+}
+
+.comment-author {
+  time {
+    display: block;
+    color: $text-secondary;
+    font-size: 12px;
+  }
+}
 .comment-list {
   margin-top: $s2-space-lg;
   display: grid;
@@ -3157,6 +3209,10 @@ body.menu-open {
     color: $tertiary;
     background: $surface;
   }
+}
+.comment-like:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 
 @media (max-width: 600px) {
@@ -3321,7 +3377,9 @@ body.menu-open {
   opacity: 1;
   transform: translateY(0);
 }
-
+.api-snackbar--warning {
+  background: #fff4cc;
+}
 .api-snackbar--error {
   background: #ffe7e7;
 }
