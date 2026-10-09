@@ -482,11 +482,14 @@ function setAuthMode(mode: AuthMode): void {
   loginFormController.reset();
   registerFormController.reset();
   authTabs.forEach((tab) => {
-    const isActive = tab.dataset.authTab === mode;
+    tab.addEventListener("click", () => {
+      const mode = tab.dataset.authTab;
 
-    tab.classList.toggle("auth-tab--active", isActive);
+      if (isAuthMode(mode)) {
+        updateAuthUrl(mode);
+      }
+    });
   });
-
   authPanels.forEach((panel) => {
     const isActive = panel.dataset.authPanel === mode;
 
@@ -570,7 +573,7 @@ const authFlow = setupAuthFlow({
 
     showSnackbar(`Welcome, ${session.displayName}!`, "success");
 
-    updateAuthUrl(null, true);
+    updateAuthUrl(null);
   },
 
   onError: (message) => {
@@ -607,20 +610,9 @@ authSwitchButtons.forEach((button) => {
     const mode = button.dataset.authSwitch;
 
     if (isAuthMode(mode)) {
-      updateAuthUrl(mode, true);
+      updateAuthUrl(mode);
     }
   });
-});
-
-authDialog.addEventListener("click", (event: MouseEvent) => {
-  if (event.target === authDialog) {
-    updateAuthUrl(null, true);
-  }
-});
-
-authDialog.addEventListener("cancel", (event: Event) => {
-  event.preventDefault();
-  updateAuthUrl(null, true);
 });
 
 const passwordToggleButtons =
@@ -711,7 +703,7 @@ authDialog.addEventListener("click", (event: MouseEvent) => {
   }
 
   if (event.target === authDialog) {
-    updateAuthUrl(null, true);
+    updateAuthUrl(null);
   }
 });
 authDialog.addEventListener("cancel", (event: Event) => {
