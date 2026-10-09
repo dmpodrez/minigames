@@ -1119,10 +1119,11 @@ async function loadLibraryGames(): Promise<void> {
 }
 
 async function syncLibraryFromUrl(url: URL): Promise<void> {
-  if (libraryCategories.length === 0) {
-    await loadCategories();
-  }
+  let categoriesLoaded = libraryCategories.length > 0;
 
+  if (!categoriesLoaded) {
+    categoriesLoaded = await loadCategories();
+  }
   const defaultCategory =
     libraryCategories.find((category) => category.isDefault)?.slug ?? "all";
   const requestedCategory = url.searchParams.get("category");
@@ -1139,7 +1140,10 @@ async function syncLibraryFromUrl(url: URL): Promise<void> {
 
   libraryPageNumber = parsePageNumber(url.searchParams.get("page"));
 
-  renderCategories();
+  if (categoriesLoaded) {
+    renderCategories();
+  }
+
   renderSortOptions();
   renderPagination();
 
@@ -1643,83 +1647,6 @@ commentTextarea.addEventListener("keydown", (event: KeyboardEvent) => {
 });
 
 commentForm.addEventListener("submit", async (event: SubmitEvent) => {
-  commentList.addEventListener("click", async (event: MouseEvent) => {
-    const target = event.target;
-
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const likeButton = target.closest<HTMLButtonElement>(
-      ".comment-like[data-comment-id]",
-    );
-
-    if (!likeButton) {
-      return;
-    }
-
-    const commentId = likeButton.dataset.commentId;
-
-    if (!commentId || pendingCommentLikes.has(commentId)) {
-      return;
-    }
-
-    const session = await sessionManager.check();
-
-    if (!session) {
-      openAuthForProtectedAction("Please sign in to like comments.");
-      return;
-    }
-
-    pendingCommentLikes.add(commentId);
-
-    const previousText = likeButton.textContent;
-
-    const previousPressed = likeButton.getAttribute("aria-pressed");
-
-    const wasActive = likeButton.classList.contains("comment-like--active");
-
-    likeButton.disabled = true;
-    likeButton.textContent = "Updating…";
-
-    try {
-      const result = await toggleCommentLike(commentId, session.email);
-
-      const { isLikedByCurrentUser, likesCount } = result.data;
-
-      likeButton.setAttribute("aria-pressed", String(isLikedByCurrentUser));
-
-      likeButton.classList.toggle("comment-like--active", isLikedByCurrentUser);
-
-      likeButton.textContent = `${isLikedByCurrentUser ? "♥" : "♡"} ${likesCount}`;
-
-      showSnackbar(
-        isLikedByCurrentUser ? "Comment liked." : "Comment like removed.",
-        "success",
-      );
-    } catch (error) {
-      likeButton.textContent = previousText;
-
-      if (previousPressed !== null) {
-        likeButton.setAttribute("aria-pressed", previousPressed);
-      }
-
-      likeButton.classList.toggle("comment-like--active", wasActive);
-
-      if (error instanceof ApiError) {
-        showSnackbar("Comment like could not be updated.", "error");
-      } else {
-        showSnackbar(
-          "The comment like result is unknown. Please check its current state before trying again.",
-          "warning",
-        );
-      }
-    } finally {
-      pendingCommentLikes.delete(commentId);
-
-      likeButton.disabled = false;
-    }
-  });
   event.preventDefault();
 
   if (commentRequestPending || !currentGameSlug) {

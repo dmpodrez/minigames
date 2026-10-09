@@ -15,6 +15,9 @@ export default defineConfig({
         "node_modules/**",
         "dist/**",
       ],
+      thresholds: {
+        statements: 80,
+      },
     },
   },
 });
