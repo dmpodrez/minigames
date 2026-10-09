@@ -836,6 +836,15 @@ export function renderApp(): void {
             <h3 id="comments-title">Comments</h3>
 
             <form class="comment-form">
+              <div class="comment-form-user">
+                <span
+                  class="comment-form-avatar"
+                  aria-hidden="true"
+                ></span>
+
+                <strong class="comment-form-name"></strong>
+              </div>
+
               <label for="game-comment">Share your thoughts</label>
 
               <textarea
