@@ -94,10 +94,33 @@ export interface CommentsResponse {
   data: GameComment[];
   meta?: {
     totalItems?: number;
+    totalComments?: number;
     totalPages?: number;
   };
 }
+export interface FavoriteResponse {
+  data: {
+    isFavorited: boolean;
+    likesCount: number;
+  };
+}
 
+export interface CreateCommentResponse {
+  data: GameComment;
+}
+
+export interface CommentLikeResponse {
+  data: {
+    isLikedByCurrentUser: boolean;
+    likesCount: number;
+  };
+}
+
+export interface CreateCommentPayload {
+  userEmail: string;
+  authorName: string;
+  text: string;
+}
 export type GameSort = "rating-desc" | "rating-asc" | "name-asc" | "name-desc";
 
 export interface GamesQuery {
@@ -142,7 +165,24 @@ async function request<T>(
 
   return (await response.json()) as T;
 }
+async function postRequest<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 
+  if (!response.ok) {
+    throw new ApiError(
+      `API request failed: ${response.status}`,
+      response.status,
+    );
+  }
+
+  return (await response.json()) as T;
+}
 export function getFeaturedGames(): Promise<GamesResponse> {
   return request<GamesResponse>("/games", {
     featured: true,
@@ -171,16 +211,58 @@ export function getGames({
   });
 }
 
-export function getGameDetails(slug: string): Promise<GameDetailsResponse> {
-  return request<GameDetailsResponse>(`/games/${encodeURIComponent(slug)}`);
+export function getGameDetails(
+  slug: string,
+  userEmail?: string,
+): Promise<GameDetailsResponse> {
+  return request<GameDetailsResponse>(`/games/${encodeURIComponent(slug)}`, {
+    userEmail,
+  });
 }
 
-export function getGameComments(slug: string): Promise<CommentsResponse> {
+export function getGameComments(
+  slug: string,
+  userEmail?: string,
+): Promise<CommentsResponse> {
   return request<CommentsResponse>(
     `/games/${encodeURIComponent(slug)}/comments`,
     {
       limit: 3,
       sort: "newest",
+      userEmail,
+    },
+  );
+}
+export function toggleGameFavorite(
+  slug: string,
+  userEmail: string,
+): Promise<FavoriteResponse> {
+  return postRequest<FavoriteResponse>(
+    `/games/${encodeURIComponent(slug)}/favorite`,
+    {
+      userEmail,
+    },
+  );
+}
+
+export function createGameComment(
+  slug: string,
+  payload: CreateCommentPayload,
+): Promise<CreateCommentResponse> {
+  return postRequest<CreateCommentResponse>(
+    `/games/${encodeURIComponent(slug)}/comments`,
+    payload,
+  );
+}
+
+export function toggleCommentLike(
+  commentId: string,
+  userEmail: string,
+): Promise<CommentLikeResponse> {
+  return postRequest<CommentLikeResponse>(
+    `/comments/${encodeURIComponent(commentId)}/like`,
+    {
+      userEmail,
     },
   );
 }

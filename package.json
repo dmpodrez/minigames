@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -26,14 +28,17 @@
   "homepage": "https://github.com/dmpodrez/minigames#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.10.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^17.5.1",
     "prettier": "^3.9.6",
     "sass": "^1.104.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.3"
   },
   "lint-staged": {
     "*.{ts,js,mjs}": [
@@ -43,5 +48,8 @@
     "*.{html,scss,css,json,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "firebase": "^12.19.0"
   }
 }
