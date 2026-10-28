@@ -3,85 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D World Builder | MiniGames</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        overflow: hidden;
-        background: #b8daf0;
-      }
-
-      #world {
-        width: 100vw;
-        height: 100dvh;
-      }
-
-      .game-info {
-        position: fixed;
-        top: 24px;
-        left: 24px;
-        z-index: 10;
-        padding: 16px 20px;
-        background: rgba(255, 255, 255, 0.88);
-        border-radius: 16px;
-        color: #294333;
-      }
-
-      .game-info h1 {
-        margin: 0 0 8px;
-        font-size: 22px;
-      }
-
-      .game-info p {
-        margin: 0;
-        font-size: 13px;
-      }
-
-      #build-cottage,
-      #build-tree,
-      #build-tower {
-        display: block;
-        margin-top: 14px;
-        padding: 10px 16px;
-        border: none;
-        border-radius: 10px;
-        background: #557e56;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      #build-cottage:hover,
-      #build-tree:hover,
-      #build-tower:hover {
-        background: #3d6340;
-      }
-
-      #build-cottage.active,
-      #build-tree.active,
-      #build-tower.active {
-        background: #a06c3b;
-      }
-    </style>
+    <title>Cozy World Builder | MiniGames</title>
   </head>
+
   <body>
-    <div class="game-info">
+    <div id="world"></div>
+
+    <header class="game-header">
+      <p class="game-header__eyebrow">MiniGames · Creative Extension</p>
       <h1>Cozy World Builder</h1>
-      <p>Drag to rotate · Scroll to zoom</p>
+      <p class="game-header__subtitle">Create your own little kingdom</p>
+    </header>
 
-      <button id="build-cottage" type="button">Build Cottage</button>
-
-      <button id="build-tree" type="button">Plant Tree</button>
-
-      <button id="build-tower" type="button">Build Tower</button>
+    <div class="game-hints" aria-label="Game controls">
+      <span>Drag to rotate</span>
+      <span>Scroll to zoom</span>
+      <span>Click to place</span>
     </div>
 
-    <div id="world"></div>
+    <section class="build-toolbar" aria-label="Building tools">
+      <div class="build-toolbar__heading">
+        <span class="build-toolbar__title">Build Your World</span>
+        <span class="build-toolbar__label">3 tools</span>
+      </div>
+
+      <div class="build-toolbar__tools">
+        <button id="build-cottage" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🏡</span>
+          <span class="build-tool__name">Cottage</span>
+        </button>
+
+        <button id="build-tree" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🌳</span>
+          <span class="build-tool__name">Tree</span>
+        </button>
+
+        <button id="build-tower" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🏰</span>
+          <span class="build-tool__name">Tower</span>
+        </button>
+      </div>
+
+      <p class="build-toolbar__hint">
+        Choose an object and click on the island to place it
+      </p>
+    </section>
 
     <script type="module" src="/creative/world-builder.ts"></script>
   </body>

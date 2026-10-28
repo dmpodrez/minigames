@@ -1,3 +1,4 @@
+import "./world-builder.scss";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createCottage } from "./objects/create-cottage";
