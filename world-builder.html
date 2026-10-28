@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D World Builder | MiniGames</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        background: #b8daf0;
+      }
+
+      #world {
+        width: 100vw;
+        height: 100dvh;
+      }
+
+      .game-info {
+        position: fixed;
+        top: 24px;
+        left: 24px;
+        z-index: 10;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.88);
+        border-radius: 16px;
+        color: #294333;
+      }
+
+      .game-info h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+
+      .game-info p {
+        margin: 0;
+        font-size: 13px;
+      }
+
+      #build-cottage,
+      #build-tree,
+      #build-tower {
+        display: block;
+        margin-top: 14px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 10px;
+        background: #557e56;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      #build-cottage:hover,
+      #build-tree:hover,
+      #build-tower:hover {
+        background: #3d6340;
+      }
+
+      #build-cottage.active,
+      #build-tree.active,
+      #build-tower.active {
+        background: #a06c3b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-info">
+      <h1>Cozy World Builder</h1>
+      <p>Drag to rotate · Scroll to zoom</p>
+
+      <button id="build-cottage" type="button">Build Cottage</button>
+
+      <button id="build-tree" type="button">Plant Tree</button>
+
+      <button id="build-tower" type="button">Build Tower</button>
+    </div>
+
+    <div id="world"></div>
+
+    <script type="module" src="/creative/world-builder.ts"></script>
+  </body>
+</html>
