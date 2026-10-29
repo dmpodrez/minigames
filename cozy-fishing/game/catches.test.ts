@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATCHES, generateCatch } from "./catches";
+import { CATCHES, generateCatch, getCatchResistance } from "./catches";
 
 describe("generateCatch", () => {
   it("uses unique item IDs and valid chances", () => {
@@ -31,5 +31,25 @@ describe("generateCatch", () => {
     const result = generateCatch(() => 0.79);
     expect(result.item.id).toBe("golden-fish");
     expect(result.item.rarity).toBe("legendary");
+  });
+
+  it("makes heavier catches more resistant", () => {
+    const perch = CATCHES.find((item) => item.id === "perch");
+
+    if (!perch) {
+      throw new Error("Perch not found");
+    }
+
+    const small = getCatchResistance({
+      item: perch,
+      weightKg: 0.4,
+    });
+
+    const large = getCatchResistance({
+      item: perch,
+      weightKg: 1.6,
+    });
+
+    expect(large).toBeGreaterThan(small);
   });
 });

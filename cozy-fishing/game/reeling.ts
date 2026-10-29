@@ -15,12 +15,16 @@ export function nextReelState(
   holding: boolean,
   deltaSeconds: number,
   tensionMultiplier = 1,
+  fishResistance = 1,
 ): ReelState {
   const dt = Math.max(0, Math.min(deltaSeconds, 0.05));
 
-  const progressChange = holding ? 26 : -3;
+  // Stronger fish are slower to reel in.
+  const progressChange = holding ? 26 / fishResistance : -3;
 
-  const tensionChange = holding ? 44 * tensionMultiplier : -52;
+  // Rod upgrades reduce tension.
+  // Stronger fish increase it.
+  const tensionChange = holding ? 44 * tensionMultiplier * fishResistance : -52;
 
   return {
     progress: clamp(current.progress + progressChange * dt),

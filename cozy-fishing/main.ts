@@ -1,7 +1,11 @@
 import "./styles.scss";
 import "./reeling.scss";
 import "./catch.scss";
-import { generateCatch, type CatchResult } from "./game/catches";
+import {
+  generateCatch,
+  getCatchResistance,
+  type CatchResult,
+} from "./game/catches";
 import { nextReelState, type ReelState } from "./game/reeling";
 import "./inventory.scss";
 import { getSalePrice, loadEconomy, saveEconomy } from "./game/economy";
@@ -102,7 +106,7 @@ interface GameArt {
 type FishingPhase = "ready" | "waiting" | "bite" | "reeling";
 
 let phase: FishingPhase = "ready";
-
+let pendingCatch: CatchResult | null = null;
 const savedCatches = loadInventory();
 const economy = loadEconomy(savedCatches);
 let shopState = loadShop();
@@ -249,6 +253,7 @@ function updateMeters(): void {
 
 function resetFishing(message: string): void {
   clearFishingTimers();
+  pendingCatch = null;
   phase = "ready";
   pointerHeld = false;
   spaceHeld = false;
@@ -266,6 +271,8 @@ function castLine(): void {
   const delay = 2000 + Math.random() * 3500;
   biteTimer = window.setTimeout(() => {
     if (phase !== "waiting") return;
+
+    pendingCatch = generateCatch();
     phase = "bite";
     updateButton();
     status.textContent = "FISH ON! Click Hook fish before it escapes!";
@@ -287,8 +294,15 @@ function startReeling(): void {
   reelPanel.hidden = false;
   updateButton();
   updateMeters();
+
+  const resistance = pendingCatch ? getCatchResistance(pendingCatch) : 1;
+
+  const strength =
+    resistance < 1 ? "Light" : resistance < 1.3 ? "Medium" : "Strong";
+
   status.textContent =
-    "Hold to reel. Release before the line tension reaches 100%!";
+    `${strength} resistance! Hold to reel, ` +
+    `but release before the line breaks!`;
 }
 
 function showCatchResult(result: CatchResult): void {
@@ -512,10 +526,11 @@ inventoryClose.addEventListener("click", () => {
 });
 
 function finishReeling(success: boolean): void {
+  const result = pendingCatch;
   // Avoid accidentally casting again when the held button is released.
   ignoreNextClick = pointerHeld;
   spaceReleasePending = spaceHeld;
-  if (success) {
+  if (success && result) {
     const result = generateCatch();
 
     savedCatches.unshift({
@@ -626,7 +641,9 @@ async function startGame(): Promise<void> {
             pointerHeld || spaceHeld,
             deltaSeconds,
             getEquippedRod(shopState).tensionMultiplier,
+            pendingCatch ? getCatchResistance(pendingCatch) : 1,
           );
+
           updateMeters();
 
           if (reelState.tension >= 100) {
