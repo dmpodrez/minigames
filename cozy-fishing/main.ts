@@ -1,7 +1,12 @@
 import "./styles.scss";
 import "./reeling.scss";
+import "./catch.scss";
+import { generateCatch, type CatchResult } from "./game/catches";
 import { nextReelState, type ReelState } from "./game/reeling";
+import "./inventory.scss";
 
+import { CATCHES } from "./game/catches";
+import { loadInventory, saveInventory, countFish } from "./game/inventory";
 function getRequiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
 
@@ -23,6 +28,29 @@ const progressFill = getRequiredElement<HTMLElement>("#reel-progress-fill");
 const tensionFill = getRequiredElement<HTMLElement>("#reel-tension-fill");
 const progressText = getRequiredElement<HTMLElement>("#reel-percent");
 const tensionText = getRequiredElement<HTMLElement>("#tension-percent");
+const catchDialog = getRequiredElement<HTMLDialogElement>("#catch-dialog");
+const catchImage = getRequiredElement<HTMLImageElement>("#catch-image");
+const catchTitle = getRequiredElement<HTMLElement>("#catch-title");
+const catchEyebrow = getRequiredElement<HTMLElement>("#catch-eyebrow");
+const catchRarity = getRequiredElement<HTMLElement>("#catch-rarity");
+const catchWeight = getRequiredElement<HTMLElement>("#catch-weight");
+const catchValue = getRequiredElement<HTMLElement>("#catch-value");
+const catchDescription = getRequiredElement<HTMLElement>("#catch-description");
+const catchContinue = getRequiredElement<HTMLButtonElement>("#catch-continue");
+
+const inventoryOpen = getRequiredElement<HTMLButtonElement>("#inventory-open");
+
+const inventoryClose =
+  getRequiredElement<HTMLButtonElement>("#inventory-close");
+
+const inventoryDialog =
+  getRequiredElement<HTMLDialogElement>("#inventory-dialog");
+
+const inventoryList = getRequiredElement<HTMLDivElement>("#inventory-list");
+
+const inventorySummary = getRequiredElement<HTMLElement>("#inventory-summary");
+
+const inventoryCount = getRequiredElement<HTMLElement>("#inventory-count");
 
 const context = canvas.getContext("2d");
 if (!context) {
@@ -48,7 +76,14 @@ interface GameArt {
 type FishingPhase = "ready" | "waiting" | "bite" | "reeling";
 
 let phase: FishingPhase = "ready";
-let caughtFish = 0;
+
+const savedCatches = loadInventory();
+
+let caughtFish = countFish(savedCatches);
+
+catchCount.textContent = String(caughtFish);
+inventoryCount.textContent = String(savedCatches.length);
+
 let biteTimer: number | undefined;
 let escapeTimer: number | undefined;
 let pointerHeld = false;
@@ -167,6 +202,7 @@ function updateButton(): void {
   };
   castButton.textContent = labels[phase];
   castButton.setAttribute("aria-pressed", String(phase !== "ready"));
+  inventoryOpen.disabled = phase !== "ready";
 }
 
 function updateMeters(): void {
@@ -226,14 +262,123 @@ function startReeling(): void {
     "Hold to reel. Release before the line tension reaches 100%!";
 }
 
+function showCatchResult(result: CatchResult): void {
+  const { item, weightKg } = result;
+  catchImage.src = item.image;
+  catchImage.alt = `Pixel art of ${item.name}`;
+  catchTitle.textContent = item.name;
+  catchEyebrow.textContent =
+    item.kind === "fish" ? "A new catch!" : "Something unexpected!";
+  catchRarity.textContent = item.rarity;
+  catchRarity.className = `catch-card__rarity catch-card__rarity--${item.rarity}`;
+  catchWeight.textContent = `${weightKg.toFixed(2)} kg`;
+  catchValue.textContent = item.value === 0 ? "—" : `${item.value} coins`;
+  catchDescription.textContent = item.description;
+  catchDialog.showModal();
+}
+
+catchContinue.addEventListener("click", () => catchDialog.close());
+catchDialog.addEventListener("close", () => {
+  // The pointer release may have happened on the modal, not on Cast.
+  ignoreNextClick = false;
+  castButton.focus();
+});
+
+function renderInventory(): void {
+  inventoryList.replaceChildren();
+
+  const fishIds = new Set(
+    savedCatches
+      .filter((entry) =>
+        CATCHES.some((item) => item.id === entry.id && item.kind === "fish"),
+      )
+      .map((entry) => entry.id),
+  );
+
+  const totalSpecies = CATCHES.filter((item) => item.kind === "fish").length;
+
+  inventorySummary.textContent =
+    `${caughtFish} fish caught · ` +
+    `${fishIds.size}/${totalSpecies} species discovered · ` +
+    `${savedCatches.length} total items`;
+
+  if (savedCatches.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "inventory-empty";
+    empty.textContent = "Your collection is empty. Catch your first fish!";
+    inventoryList.append(empty);
+    return;
+  }
+
+  // Display the latest 50 catches.
+  for (const entry of savedCatches.slice(0, 50)) {
+    const item = CATCHES.find((catchItem) => catchItem.id === entry.id);
+
+    if (!item) continue;
+
+    const card = document.createElement("div");
+    card.className = "inventory-item";
+
+    const image = document.createElement("img");
+    image.src = item.image;
+    image.alt = item.name;
+
+    const info = document.createElement("div");
+    info.className = "inventory-item__info";
+
+    const name = document.createElement("strong");
+    name.textContent = item.name;
+
+    const details = document.createElement("span");
+    details.textContent =
+      `${item.rarity.toUpperCase()} · ` + `${entry.weightKg.toFixed(2)} kg`;
+
+    info.append(name, details);
+    card.append(image, info);
+    inventoryList.append(card);
+  }
+}
+
+inventoryOpen.addEventListener("click", () => {
+  renderInventory();
+  inventoryDialog.showModal();
+});
+
+inventoryClose.addEventListener("click", () => {
+  inventoryDialog.close();
+});
+
 function finishReeling(success: boolean): void {
   // Avoid accidentally casting again when the held button is released.
   ignoreNextClick = pointerHeld;
   spaceReleasePending = spaceHeld;
   if (success) {
-    caughtFish++;
+    const result = generateCatch();
+
+    savedCatches.unshift({
+      id: result.item.id,
+      weightKg: result.weightKg,
+      caughtAt: Date.now(),
+    });
+
+    // Keep only the latest 500 catches.
+    if (savedCatches.length > 500) {
+      savedCatches.length = 500;
+    }
+
+    saveInventory(savedCatches);
+
+    caughtFish = countFish(savedCatches);
+
     catchCount.textContent = String(caughtFish);
-    resetFishing(`You caught a fish! Total catches: ${caughtFish}.`);
+    inventoryCount.textContent = String(savedCatches.length);
+
+    resetFishing(
+      result.item.kind === "fish"
+        ? `You caught ${result.item.name}! Total fish caught: ${caughtFish}.`
+        : `You found ${result.item.name}! Keep fishing for your next catch.`,
+    );
+    showCatchResult(result);
   } else {
     resetFishing("The fishing line snapped! Let it relax next time.");
   }
