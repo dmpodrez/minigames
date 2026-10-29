@@ -1,0 +1,249 @@
+:root {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #fff1d4;
+  background: #b8daf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+#world {
+  width: 100vw;
+  height: 100dvh;
+}
+
+.game-header {
+  position: fixed;
+  z-index: 10;
+  top: 22px;
+  left: 22px;
+  padding: 18px 24px;
+  border: 1px solid rgba(245, 209, 148, 0.65);
+  border-radius: 16px;
+  background: linear-gradient(
+    145deg,
+    rgba(68, 53, 41, 0.95),
+    rgba(41, 43, 37, 0.92)
+  );
+  box-shadow:
+    0 14px 35px rgba(36, 34, 25, 0.18),
+    inset 0 1px rgba(255, 241, 214, 0.15);
+  backdrop-filter: blur(12px);
+}
+
+.game-header__eyebrow {
+  margin: 0 0 6px;
+  color: #e3c58e;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+}
+
+.game-header h1 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 29px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.game-header__subtitle {
+  margin: 7px 0 0;
+  color: #d4c7ad;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+.game-hints {
+  position: fixed;
+  z-index: 10;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 350px;
+}
+
+.game-hints span {
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 252, 241, 0.82);
+  color: #485341;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+.build-toolbar {
+  position: fixed;
+  z-index: 10;
+  bottom: 28px;
+  left: 50%;
+  width: min(640px, calc(100% - 28px));
+  padding: 14px;
+  transform: translateX(-50%);
+  border: 1px solid #b9a078;
+  border-radius: 20px;
+  background: linear-gradient(
+    150deg,
+    rgba(75, 62, 48, 0.97),
+    rgba(40, 45, 37, 0.97)
+  );
+  box-shadow:
+    0 18px 45px rgba(28, 32, 25, 0.3),
+    inset 0 1px rgba(255, 240, 204, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.build-toolbar__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 4px 12px;
+}
+
+.build-toolbar__title {
+  color: #f3dfb6;
+  font-size: 16px;
+}
+
+.build-toolbar__label {
+  color: #bcb19b;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.build-toolbar__tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.build-tool {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 78px;
+  padding: 12px 8px;
+  border: 1px solid rgba(233, 209, 165, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 245, 218, 0.07);
+  color: #f7e9ce;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.build-tool:hover {
+  transform: translateY(-2px);
+  border-color: #ebc78b;
+  background: rgba(255, 240, 204, 0.15);
+}
+
+.build-tool.active {
+  border-color: #f2d39b;
+  background: linear-gradient(
+    160deg,
+    rgba(194, 142, 68, 0.42),
+    rgba(115, 92, 56, 0.4)
+  );
+  box-shadow: inset 0 0 0 1px rgba(250, 224, 174, 0.22);
+}
+
+.build-tool:focus-visible {
+  outline: 3px solid #f5d28d;
+  outline-offset: 3px;
+}
+
+.build-tool__icon {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.build-tool__name {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.build-toolbar__hint {
+  margin: 12px 4px 0;
+  color: #c9bba2;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .game-header {
+    top: 12px;
+    left: 12px;
+    padding: 12px 15px;
+  }
+
+  .game-header h1 {
+    font-size: 20px;
+  }
+
+  .game-header__subtitle {
+    font-size: 10px;
+  }
+
+  .game-hints {
+    top: 105px;
+    left: 12px;
+    right: auto;
+    justify-content: flex-start;
+  }
+
+  .game-hints span {
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+
+  .build-toolbar {
+    bottom: 12px;
+    padding: 11px;
+  }
+
+  .build-tool {
+    min-height: 70px;
+  }
+
+  .build-tool__icon {
+    font-size: 22px;
+  }
+}
+
+.build-tool--delete.active {
+  border-color: #ef9a8c;
+  background: rgba(170, 65, 55, 0.32);
+}
+
+@media (max-width: 480px) {
+  .build-toolbar__tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

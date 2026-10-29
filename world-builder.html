@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cozy World Builder | MiniGames</title>
+  </head>
+
+  <body>
+    <div id="world"></div>
+
+    <header class="game-header">
+      <p class="game-header__eyebrow">MiniGames · Creative Extension</p>
+      <h1>Cozy World Builder</h1>
+      <p class="game-header__subtitle">Create your own little kingdom</p>
+    </header>
+
+    <div class="game-hints" aria-label="Game controls">
+      <span>Drag to rotate</span>
+      <span>Right-drag to move</span>
+      <span>Scroll to zoom</span>
+      <span>Click to build</span>
+    </div>
+    >
+
+    <section class="build-toolbar" aria-label="Building tools">
+      <div class="build-toolbar__heading">
+        <span class="build-toolbar__title">Build Your World</span>
+        <span class="build-toolbar__label">3 tools</span>
+      </div>
+
+      <div class="build-toolbar__tools">
+        <button id="build-cottage" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🏡</span>
+          <span class="build-tool__name">Cottage</span>
+        </button>
+
+        <button id="build-tree" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🌳</span>
+          <span class="build-tool__name">Tree</span>
+        </button>
+
+        <button id="build-tower" class="build-tool" type="button">
+          <span class="build-tool__icon" aria-hidden="true">🏰</span>
+          <span class="build-tool__name">Tower</span>
+        </button>
+
+        <button
+          id="delete-building"
+          class="build-tool build-tool--delete"
+          type="button"
+          aria-pressed="false"
+        >
+          <span class="build-tool__icon" aria-hidden="true">🗑️</span>
+          <span class="build-tool__name">Delete</span>
+        </button>
+      </div>
+
+      <p class="build-toolbar__hint">
+        Choose an object and click on the island to place it
+      </p>
+    </section>
+
+    <script type="module" src="/creative/world-builder.ts"></script>
+  </body>
+</html>
