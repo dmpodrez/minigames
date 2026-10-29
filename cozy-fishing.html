@@ -22,7 +22,9 @@
             <strong id="wallet-balance">0</strong>
             <span>coins</span>
           </div>
-
+          <button id="shop-open" class="shop-button" type="button">
+            🛒 Shop
+          </button>
           <button id="inventory-open" class="inventory-button" type="button">
             🎒 Collection <span id="inventory-count">0</span>
           </button>
@@ -102,6 +104,7 @@
           <p id="game-status" role="status" aria-live="polite">
             The lake is quiet. Ready to cast?
           </p>
+          <p id="equipped-rod" class="equipped-rod">Equipped: Wooden Rod</p>
         </div>
         <div class="game-panel__controls">
           <span class="game-panel__tip"
@@ -133,6 +136,27 @@
           <p id="discovered-species" class="inventory-discovered"></p>
 
           <div id="inventory-list" class="inventory-list"></div>
+        </div>
+      </dialog>
+
+      <dialog id="shop-dialog" class="shop-dialog" aria-labelledby="shop-title">
+        <div class="shop-content">
+          <div class="shop-header">
+            <div>
+              <p class="shop-eyebrow">FISHING EQUIPMENT</p>
+              <h2 id="shop-title">Fishing Shop</h2>
+            </div>
+
+            <button id="shop-close" class="shop-close" type="button">
+              Close ✕
+            </button>
+          </div>
+
+          <p class="shop-description">
+            Upgrade your fishing rod to reduce line tension and catch more fish.
+          </p>
+
+          <div id="shop-list" class="shop-list"></div>
         </div>
       </dialog>
 

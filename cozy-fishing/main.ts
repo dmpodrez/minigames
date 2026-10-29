@@ -7,6 +7,16 @@ import "./inventory.scss";
 import { getSalePrice, loadEconomy, saveEconomy } from "./game/economy";
 import { CATCHES } from "./game/catches";
 import { loadInventory, saveInventory } from "./game/inventory";
+import "./shop.scss";
+
+import {
+  RODS,
+  loadShop,
+  saveShop,
+  buyRod,
+  equipRod,
+  getEquippedRod,
+} from "./game/shop";
 function getRequiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
 
@@ -58,6 +68,16 @@ const discoveredSpecies = getRequiredElement<HTMLElement>(
   "#discovered-species",
 );
 
+const shopOpen = getRequiredElement<HTMLButtonElement>("#shop-open");
+
+const shopClose = getRequiredElement<HTMLButtonElement>("#shop-close");
+
+const shopDialog = getRequiredElement<HTMLDialogElement>("#shop-dialog");
+
+const shopList = getRequiredElement<HTMLDivElement>("#shop-list");
+
+const equippedRodLabel = getRequiredElement<HTMLElement>("#equipped-rod");
+
 const context = canvas.getContext("2d");
 if (!context) {
   throw new Error("Cozy Fishing: Canvas 2D is not supported");
@@ -85,7 +105,7 @@ let phase: FishingPhase = "ready";
 
 const savedCatches = loadInventory();
 const economy = loadEconomy(savedCatches);
-
+let shopState = loadShop();
 let caughtFish = economy.totalFishCaught;
 
 catchCount.textContent = String(caughtFish);
@@ -211,6 +231,7 @@ function updateButton(): void {
   castButton.textContent = labels[phase];
   castButton.setAttribute("aria-pressed", String(phase !== "ready"));
   inventoryOpen.disabled = phase !== "ready";
+  shopOpen.disabled = phase !== "ready";
 }
 
 function updateMeters(): void {
@@ -295,6 +316,97 @@ catchDialog.addEventListener("close", () => {
   ignoreNextClick = false;
   castButton.focus();
 });
+
+function updateEquippedRod(): void {
+  const rod = getEquippedRod(shopState);
+
+  equippedRodLabel.textContent = `Equipped: ${rod.name}`;
+}
+
+function renderShop(): void {
+  shopList.replaceChildren();
+
+  for (const rod of RODS) {
+    const card = document.createElement("div");
+    card.className = "shop-item";
+
+    const equipped = shopState.equippedRodId === rod.id;
+    const owned = shopState.ownedRodIds.includes(rod.id);
+
+    if (equipped) {
+      card.classList.add("shop-item--equipped");
+    }
+
+    const details = document.createElement("div");
+    details.className = "shop-item__details";
+
+    const name = document.createElement("strong");
+    name.textContent = rod.name;
+
+    const description = document.createElement("p");
+    description.textContent = rod.description;
+
+    const price = document.createElement("span");
+    price.textContent = rod.price === 0 ? "Free" : `${rod.price} coins`;
+
+    details.append(name, description, price);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "shop-item__action";
+
+    if (equipped) {
+      button.textContent = "Equipped ✓";
+      button.disabled = true;
+    } else if (owned) {
+      button.textContent = "Equip";
+    } else if (economy.coins < rod.price) {
+      button.textContent = "Not enough coins";
+      button.disabled = true;
+    } else {
+      button.textContent = `Buy · ${rod.price}`;
+    }
+
+    button.addEventListener("click", () => {
+      if (owned) {
+        shopState = equipRod(shopState, rod.id);
+
+        status.textContent = `${rod.name} equipped!`;
+      } else {
+        const result = buyRod(shopState, economy.coins, rod.id);
+
+        if (!result.success) return;
+
+        shopState = result.shop;
+        economy.coins = result.coins;
+
+        saveEconomy(economy);
+
+        walletBalance.textContent = String(economy.coins);
+
+        status.textContent = `Purchased and equipped ${rod.name}!`;
+      }
+
+      saveShop(shopState);
+      updateEquippedRod();
+      renderShop();
+    });
+
+    card.append(details, button);
+    shopList.append(card);
+  }
+}
+
+shopOpen.addEventListener("click", () => {
+  renderShop();
+  shopDialog.showModal();
+});
+
+shopClose.addEventListener("click", () => {
+  shopDialog.close();
+});
+
+updateEquippedRod();
 
 function renderInventory(): void {
   inventoryList.replaceChildren();
@@ -513,6 +625,7 @@ async function startGame(): Promise<void> {
             reelState,
             pointerHeld || spaceHeld,
             deltaSeconds,
+            getEquippedRod(shopState).tensionMultiplier,
           );
           updateMeters();
 
