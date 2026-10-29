@@ -1,0 +1,92 @@
+// Extra HUD for the fishing battle. Existing styles.scss stays untouched.
+.reel-panel[hidden] {
+  display: none;
+}
+
+.reel-panel {
+  position: absolute;
+  left: 22px;
+  bottom: 20px;
+  z-index: 2;
+  width: min(300px, calc(100% - 44px));
+  padding: 16px 18px;
+  border: 2px solid #c8a76c;
+  border-radius: 12px;
+  background: rgba(23, 51, 54, 0.94);
+  color: #f8ebcb;
+  box-shadow: 0 10px 28px rgba(12, 29, 32, 0.4);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.reel-panel__eyebrow {
+  margin: 0 0 10px;
+  color: #f3c97c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.reel-panel__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.reel-panel__heading--tension {
+  margin-top: 14px;
+}
+
+.reel-panel__track {
+  height: 11px;
+  overflow: hidden;
+  border: 1px solid #6f887f;
+  border-radius: 5px;
+  background: #10282d;
+}
+
+.reel-panel__fill {
+  height: 100%;
+  width: 0;
+  transition: width 60ms linear;
+}
+
+.reel-panel__fill--progress {
+  background: #95cf8b;
+}
+
+.reel-panel__fill--tension {
+  background: #e3b46b;
+}
+
+.reel-panel__fill--danger {
+  background: #f06f63;
+}
+
+.reel-panel__hint {
+  margin: 13px 0 0;
+  color: #c3dbd2;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .reel-panel {
+    left: 9px;
+    bottom: 9px;
+    width: min(265px, calc(100% - 18px));
+    padding: 10px 12px;
+  }
+
+  .reel-panel__hint {
+    font-size: 10px;
+  }
+}
+
+// Keep touch-and-hold interactions from selecting text or scrolling.
+.cast-button {
+  touch-action: none;
+  user-select: none;
+}
