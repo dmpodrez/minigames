@@ -16,5 +16,5 @@
     "types": ["vite/client"]
   },
 
-  "include": ["**/*.ts", "**/*.d.ts"]
+  "include": ["**/*.ts", "**/*.d.ts", "vite.config.mts"]
 }

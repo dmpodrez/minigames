@@ -1,5 +1,5 @@
 import * as THREE from "three";
-
+import { decorateCottage } from "./decorate-cottage";
 export function createCottage(
   scene: THREE.Scene,
   x: number,
@@ -115,6 +115,9 @@ export function createCottage(
   cottage.add(chimney);
 
   // Put the cottage on the island
+
+  decorateCottage(cottage);
+
   cottage.position.set(x, 0.1, z);
   scene.add(cottage);
 

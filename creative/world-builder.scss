@@ -94,7 +94,7 @@ button {
   z-index: 10;
   bottom: 28px;
   left: 50%;
-  width: min(520px, calc(100% - 28px));
+  width: min(640px, calc(100% - 28px));
   padding: 14px;
   transform: translateX(-50%);
   border: 1px solid #b9a078;
@@ -133,7 +133,7 @@ button {
 
 .build-toolbar__tools {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -234,5 +234,16 @@ button {
 
   .build-tool__icon {
     font-size: 22px;
+  }
+}
+
+.build-tool--delete.active {
+  border-color: #ef9a8c;
+  background: rgba(170, 65, 55, 0.32);
+}
+
+@media (max-width: 480px) {
+  .build-toolbar__tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -17,9 +17,11 @@
 
     <div class="game-hints" aria-label="Game controls">
       <span>Drag to rotate</span>
+      <span>Right-drag to move</span>
       <span>Scroll to zoom</span>
-      <span>Click to place</span>
+      <span>Click to build</span>
     </div>
+    >
 
     <section class="build-toolbar" aria-label="Building tools">
       <div class="build-toolbar__heading">
@@ -41,6 +43,16 @@
         <button id="build-tower" class="build-tool" type="button">
           <span class="build-tool__icon" aria-hidden="true">🏰</span>
           <span class="build-tool__name">Tower</span>
+        </button>
+
+        <button
+          id="delete-building"
+          class="build-tool build-tool--delete"
+          type="button"
+          aria-pressed="false"
+        >
+          <span class="build-tool__icon" aria-hidden="true">🗑️</span>
+          <span class="build-tool__name">Delete</span>
         </button>
       </div>
 

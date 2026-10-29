@@ -3,12 +3,24 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { createCottage } from "./objects/create-cottage";
 import { createTower } from "./objects/create-tower";
+import { createLandscape } from "./objects/create-landscape";
+import { createForest } from "./objects/create-forest";
+import { createTree } from "./objects/create-tree";
+import { createVillagePaths } from "./objects/create-village-paths";
+import { createLake, isInsideLake } from "./objects/create-lake";
+import { loadWorld, saveWorld, type SavedBuilding } from "./world-storage";
 type BuildTool = "cottage" | "tree" | "tower";
 
 interface OccupiedSpace {
   x: number;
   z: number;
   radius: number;
+}
+
+interface PlacedBuilding {
+  object: THREE.Group;
+  data: SavedBuilding;
+  space: OccupiedSpace;
 }
 
 function getRequiredElement<T extends Element>(selector: string): T {
@@ -27,6 +39,7 @@ const cottageButton = getRequiredElement<HTMLButtonElement>("#build-cottage");
 
 const treeButton = getRequiredElement<HTMLButtonElement>("#build-tree");
 const towerButton = getRequiredElement<HTMLButtonElement>("#build-tower");
+const deleteButton = getRequiredElement<HTMLButtonElement>("#delete-building");
 // SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("#b8daf0");
@@ -38,7 +51,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000,
 );
-camera.position.set(14, 11, 14);
+camera.position.set(18, 14, 18);
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -53,13 +66,31 @@ renderer.toneMappingExposure = 1.5;
 container.appendChild(renderer.domElement);
 
 // CAMERA CONTROLS
+
 const controls = new OrbitControls(camera, renderer.domElement);
+
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
+
 controls.target.set(0, 0, 0);
-controls.minDistance = 5;
-controls.maxDistance = 35;
+
+// Zoom limits
+controls.minDistance = 6;
+controls.maxDistance = 120;
+
+// Do not allow the camera to go below the island
 controls.maxPolarAngle = Math.PI / 2.1;
+
+// Allow movement across the island
+controls.enablePan = true;
+controls.screenSpacePanning = false;
+controls.panSpeed = 1;
+
+// Limit how far the camera can move from the center
+controls.cursor.set(0, 0, 0);
+controls.maxTargetRadius = 47;
+
+controls.update();
 
 // LIGHTING
 const ambientLight = new THREE.HemisphereLight("#fff7e5", "#6b805e", 2.2);
@@ -70,10 +101,10 @@ sunlight.position.set(8, 15, 10);
 sunlight.castShadow = true;
 sunlight.shadow.mapSize.set(2048, 2048);
 
-sunlight.shadow.camera.left = -15;
-sunlight.shadow.camera.right = 15;
-sunlight.shadow.camera.top = 15;
-sunlight.shadow.camera.bottom = -15;
+sunlight.shadow.camera.left = -60;
+sunlight.shadow.camera.right = 60;
+sunlight.shadow.camera.top = 60;
+sunlight.shadow.camera.bottom = -60;
 
 scene.add(sunlight);
 
@@ -89,68 +120,43 @@ const stoneMaterial = new THREE.MeshStandardMaterial({
 });
 
 const islandBase = new THREE.Mesh(
-  new THREE.CylinderGeometry(7, 5.8, 1.6, 12),
+  new THREE.CylinderGeometry(50, 48, 1.6, 64),
   stoneMaterial,
 );
 islandBase.position.y = -0.85;
 islandBase.receiveShadow = true;
 scene.add(islandBase);
 
+// Larger grass surface
 const grass = new THREE.Mesh(
-  new THREE.CylinderGeometry(7.1, 7, 0.2, 12),
+  new THREE.CylinderGeometry(50.1, 50, 0.2, 64),
   grassMaterial,
 );
 grass.receiveShadow = true;
 scene.add(grass);
 
 // TREE FACTORY
-function createTree(x: number, z: number): THREE.Group {
-  const tree = new THREE.Group();
 
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.16, 0.24, 1.6, 8),
-    new THREE.MeshStandardMaterial({ color: "#805536" }),
-  );
-  trunk.position.y = 0.85;
-  trunk.castShadow = true;
-  tree.add(trunk);
-
-  const leaves = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(1.1, 1),
-    new THREE.MeshStandardMaterial({
-      color: "#4c945a",
-      roughness: 0.9,
-      flatShading: true,
-    }),
-  );
-  leaves.position.y = 2.2;
-  leaves.castShadow = true;
-  tree.add(leaves);
-
-  tree.position.set(x, 0.1, z);
-  scene.add(tree);
-
-  return tree;
-}
-
-// INITIAL WORLD
-createTree(-4, -3);
-createTree(4, -3);
-createTree(-4, 3);
-createTree(4, 3);
-createTree(0, -5);
+createTree(scene, -4, -3);
+createTree(scene, 4, -3);
+createTree(scene, -4, 3);
+createTree(scene, 4, 3);
+createTree(scene, 0, -5);
 
 createCottage(scene, 0, 0);
-
+createLandscape(scene);
+createLake(scene);
+createVillagePaths(scene);
 // COLLISION DATA
 const occupied: OccupiedSpace[] = [
   { x: 0, z: 0, radius: 1.7 },
-  { x: -4, z: -3, radius: 0.9 },
-  { x: 4, z: -3, radius: 0.9 },
-  { x: -4, z: 3, radius: 0.9 },
-  { x: 4, z: 3, radius: 0.9 },
-  { x: 0, z: -5, radius: 0.9 },
+  { x: -4, z: -3, radius: 1.3 },
+  { x: 4, z: -3, radius: 1.3 },
+  { x: -4, z: 3, radius: 1.3 },
+  { x: 4, z: 3, radius: 1.3 },
+  { x: 0, z: -5, radius: 1.3 },
 ];
+createForest(scene, occupied);
 
 const objectRadius: Record<BuildTool, number> = {
   cottage: 1.7,
@@ -160,8 +166,10 @@ const objectRadius: Record<BuildTool, number> = {
 
 function isFreePosition(x: number, z: number, tool: BuildTool): boolean {
   const radius = objectRadius[tool];
-
-  if (Math.hypot(x, z) + radius > 6.8) {
+  if (isInsideLake(x, z, radius + 0.6)) {
+    return false;
+  }
+  if (Math.hypot(x, z) + radius > 48.5) {
     return false;
   }
 
@@ -169,6 +177,48 @@ function isFreePosition(x: number, z: number, tool: BuildTool): boolean {
     const distance = Math.hypot(x - object.x, z - object.z);
 
     return distance >= radius + object.radius;
+  });
+}
+
+const playerBuildings: SavedBuilding[] = [];
+const placedBuildings: PlacedBuilding[] = [];
+
+function spawnBuilding(tool: BuildTool, x: number, z: number): THREE.Group {
+  if (tool === "cottage") {
+    return createCottage(scene, x, z);
+  }
+
+  if (tool === "tree") {
+    return createTree(scene, x, z);
+  }
+
+  return createTower(scene, x, z);
+}
+
+// Restore buildings saved during previous sessions.
+
+for (const building of loadWorld()) {
+  const { tool, x, z } = building;
+
+  if (!isFreePosition(x, z, tool)) {
+    continue;
+  }
+
+  const object = spawnBuilding(tool, x, z);
+
+  const space: OccupiedSpace = {
+    x,
+    z,
+    radius: objectRadius[tool],
+  };
+
+  occupied.push(space);
+  playerBuildings.push(building);
+
+  placedBuildings.push({
+    object,
+    data: building,
+    space,
   });
 }
 
@@ -204,7 +254,7 @@ function preparePreview(group: THREE.Group): THREE.Mesh[] {
 }
 
 const previewCottage = createCottage(scene, 0, 0);
-const previewTree = createTree(0, 0);
+const previewTree = createTree(scene, 0, 0);
 const previewTower = createTower(scene, 0, 0);
 const cottageMeshes = preparePreview(previewCottage);
 const treeMeshes = preparePreview(previewTree);
@@ -217,8 +267,12 @@ function hidePreviews(): void {
 
 // TOOL SELECTION
 let activeTool: BuildTool | null = null;
-
+let deleteMode = false;
 function selectTool(tool: BuildTool): void {
+  deleteMode = false;
+  deleteButton.classList.remove("active");
+  deleteButton.setAttribute("aria-pressed", "false");
+
   activeTool = activeTool === tool ? null : tool;
 
   cottageButton.classList.toggle("active", activeTool === "cottage");
@@ -252,6 +306,25 @@ towerButton.addEventListener("click", () => {
   selectTool("tower");
 });
 
+deleteButton.addEventListener("click", () => {
+  const nextDeleteMode = !deleteMode;
+
+  // Deselect the active building tool.
+  if (activeTool) {
+    selectTool(activeTool);
+  }
+
+  deleteMode = nextDeleteMode;
+
+  deleteButton.classList.toggle("active", deleteMode);
+
+  deleteButton.setAttribute("aria-pressed", String(deleteMode));
+
+  hidePreviews();
+
+  renderer.domElement.style.cursor = deleteMode ? "not-allowed" : "grab";
+});
+
 // MOUSE RAYCASTING
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -269,6 +342,67 @@ function getGroundPoint(event: PointerEvent): THREE.Vector3 | null {
     .find((intersection) => intersection.point.y >= 0.09);
 
   return hit?.point ?? null;
+}
+
+function findPlacedBuilding(event: PointerEvent): PlacedBuilding | null {
+  const rect = renderer.domElement.getBoundingClientRect();
+
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const objects = placedBuildings.map((building) => building.object);
+
+  const hits = raycaster.intersectObjects(objects, true);
+  const hit = hits[0]?.object;
+
+  if (!hit) return null;
+
+  return (
+    placedBuildings.find((building) => {
+      let current: THREE.Object3D | null = hit;
+
+      while (current) {
+        if (current === building.object) {
+          return true;
+        }
+
+        current = current.parent;
+      }
+
+      return false;
+    }) ?? null
+  );
+}
+
+function deleteBuilding(building: PlacedBuilding): void {
+  // Remove the 3D model from the scene.
+  building.object.removeFromParent();
+
+  // Free the occupied space.
+  const spaceIndex = occupied.indexOf(building.space);
+
+  if (spaceIndex !== -1) {
+    occupied.splice(spaceIndex, 1);
+  }
+
+  // Remove its saved data.
+  const savedIndex = playerBuildings.indexOf(building.data);
+
+  if (savedIndex !== -1) {
+    playerBuildings.splice(savedIndex, 1);
+  }
+
+  // Stop tracking this building.
+  const placedIndex = placedBuildings.indexOf(building);
+
+  if (placedIndex !== -1) {
+    placedBuildings.splice(placedIndex, 1);
+  }
+
+  saveWorld(playerBuildings);
 }
 
 // FOLLOW THE MOUSE
@@ -326,7 +460,7 @@ renderer.domElement.addEventListener("pointerdown", (event) => {
 });
 
 renderer.domElement.addEventListener("pointerup", (event) => {
-  if (!activeTool || !pointerStart || event.button !== 0) {
+  if ((!activeTool && !deleteMode) || !pointerStart || event.button !== 0) {
     pointerStart = null;
     return;
   }
@@ -341,6 +475,18 @@ renderer.domElement.addEventListener("pointerup", (event) => {
   // Do not build while rotating the camera.
   if (movement > 5) return;
 
+  if (deleteMode) {
+    const building = findPlacedBuilding(event);
+
+    if (building) {
+      deleteBuilding(building);
+    }
+
+    return;
+  }
+
+  if (!activeTool) return;
+
   const point = getGroundPoint(event);
 
   if (!point) return;
@@ -350,19 +496,30 @@ renderer.domElement.addEventListener("pointerup", (event) => {
 
   if (!isFreePosition(x, z, tool)) return;
 
-  if (tool === "cottage") {
-    createCottage(scene, x, z);
-  } else if (tool === "tree") {
-    createTree(x, z);
-  } else if (tool === "tower") {
-    createTower(scene, x, z);
-  }
+  const object = spawnBuilding(tool, x, z);
 
-  occupied.push({
+  const data: SavedBuilding = {
+    tool,
+    x,
+    z,
+  };
+
+  const space: OccupiedSpace = {
     x,
     z,
     radius: objectRadius[tool],
+  };
+
+  occupied.push(space);
+  playerBuildings.push(data);
+
+  placedBuildings.push({
+    object,
+    data,
+    space,
   });
+
+  saveWorld(playerBuildings);
 });
 
 // RESIZE

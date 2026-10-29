@@ -1,5 +1,5 @@
 import * as THREE from "three";
-
+import { decorateTower } from "./decorate-tower";
 export function createTower(
   scene: THREE.Scene,
   x: number,
@@ -111,6 +111,8 @@ export function createTower(
 
   ornament.position.y = 4.55;
   tower.add(ornament);
+
+  decorateTower(tower);
 
   tower.position.set(x, 0.1, z);
   scene.add(tower);
