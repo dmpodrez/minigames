@@ -4,9 +4,9 @@ import "./catch.scss";
 import { generateCatch, type CatchResult } from "./game/catches";
 import { nextReelState, type ReelState } from "./game/reeling";
 import "./inventory.scss";
-
+import { getSalePrice, loadEconomy, saveEconomy } from "./game/economy";
 import { CATCHES } from "./game/catches";
-import { loadInventory, saveInventory, countFish } from "./game/inventory";
+import { loadInventory, saveInventory } from "./game/inventory";
 function getRequiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
 
@@ -52,6 +52,12 @@ const inventorySummary = getRequiredElement<HTMLElement>("#inventory-summary");
 
 const inventoryCount = getRequiredElement<HTMLElement>("#inventory-count");
 
+const walletBalance = getRequiredElement<HTMLElement>("#wallet-balance");
+
+const discoveredSpecies = getRequiredElement<HTMLElement>(
+  "#discovered-species",
+);
+
 const context = canvas.getContext("2d");
 if (!context) {
   throw new Error("Cozy Fishing: Canvas 2D is not supported");
@@ -78,11 +84,13 @@ type FishingPhase = "ready" | "waiting" | "bite" | "reeling";
 let phase: FishingPhase = "ready";
 
 const savedCatches = loadInventory();
+const economy = loadEconomy(savedCatches);
 
-let caughtFish = countFish(savedCatches);
+let caughtFish = economy.totalFishCaught;
 
 catchCount.textContent = String(caughtFish);
 inventoryCount.textContent = String(savedCatches.length);
+walletBalance.textContent = String(economy.coins);
 
 let biteTimer: number | undefined;
 let escapeTimer: number | undefined;
@@ -272,7 +280,11 @@ function showCatchResult(result: CatchResult): void {
   catchRarity.textContent = item.rarity;
   catchRarity.className = `catch-card__rarity catch-card__rarity--${item.rarity}`;
   catchWeight.textContent = `${weightKg.toFixed(2)} kg`;
-  catchValue.textContent = item.value === 0 ? "—" : `${item.value} coins`;
+
+  const price = getSalePrice(item, weightKg);
+
+  catchValue.textContent = price > 0 ? `${price} coins` : "Not for sale";
+
   catchDescription.textContent = item.description;
   catchDialog.showModal();
 }
@@ -287,13 +299,7 @@ catchDialog.addEventListener("close", () => {
 function renderInventory(): void {
   inventoryList.replaceChildren();
 
-  const fishIds = new Set(
-    savedCatches
-      .filter((entry) =>
-        CATCHES.some((item) => item.id === entry.id && item.kind === "fish"),
-      )
-      .map((entry) => entry.id),
-  );
+  const fishIds = new Set(economy.discoveredFishIds);
 
   const totalSpecies = CATCHES.filter((item) => item.kind === "fish").length;
 
@@ -301,6 +307,15 @@ function renderInventory(): void {
     `${caughtFish} fish caught · ` +
     `${fishIds.size}/${totalSpecies} species discovered · ` +
     `${savedCatches.length} total items`;
+
+  const discoveredNames = CATCHES.filter(
+    (item) => item.kind === "fish" && fishIds.has(item.id),
+  ).map((item) => item.name);
+
+  discoveredSpecies.textContent =
+    discoveredNames.length > 0
+      ? `Discovered: ${discoveredNames.join(", ")}`
+      : "Discovered: none yet";
 
   if (savedCatches.length === 0) {
     const empty = document.createElement("p");
@@ -334,6 +349,42 @@ function renderInventory(): void {
       `${item.rarity.toUpperCase()} · ` + `${entry.weightKg.toFixed(2)} kg`;
 
     info.append(name, details);
+
+    if (item.kind === "fish") {
+      const price = getSalePrice(item, entry.weightKg);
+
+      const sellButton = document.createElement("button");
+      sellButton.type = "button";
+      sellButton.className = "inventory-item__sell";
+      sellButton.textContent = `🪙 Sell for ${price}`;
+
+      sellButton.addEventListener("click", () => {
+        const index = savedCatches.indexOf(entry);
+
+        // Prevent selling an already removed item.
+        if (index === -1) return;
+
+        // Remove only this particular fish.
+        savedCatches.splice(index, 1);
+
+        // Add coins to the wallet.
+        economy.coins += price;
+
+        // Save both changes.
+        saveInventory(savedCatches);
+        saveEconomy(economy);
+
+        // Update the interface.
+        walletBalance.textContent = String(economy.coins);
+
+        inventoryCount.textContent = String(savedCatches.length);
+
+        renderInventory();
+      });
+
+      info.append(sellButton);
+    }
+
     card.append(image, info);
     inventoryList.append(card);
   }
@@ -366,12 +417,22 @@ function finishReeling(success: boolean): void {
       savedCatches.length = 500;
     }
 
-    saveInventory(savedCatches);
+    if (result.item.kind === "fish") {
+      economy.totalFishCaught++;
 
-    caughtFish = countFish(savedCatches);
+      if (!economy.discoveredFishIds.includes(result.item.id)) {
+        economy.discoveredFishIds.push(result.item.id);
+      }
+    }
+
+    saveInventory(savedCatches);
+    saveEconomy(economy);
+
+    caughtFish = economy.totalFishCaught;
 
     catchCount.textContent = String(caughtFish);
     inventoryCount.textContent = String(savedCatches.length);
+    walletBalance.textContent = String(economy.coins);
 
     resetFishing(
       result.item.kind === "fish"

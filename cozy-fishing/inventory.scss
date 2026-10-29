@@ -131,3 +131,61 @@
     padding: 15px;
   }
 }
+
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid #bba56d;
+  border-radius: 10px;
+  background: #294744;
+  color: #f6e4b4;
+  font-size: 13px;
+}
+
+.wallet strong {
+  color: #f3cb72;
+  font-size: 17px;
+}
+
+.inventory-discovered {
+  margin: -9px 0 18px;
+  color: #a6c6b6;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.inventory-item__sell {
+  width: fit-content;
+  margin-top: 3px;
+  padding: 8px 12px;
+  border: 1px solid #d1b26c;
+  border-radius: 8px;
+  background: #a97837;
+  color: #fff4dc;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inventory-item__sell:hover {
+  background: #bb8a48;
+}
+
+.inventory-item__sell:focus-visible {
+  outline: 3px solid #f5d28d;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .topbar__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .wallet {
+    padding: 7px;
+    font-size: 11px;
+  }
+}

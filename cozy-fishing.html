@@ -17,6 +17,12 @@
         </div>
 
         <div class="topbar__actions">
+          <div class="wallet" aria-label="Your wallet">
+            <span aria-hidden="true">🪙</span>
+            <strong id="wallet-balance">0</strong>
+            <span>coins</span>
+          </div>
+
           <button id="inventory-open" class="inventory-button" type="button">
             🎒 Collection <span id="inventory-count">0</span>
           </button>
@@ -124,6 +130,7 @@
           </div>
 
           <p id="inventory-summary" class="inventory-summary"></p>
+          <p id="discovered-species" class="inventory-discovered"></p>
 
           <div id="inventory-list" class="inventory-list"></div>
         </div>
