@@ -153,6 +153,10 @@ button:focus-visible {
   background: linear-gradient(110deg, #243d3d, #1c3032);
   box-shadow: 0 10px 24px #061a1c60;
 }
+.game-panel__status {
+  flex: 1;
+  min-width: 0;
+}
 .game-panel__status p {
   margin: 5px 0 0;
   font-size: 16px;
@@ -239,5 +243,30 @@ button:focus-visible {
   }
   .game-panel__tip {
     font-size: 10px;
+  }
+}
+
+.game-panel {
+  align-items: flex-end;
+}
+
+.game-panel__status {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-panel__controls {
+  align-self: flex-end;
+  padding-bottom: 4px;
+}
+
+// The reeling panel already contains instructions.
+.game-panel__tip {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .game-panel__controls {
+    align-self: stretch;
   }
 }

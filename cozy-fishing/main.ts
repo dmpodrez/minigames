@@ -92,14 +92,12 @@ const WIDTH = 640;
 const HEIGHT = 360;
 
 const ART = {
-  background: new URL("./assets/lake-background.png", import.meta.url).href,
-  pier: new URL("./assets/wooden-pier.png", import.meta.url).href,
+  background: new URL("./assets/catches/level_1.jpeg", import.meta.url).href,
+
   fisherman: new URL("./assets/fisherman-sprites.png", import.meta.url).href,
 };
-
 interface GameArt {
   background: HTMLImageElement;
-  pier: HTMLImageElement;
   fisherman: HTMLImageElement;
 }
 
@@ -136,66 +134,77 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function drawWaterDetails(time: number): void {
-  ctx.save();
-  ctx.globalAlpha = 0.22;
-
-  for (let i = 0; i < 24; i++) {
-    const x = (i * 139 + Math.sin(time * 0.75 + i) * 5 + WIDTH) % WIDTH;
-    const y = 222 + ((i * 53) % 133);
-    ctx.fillStyle = i % 3 === 0 ? "#f4d5a7" : "#a3c2b7";
-    ctx.fillRect(Math.round(x), y, 4 + (i % 4) * 2, 1);
-  }
-
-  ctx.restore();
-}
-
 function drawFisherman(art: GameArt, time: number): void {
   const frame = time % 4.5 < 0.14 ? 1 : 0;
-  ctx.drawImage(art.fisherman, frame * 48, 0, 48, 64, 486, 185, 60, 80);
+
+  // Fisherman position inside the boat.
+  const fishermanX = 407;
+  const fishermanY = 218;
+
+  ctx.drawImage(
+    art.fisherman,
+    frame * 48,
+    0,
+    48,
+    64,
+    fishermanX,
+    fishermanY,
+    20,
+    27,
+  );
 }
 
 function drawFishingRod(time: number): void {
-  const handX = 497;
-  const handY = 240;
-  const tipX = 409;
-  const tipY = 178;
+  // Rod starts near the fisherman's hand.
+  const handX = 410;
+  const handY = 236;
 
+  // Rod points toward the open water.
+  const tipX = 357;
+  const tipY = 211;
+
+  ctx.save();
+
+  // Fishing rod
+  ctx.strokeStyle = "#443026";
+  ctx.lineWidth = 2;
   ctx.lineCap = "round";
-  ctx.strokeStyle = "#342e2d";
-  ctx.lineWidth = 3;
+
   ctx.beginPath();
   ctx.moveTo(handX, handY);
-  ctx.quadraticCurveTo(451, 193, tipX, tipY);
+  ctx.quadraticCurveTo(383, 213, tipX, tipY);
   ctx.stroke();
 
-  ctx.strokeStyle = "#dfbc81";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(445, 190);
-  ctx.lineTo(tipX, tipY);
-  ctx.stroke();
+  if (phase === "ready") {
+    ctx.restore();
+    return;
+  }
 
-  if (phase === "ready") return;
-
+  // Fishing bobber
   const isBiting = phase === "bite" || phase === "reeling";
-  const bobberX = 390;
-  const bobberY =
-    274 + Math.sin(time * (isBiting ? 13 : 2)) * (isBiting ? 4 : 2);
 
-  ctx.strokeStyle = "#e9e7da";
+  const bobberX = 350;
+
+  const bobberY =
+    279 + Math.sin(time * (isBiting ? 13 : 2)) * (isBiting ? 4 : 2);
+
+  // Fishing line
+  ctx.strokeStyle = "#ede6d6";
   ctx.lineWidth = 1;
+
   ctx.beginPath();
   ctx.moveTo(tipX, tipY);
   ctx.lineTo(bobberX, bobberY);
   ctx.stroke();
 
-  ctx.strokeStyle = "#8dc1c1";
+  // Water ripple
+  ctx.strokeStyle = "#b7cbd0";
+
   ctx.beginPath();
   ctx.ellipse(
     bobberX,
-    bobberY + 4,
-    9 + Math.sin(time * 3),
+    bobberY + 5,
+    8 + Math.sin(time * 3),
     3,
     0,
     0,
@@ -203,17 +212,36 @@ function drawFishingRod(time: number): void {
   );
   ctx.stroke();
 
+  // White and red bobber
   ctx.fillStyle = "#f1eddf";
   ctx.fillRect(bobberX - 2, Math.round(bobberY) - 5, 5, 5);
+
   ctx.fillStyle = "#df6857";
   ctx.fillRect(bobberX - 2, Math.round(bobberY), 5, 6);
+
+  ctx.restore();
 }
 
 function drawScene(art: GameArt, time: number): void {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.drawImage(art.background, 0, 0, WIDTH, HEIGHT);
-  drawWaterDetails(time);
-  ctx.drawImage(art.pier, 440, 174);
+
+  // Crop the background to fit the 16:9 canvas.
+  const sourceHeight = (art.background.width * HEIGHT) / WIDTH;
+
+  const sourceY = (art.background.height - sourceHeight) / 2;
+
+  ctx.drawImage(
+    art.background,
+    0,
+    sourceY,
+    art.background.width,
+    sourceHeight,
+    0,
+    0,
+    WIDTH,
+    HEIGHT,
+  );
+
   drawFisherman(art, time);
   drawFishingRod(time);
 }
@@ -622,12 +650,15 @@ window.addEventListener("blur", () => {
 
 async function startGame(): Promise<void> {
   try {
-    const [background, pier, fisherman] = await Promise.all([
+    const [background, fisherman] = await Promise.all([
       loadImage(ART.background),
-      loadImage(ART.pier),
       loadImage(ART.fisherman),
     ]);
-    const art: GameArt = { background, pier, fisherman };
+
+    const art: GameArt = {
+      background,
+      fisherman,
+    };
 
     function animate(timestamp: number): void {
       if (lastFrame === 0 || timestamp - lastFrame >= 33) {

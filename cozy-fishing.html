@@ -28,7 +28,6 @@
           <button id="inventory-open" class="inventory-button" type="button">
             🎒 Collection <span id="inventory-count">0</span>
           </button>
-
           <a class="back-link" href="/">← Back to MiniGames</a>
         </div>
       </header>
@@ -38,78 +37,79 @@
           id="fishing-canvas"
           width="640"
           height="360"
-          aria-label="Pixel-art lake with a fishing pier and fisherman"
+          aria-label="Pixel-art sunset lake with a boat and fisherman"
         ></canvas>
         <div class="location-label">
           <span>LOCATION 01</span>
-          <h1>Willow Lake</h1>
-          <p>A peaceful morning by the water</p>
+          <h1>Sunset Cove</h1>
+          <p>A peaceful evening on the lake</p>
         </div>
-        <div class="weather-label">☀ &nbsp; DAY 01 · CLEAR</div>
-
-        <aside
-          id="reel-panel"
-          class="reel-panel"
-          aria-label="Fishing battle"
-          hidden
-        >
-          <p class="reel-panel__eyebrow">FISH ON THE LINE!</p>
-          <div class="reel-panel__heading">
-            <strong>Reel the fish in</strong>
-            <span id="reel-percent">0%</span>
-          </div>
-          <div
-            class="reel-panel__track"
-            role="progressbar"
-            aria-label="Catch progress"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="0"
-            id="reel-progress"
-          >
-            <div
-              id="reel-progress-fill"
-              class="reel-panel__fill reel-panel__fill--progress"
-            ></div>
-          </div>
-          <div class="reel-panel__heading reel-panel__heading--tension">
-            <strong>Line tension</strong>
-            <span id="tension-percent">0%</span>
-          </div>
-          <div
-            class="reel-panel__track"
-            role="progressbar"
-            aria-label="Line tension"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="0"
-            id="reel-tension"
-          >
-            <div
-              id="reel-tension-fill"
-              class="reel-panel__fill reel-panel__fill--tension"
-            ></div>
-          </div>
-          <p class="reel-panel__hint">
-            Hold the button or Space to reel. Release to lower tension.
-          </p>
-        </aside>
+        <div class="weather-label">🌅 DAY 01 · SUNSET</div>
       </section>
 
       <section class="game-panel" aria-label="Fishing controls">
         <div class="game-panel__status">
-          <span class="game-panel__eyebrow"
-            >FISHING STATUS · CAUGHT <strong id="catch-count">0</strong></span
-          >
+          <span class="game-panel__eyebrow">
+            FISHING STATUS · CAUGHT <strong id="catch-count">0</strong>
+          </span>
           <p id="game-status" role="status" aria-live="polite">
             The lake is quiet. Ready to cast?
           </p>
           <p id="equipped-rod" class="equipped-rod">Equipped: Wooden Rod</p>
-        </div>
-        <div class="game-panel__controls">
-          <span class="game-panel__tip"
-            >During the fight, hold to reel and release to relax</span
+
+          <aside
+            id="reel-panel"
+            class="reel-panel"
+            aria-label="Fishing battle"
+            hidden
           >
+            <p class="reel-panel__eyebrow">FISH ON THE LINE!</p>
+            <div class="reel-panel__heading">
+              <strong>Reel the fish in</strong>
+              <span id="reel-percent">0%</span>
+            </div>
+            <div
+              class="reel-panel__track"
+              role="progressbar"
+              aria-label="Catch progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="reel-progress"
+            >
+              <div
+                id="reel-progress-fill"
+                class="reel-panel__fill reel-panel__fill--progress"
+              ></div>
+            </div>
+            <div class="reel-panel__heading reel-panel__heading--tension">
+              <strong>Line tension</strong>
+              <span id="tension-percent">0%</span>
+            </div>
+            <div
+              class="reel-panel__track"
+              role="progressbar"
+              aria-label="Line tension"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="reel-tension"
+            >
+              <div
+                id="reel-tension-fill"
+                class="reel-panel__fill reel-panel__fill--tension"
+              ></div>
+            </div>
+            <p class="reel-panel__hint">
+              Hold the button or Space to reel. Release to lower tension.
+            </p>
+          </aside>
+        </div>
+
+        <div class="game-panel__controls">
+          <span class="game-panel__tip">
+            During the fight, hold to reel and release to relax
+          </span>
           <button
             id="cast-button"
             class="cast-button"
@@ -131,10 +131,8 @@
             <h2 id="inventory-title">Catch Collection</h2>
             <button id="inventory-close" type="button">Close ✕</button>
           </div>
-
           <p id="inventory-summary" class="inventory-summary"></p>
           <p id="discovered-species" class="inventory-discovered"></p>
-
           <div id="inventory-list" class="inventory-list"></div>
         </div>
       </dialog>
@@ -146,16 +144,13 @@
               <p class="shop-eyebrow">FISHING EQUIPMENT</p>
               <h2 id="shop-title">Fishing Shop</h2>
             </div>
-
             <button id="shop-close" class="shop-close" type="button">
               Close ✕
             </button>
           </div>
-
           <p class="shop-description">
             Upgrade your fishing rod to reduce line tension and catch more fish.
           </p>
-
           <div id="shop-list" class="shop-list"></div>
         </div>
       </dialog>

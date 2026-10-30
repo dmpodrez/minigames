@@ -1,14 +1,18 @@
-// Extra HUD for the fishing battle. Existing styles.scss stays untouched.
+// Fishing battle HUD appears below the lake, inside the control panel.
 .reel-panel[hidden] {
   display: none;
 }
 
+// Leave enough horizontal space for the fishing meters.
+.game-panel__status {
+  flex: 1;
+  min-width: 0;
+}
+
 .reel-panel {
-  position: absolute;
-  left: 22px;
-  bottom: 20px;
-  z-index: 2;
-  width: min(300px, calc(100% - 44px));
+  position: static;
+  width: min(420px, 100%);
+  margin-top: 14px;
   padding: 16px 18px;
   border: 2px solid #c8a76c;
   border-radius: 12px;
@@ -18,7 +22,8 @@
   font-family: "Trebuchet MS", Arial, sans-serif;
 }
 
-.reel-panel__eyebrow {
+// More specific selectors override .game-panel__status p in styles.scss.
+.game-panel__status .reel-panel__eyebrow {
   margin: 0 0 10px;
   color: #f3c97c;
   font-size: 10px;
@@ -65,7 +70,7 @@
   background: #f06f63;
 }
 
-.reel-panel__hint {
+.game-panel__status .reel-panel__hint {
   margin: 13px 0 0;
   color: #c3dbd2;
   font-size: 11px;
@@ -74,13 +79,11 @@
 
 @media (max-width: 520px) {
   .reel-panel {
-    left: 9px;
-    bottom: 9px;
-    width: min(265px, calc(100% - 18px));
+    width: 100%;
     padding: 10px 12px;
   }
 
-  .reel-panel__hint {
+  .game-panel__status .reel-panel__hint {
     font-size: 10px;
   }
 }
