@@ -91,11 +91,95 @@ const ctx = context;
 const WIDTH = 640;
 const HEIGHT = 360;
 
-const ART = {
-  background: new URL("./assets/catches/level_1.jpeg", import.meta.url).href,
+type LocationId = 1 | 2 | 3 | 4;
 
-  fisherman: new URL("./assets/fisherman-sprites.png", import.meta.url).href,
+interface LocationConfig {
+  background: string;
+  fisherman: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  direction: -1 | 1;
+  handX: number;
+  handY: number;
+  tipX: number;
+  tipY: number;
+  bobberX: number;
+  bobberY: number;
+}
+
+const LOCATIONS: Record<LocationId, LocationConfig> = {
+  1: {
+    name: "Sunset Cove",
+    background: "./assets/boat-man.png",
+    fisherman: "./assets/backgr.png",
+    x: 505,
+    y: 207,
+    width: 40,
+    height: 54,
+    direction: -1,
+    handX: 512,
+    handY: 239,
+    tipX: 444,
+    tipY: 207,
+    bobberX: 350,
+    bobberY: 279,
+  },
+  2: {
+    name: "Mountain River",
+    background: "./assets/nature.png",
+    fisherman: "./assets/nature-man.png",
+    x: 180,
+    y: 170,
+    width: 75,
+    height: 100,
+    direction: 1,
+    handX: 116,
+    handY: 247,
+    tipX: 252,
+    tipY: 188,
+    bobberX: 335,
+    bobberY: 292,
+  },
+  3: {
+    name: "Tropical Lagoon",
+    background: "./assets/island.png",
+    fisherman: "./assets/island-man.png",
+    x: 45,
+    y: 225,
+    width: 44,
+    height: 59,
+    direction: 1,
+    handX: 80,
+    handY: 253,
+    tipX: 147,
+    tipY: 216,
+    bobberX: 265,
+    bobberY: 280,
+  },
+  4: {
+    name: "Winter Lake",
+    background: "./assets/snow.png",
+    fisherman: "./assets/snow-man.png",
+    x: 535,
+    y: 210,
+    width: 46,
+    height: 61,
+    direction: -1,
+    handX: 542,
+    handY: 246,
+    tipX: 484,
+    tipY: 226,
+    bobberX: 390,
+    bobberY: 285,
+  },
 };
+
+const activeLocation: LocationId = 2;
+const location = LOCATIONS[activeLocation];
+
 interface GameArt {
   background: HTMLImageElement;
   fisherman: HTMLImageElement;
@@ -123,7 +207,8 @@ let spaceReleasePending = false;
 let reelState: ReelState = { progress: 0, tension: 0, elapsed: 0 };
 let lastFrame = 0;
 
-ctx.imageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -135,115 +220,24 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 function drawFisherman(art: GameArt, time: number): void {
-  const frame = time % 4.5 < 0.14 ? 1 : 0;
-
-  // Fisherman position inside the boat.
-  const fishermanX = 407;
-  const fishermanY = 218;
+  const breathe = Math.sin(time * 2) * 0.6;
 
   ctx.drawImage(
     art.fisherman,
-    frame * 48,
-    0,
-    48,
-    64,
-    fishermanX,
-    fishermanY,
-    20,
-    27,
+    location.x,
+    location.y + breathe,
+    location.width,
+    location.height,
   );
-}
-
-function drawFishingRod(time: number): void {
-  // Rod starts near the fisherman's hand.
-  const handX = 410;
-  const handY = 236;
-
-  // Rod points toward the open water.
-  const tipX = 357;
-  const tipY = 211;
-
-  ctx.save();
-
-  // Fishing rod
-  ctx.strokeStyle = "#443026";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-
-  ctx.beginPath();
-  ctx.moveTo(handX, handY);
-  ctx.quadraticCurveTo(383, 213, tipX, tipY);
-  ctx.stroke();
-
-  if (phase === "ready") {
-    ctx.restore();
-    return;
-  }
-
-  // Fishing bobber
-  const isBiting = phase === "bite" || phase === "reeling";
-
-  const bobberX = 350;
-
-  const bobberY =
-    279 + Math.sin(time * (isBiting ? 13 : 2)) * (isBiting ? 4 : 2);
-
-  // Fishing line
-  ctx.strokeStyle = "#ede6d6";
-  ctx.lineWidth = 1;
-
-  ctx.beginPath();
-  ctx.moveTo(tipX, tipY);
-  ctx.lineTo(bobberX, bobberY);
-  ctx.stroke();
-
-  // Water ripple
-  ctx.strokeStyle = "#b7cbd0";
-
-  ctx.beginPath();
-  ctx.ellipse(
-    bobberX,
-    bobberY + 5,
-    8 + Math.sin(time * 3),
-    3,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // White and red bobber
-  ctx.fillStyle = "#f1eddf";
-  ctx.fillRect(bobberX - 2, Math.round(bobberY) - 5, 5, 5);
-
-  ctx.fillStyle = "#df6857";
-  ctx.fillRect(bobberX - 2, Math.round(bobberY), 5, 6);
-
-  ctx.restore();
 }
 
 function drawScene(art: GameArt, time: number): void {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
-  // Crop the background to fit the 16:9 canvas.
-  const sourceHeight = (art.background.width * HEIGHT) / WIDTH;
-
-  const sourceY = (art.background.height - sourceHeight) / 2;
-
-  ctx.drawImage(
-    art.background,
-    0,
-    sourceY,
-    art.background.width,
-    sourceHeight,
-    0,
-    0,
-    WIDTH,
-    HEIGHT,
-  );
+  ctx.drawImage(art.background, 0, 0, WIDTH, HEIGHT);
 
   drawFisherman(art, time);
-  drawFishingRod(time);
+  drawFishingLine(time);
 }
 
 function clearFishingTimers(): void {
@@ -331,6 +325,92 @@ function startReeling(): void {
   status.textContent =
     `${strength} resistance! Hold to reel, ` +
     `but release before the line breaks!`;
+}
+
+function drawFishingLine(time: number): void {
+  // Пока удочка не заброшена, леску не рисуем
+  if (phase === "ready") return;
+
+  const { tipX, tipY, bobberX, bobberY } = location;
+
+  const biting = phase === "bite";
+  const reeling = phase === "reeling";
+
+  const wave = Math.sin(time * 2.5) * 1.5;
+  const biteMovement = biting ? Math.sin(time * 17) * 5 : 0;
+
+  const currentY = bobberY + wave + biteMovement;
+
+  ctx.save();
+
+  // Леска от кончика удочки до поплавка
+  ctx.strokeStyle = "rgba(245, 245, 235, 0.85)";
+  ctx.lineWidth = 0.9;
+
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+
+  // Небольшое провисание лески
+  if (reeling || biting) {
+    ctx.lineTo(bobberX, currentY);
+  } else {
+    ctx.quadraticCurveTo(
+      (tipX + bobberX) / 2,
+      (tipY + currentY) / 2 + 8,
+      bobberX,
+      currentY,
+    );
+  }
+
+  ctx.stroke();
+
+  // Круги на воде
+  const ripple = (time * 5) % 1;
+
+  ctx.strokeStyle = `rgba(220, 245, 250, ${0.6 * (1 - ripple)})`;
+  ctx.lineWidth = 1;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    bobberX,
+    currentY + 3,
+    4 + ripple * 9,
+    2 + ripple * 3,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+
+  // Поплавок
+  const x = Math.round(bobberX);
+  const y = Math.round(currentY);
+
+  // Антенна
+  ctx.strokeStyle = "#352e2a";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 9);
+  ctx.lineTo(x, y - 5);
+  ctx.stroke();
+
+  // Красная верхняя часть
+  ctx.fillStyle = "#e94c42";
+  ctx.fillRect(x - 2, y - 5, 5, 5);
+
+  // Белая нижняя часть
+  ctx.fillStyle = "#fff2d2";
+  ctx.fillRect(x - 2, y, 5, 4);
+
+  // При поклёвке поплавок погружается
+  if (biting) {
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 4, 10, 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function showCatchResult(result: CatchResult): void {
@@ -651,14 +731,11 @@ window.addEventListener("blur", () => {
 async function startGame(): Promise<void> {
   try {
     const [background, fisherman] = await Promise.all([
-      loadImage(ART.background),
-      loadImage(ART.fisherman),
+      loadImage(new URL(location.background, import.meta.url).href),
+      loadImage(new URL(location.fisherman, import.meta.url).href),
     ]);
 
-    const art: GameArt = {
-      background,
-      fisherman,
-    };
+    const art: GameArt = { background, fisherman };
 
     function animate(timestamp: number): void {
       if (lastFrame === 0 || timestamp - lastFrame >= 33) {
