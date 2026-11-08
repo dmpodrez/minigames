@@ -170,15 +170,15 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
     name: "Winter Lake",
     background: "./assets/snow.png",
     fisherman: "./assets/snow-man.png",
-    x: 450,
-    y: 240,
-    width: 46,
-    height: 61,
+    x: 420,
+    y: 200,
+    width: 86,
+    height: 101,
     direction: -1,
     handX: 542,
     handY: 246,
-    tipX: 494,
-    tipY: 265,
+    tipX: 505,
+    tipY: 240,
     bobberX: 531,
     bobberY: 286,
   },
@@ -242,6 +242,9 @@ let ignoreNextClick = false;
 let spaceReleasePending = false;
 let reelState: ReelState = { progress: 0, tension: 0, elapsed: 0 };
 let lastFrame = 0;
+let hasMadeReelProgress = false;
+let zeroProgressIdleSeconds = 0;
+const ZERO_PROGRESS_ESCAPE_SECONDS = 5;
 let castStartedAt = 0;
 let splashStartedAt = -1;
 
@@ -340,6 +343,9 @@ function updateButton(): void {
   inventoryOpen.disabled = phase !== "ready";
   shopOpen.disabled = phase !== "ready";
   locationSelect.disabled = phase !== "ready";
+  document
+    .querySelector(".game-panel")
+    ?.classList.toggle("game-panel--reeling", phase === "reeling");
 }
 
 function updateMeters(): void {
@@ -364,6 +370,8 @@ function resetFishing(message: string): void {
   pointerHeld = false;
   spaceHeld = false;
   reelPanel.hidden = true;
+  hasMadeReelProgress = false;
+  zeroProgressIdleSeconds = 0;
   updateButton();
   status.textContent = message;
 }
@@ -399,6 +407,8 @@ function startReeling(): void {
   pointerHeld = false;
   spaceHeld = false;
   reelState = { progress: 0, tension: 10, elapsed: 0 };
+  hasMadeReelProgress = false;
+  zeroProgressIdleSeconds = 0;
   reelPanel.hidden = false;
   updateButton();
   updateMeters();
@@ -892,10 +902,28 @@ async function startGame(): Promise<void> {
 
           updateMeters();
 
+          // Once the player has gained progress, losing all of it means
+          // the fish escapes immediately.
+          if (reelState.progress > 0) {
+            hasMadeReelProgress = true;
+            zeroProgressIdleSeconds = 0;
+          } else if (!pointerHeld && !spaceHeld) {
+            // A newly hooked fish can wait at 0% for only five seconds.
+            zeroProgressIdleSeconds += Math.max(0, Math.min(deltaSeconds, 0.1));
+          }
+
           if (reelState.tension >= 100) {
             finishReeling(false);
           } else if (reelState.progress >= 100) {
             finishReeling(true);
+          } else if (hasMadeReelProgress && reelState.progress <= 0) {
+            resetFishing(
+              "The fish escaped! Your reeling progress fell to zero.",
+            );
+          } else if (zeroProgressIdleSeconds >= ZERO_PROGRESS_ESCAPE_SECONDS) {
+            resetFishing(
+              "The fish escaped! You waited five seconds without reeling.",
+            );
           }
         }
 

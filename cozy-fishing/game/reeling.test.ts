@@ -40,3 +40,22 @@ describe("fishing rod upgrades", () => {
     expect(pike.progress).toBeLessThan(perch.progress);
   });
 });
+
+describe("reeling progress decay", () => {
+  it("allows progress to return to zero when the player releases", () => {
+    const next = nextReelState(
+      { progress: 0.12, tension: 10, elapsed: 0 },
+      false,
+      0.05,
+    );
+    expect(next.progress).toBe(0);
+  });
+  it("does not allow negative progress", () => {
+    const next = nextReelState(
+      { progress: 0, tension: 0, elapsed: 0 },
+      false,
+      0.05,
+    );
+    expect(next.progress).toBe(0);
+  });
+});

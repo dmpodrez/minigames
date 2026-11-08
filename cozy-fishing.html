@@ -17,6 +17,15 @@
         </div>
 
         <div class="topbar__actions">
+          <label class="location-picker" for="location-select">
+            Location
+            <select id="location-select" aria-label="Fishing location">
+              <option value="1">Sunset Cove</option>
+              <option value="2" selected>Mountain River</option>
+              <option value="3">Tropical Lagoon</option>
+              <option value="4">Winter Lake</option>
+            </select>
+          </label>
           <div class="wallet" aria-label="Your wallet">
             <span aria-hidden="true">🪙</span>
             <strong id="wallet-balance">0</strong>
@@ -35,16 +44,16 @@
       <section class="game-frame" aria-label="Fishing game scene">
         <canvas
           id="fishing-canvas"
-          width="640"
-          height="360"
+          width="1280"
+          height="720"
           aria-label="Pixel-art sunset lake with a boat and fisherman"
         ></canvas>
         <div class="location-label">
-          <span>LOCATION 01</span>
-          <h1>Sunset Cove</h1>
-          <p>A peaceful evening on the lake</p>
+          <span id="location-number">LOCATION 02</span>
+          <h1 id="location-title">Mountain River</h1>
+          <p id="location-description">Wild trout by the mountain stream</p>
         </div>
-        <div class="weather-label">🌅 DAY 01 · SUNSET</div>
+        <div class="weather-label" id="weather-label">☀ DAY 01 · CLEAR</div>
       </section>
 
       <section class="game-panel" aria-label="Fishing controls">

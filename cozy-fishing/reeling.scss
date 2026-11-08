@@ -93,3 +93,25 @@
   touch-action: none;
   user-select: none;
 }
+
+/* COZY responsive reeling controls — keep same button position in all phases */
+.game-panel--reeling {
+  align-items: center;
+}
+.game-panel--reeling .game-panel__controls {
+  align-self: center;
+  padding-bottom: 0;
+  flex: 0 0 auto;
+}
+.game-panel--reeling .cast-button {
+  min-height: 54px;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .game-panel--reeling .game-panel__controls {
+    align-self: stretch;
+  }
+  .game-panel--reeling .cast-button {
+    width: 100%;
+  }
+}
