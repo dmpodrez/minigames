@@ -1,0 +1,60 @@
+/* Reviewer shortcut: visible in deployed builds, distinct from the real shop. */
+.reviewer-bonus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid #a59bd8;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #3c3b63 0%, #26364a 100%);
+  color: #f6efff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 20, 38, 0.25);
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.reviewer-bonus:hover {
+  border-color: #f2d087;
+  background: linear-gradient(145deg, #535487, #324b64);
+  transform: translateY(-1px);
+}
+
+.reviewer-bonus:active {
+  transform: translateY(1px);
+}
+
+.reviewer-bonus:focus-visible {
+  outline: 3px solid #f4cd85;
+  outline-offset: 3px;
+}
+
+.reviewer-bonus__hint {
+  color: #d4cbee;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .reviewer-bonus {
+    min-height: 38px;
+    padding: 9px 11px;
+  }
+  .reviewer-bonus__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviewer-bonus {
+    transition: none;
+  }
+}

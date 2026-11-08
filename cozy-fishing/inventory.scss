@@ -189,3 +189,85 @@
     font-size: 11px;
   }
 }
+
+/* COZY_COLLECTION_CLEANUP_V4 — Collection management */
+.inventory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.inventory-action,
+.inventory-item__discard {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    background-color 130ms ease,
+    transform 130ms ease;
+}
+.inventory-action {
+  min-height: 38px;
+  padding: 8px 12px;
+  background: #315752;
+  color: #eef5dd;
+  border: 1px solid #739a7a;
+}
+.inventory-action--junk:hover:not(:disabled) {
+  background: #417267;
+}
+.inventory-action--danger {
+  background: #53363b;
+  color: #ffe0dc;
+  border-color: #b47378;
+}
+.inventory-action--danger:hover:not(:disabled) {
+  background: #734249;
+}
+.inventory-action:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.inventory-action:focus-visible,
+.inventory-item__discard:focus-visible {
+  outline: 2px solid #f3d59c;
+  outline-offset: 3px;
+}
+.inventory-item__discard {
+  margin-top: 4px;
+  padding: 8px 12px;
+  width: fit-content;
+  background: #3d5259;
+  color: #f3d7c1;
+  border: 1px solid #ae9280;
+}
+.inventory-item__discard:hover {
+  background: #576a71;
+}
+.inventory-item__info {
+  min-width: 0;
+}
+.brand__mark img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  border-radius: 6px;
+}
+@media (max-width: 460px) {
+  .inventory-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .inventory-action {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  .inventory-item img {
+    width: 70px;
+    height: 55px;
+  }
+}

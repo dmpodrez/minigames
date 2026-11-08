@@ -8,10 +8,19 @@ import {
 } from "./game/catches";
 import { nextReelState, type ReelState } from "./game/reeling";
 import "./inventory.scss";
+import {
+  clearCollection,
+  discardJunk,
+  isJunkCatch,
+} from "./game/collection-actions";
+// COZY_COLLECTION_CLEANUP_V4
 import { getSalePrice, loadEconomy, saveEconomy } from "./game/economy";
 import { CATCHES } from "./game/catches";
 import { loadInventory, saveInventory } from "./game/inventory";
 import "./shop.scss";
+import "./reviewer-tools.scss";
+import { getReviewerBonus } from "./game/reviewer-tools";
+import "./location-picker.scss";
 
 import {
   RODS,
@@ -68,8 +77,16 @@ const inventoryList = getRequiredElement<HTMLDivElement>("#inventory-list");
 const inventorySummary = getRequiredElement<HTMLElement>("#inventory-summary");
 
 const inventoryCount = getRequiredElement<HTMLElement>("#inventory-count");
+const inventoryDiscardJunk = getRequiredElement<HTMLButtonElement>(
+  "#inventory-discard-junk",
+);
+const inventoryClearAll = getRequiredElement<HTMLButtonElement>(
+  "#inventory-clear-all",
+);
 
 const walletBalance = getRequiredElement<HTMLElement>("#wallet-balance");
+const reviewerBonusButton =
+  getRequiredElement<HTMLButtonElement>("#reviewer-bonus");
 
 const discoveredSpecies = getRequiredElement<HTMLElement>(
   "#discovered-species",
@@ -125,15 +142,15 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
     name: "Sunset Cove",
     background: "./assets/boat-man.png",
     fisherman: "./assets/backgr.png",
-    x: 300,
-    y: 207,
-    width: 40,
-    height: 54,
+    x: 260,
+    y: 177,
+    width: 70,
+    height: 84,
     direction: -1,
     handX: 512,
     handY: 239,
-    tipX: 300,
-    tipY: 217,
+    tipX: 260,
+    tipY: 195,
     bobberX: 200,
     bobberY: 279,
   },
@@ -192,6 +209,20 @@ let activeLocation: LocationId = 1;
 let location = LOCATIONS[activeLocation];
 const locationSelect =
   getRequiredElement<HTMLSelectElement>("#location-select");
+const destinationPicker =
+  getRequiredElement<HTMLDivElement>("#location-picker");
+const destinationTrigger =
+  getRequiredElement<HTMLButtonElement>("#location-trigger");
+const destinationMenu = getRequiredElement<HTMLDivElement>("#location-menu");
+const destinationName = getRequiredElement<HTMLElement>(
+  "#location-current-name",
+);
+const destinationNumber = getRequiredElement<HTMLElement>(
+  "#location-current-number",
+);
+const destinationPreview = getRequiredElement<HTMLElement>(
+  "#location-current-preview",
+);
 const locationHeading = getRequiredElement<HTMLElement>("#location-title");
 const locationNumber = getRequiredElement<HTMLElement>("#location-number");
 const locationDescription = getRequiredElement<HTMLElement>(
@@ -216,6 +247,7 @@ function updateLocationLabels(): void {
   locationNumber.textContent = `LOCATION 0${activeLocation}`;
   locationDescription.textContent = locationDescriptions[activeLocation];
   weatherLabel.textContent = locationWeather[activeLocation];
+  syncDestinationTrigger();
 }
 updateLocationLabels();
 
@@ -232,6 +264,90 @@ const savedCatches = loadInventory();
 const economy = loadEconomy(savedCatches);
 let shopState = loadShop();
 
+// COZY_DESTINATION_PICKER_V3: display only. Native select and shop remain authoritative.
+function syncDestinationTrigger(): void {
+  destinationName.textContent = location.name;
+  destinationNumber.textContent = `LOCATION 0${activeLocation}`;
+  destinationPreview.style.backgroundImage = `url("${new URL(location.background, import.meta.url).href}")`;
+}
+
+function showDestinationMenu(open: boolean): void {
+  const allowed = open && phase === "ready";
+  destinationMenu.hidden = !allowed;
+  destinationTrigger.setAttribute("aria-expanded", String(allowed));
+}
+
+function renderDestinationMenu(): void {
+  syncDestinationTrigger();
+  destinationMenu.replaceChildren();
+
+  const heading = document.createElement("div");
+  heading.className = "location-menu__heading";
+  const name = document.createElement("strong");
+  name.textContent = "Choose a destination";
+  const counter = document.createElement("span");
+  counter.textContent = `${shopState.ownedLocationIds.length} / ${FISHING_LOCATIONS.length} unlocked`;
+  heading.append(name, counter);
+  destinationMenu.append(heading);
+
+  const items = document.createElement("div");
+  items.className = "location-menu__items";
+  for (const place of FISHING_LOCATIONS) {
+    const owned = shopState.ownedLocationIds.includes(place.id);
+    const selected = place.id === activeLocation;
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className =
+      "location-menu__item" +
+      (selected ? " location-menu__item--active" : "") +
+      (!owned ? " location-menu__item--locked" : "");
+    if (selected) item.setAttribute("aria-current", "location");
+    item.setAttribute(
+      "aria-label",
+      `${place.name}: ${selected ? "current" : owned ? "unlocked" : `locked, ${place.price} coins`}`,
+    );
+
+    const thumb = document.createElement("span");
+    thumb.className = "location-menu__thumb";
+    thumb.style.backgroundImage = `url("${new URL(LOCATIONS[place.id].background, import.meta.url).href}")`;
+    thumb.setAttribute("aria-hidden", "true");
+    const copy = document.createElement("span");
+    copy.className = "location-menu__copy";
+    const title = document.createElement("strong");
+    title.textContent = place.name;
+    const description = document.createElement("small");
+    description.textContent = place.description;
+    copy.append(title, description);
+    const state = document.createElement("span");
+    state.className = "location-menu__state";
+    state.textContent = selected
+      ? "✓ HERE"
+      : owned
+        ? "TRAVEL"
+        : `🔒 ${place.price} 🪙`;
+    item.append(thumb, copy, state);
+
+    item.addEventListener("click", () => {
+      showDestinationMenu(false);
+      if (!owned) {
+        renderShop();
+        if (!shopDialog.open) shopDialog.showModal();
+      } else if (!selected) {
+        locationSelect.value = String(place.id);
+        locationSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+    items.append(item);
+  }
+  destinationMenu.append(items);
+
+  const footer = document.createElement("p");
+  footer.className = "location-menu__footer";
+  footer.textContent =
+    "Locked locations can be unlocked in the Shop with coins from your catches.";
+  destinationMenu.append(footer);
+}
+
 // COZY_LOCATION_UNLOCKS_V1: ownership from the existing shop save.
 function refreshLocationOptions(): void {
   for (const item of FISHING_LOCATIONS) {
@@ -247,8 +363,33 @@ function refreshLocationOptions(): void {
     option.disabled = false;
   }
   locationSelect.value = String(activeLocation);
+  renderDestinationMenu();
 }
 refreshLocationOptions();
+
+destinationTrigger.addEventListener("click", () => {
+  if (destinationTrigger.disabled) return;
+
+  renderDestinationMenu();
+
+  const isOpen = destinationTrigger.getAttribute("aria-expanded") === "true";
+
+  showDestinationMenu(!isOpen);
+});
+document.addEventListener("pointerdown", (event) => {
+  if (
+    event.target instanceof Node &&
+    !destinationPicker.contains(event.target)
+  ) {
+    showDestinationMenu(false);
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !destinationMenu.hidden) {
+    showDestinationMenu(false);
+    destinationTrigger.focus();
+  }
+});
 let caughtFish = economy.totalFishCaught;
 
 catchCount.textContent = String(caughtFish);
@@ -364,6 +505,8 @@ function updateButton(): void {
   inventoryOpen.disabled = phase !== "ready";
   shopOpen.disabled = phase !== "ready";
   locationSelect.disabled = phase !== "ready";
+  destinationTrigger.disabled = phase !== "ready";
+  if (phase !== "ready") showDestinationMenu(false);
   document
     .querySelector(".game-panel")
     ?.classList.toggle("game-panel--reeling", phase === "reeling");
@@ -722,6 +865,22 @@ function renderShop(): void {
   }
 }
 
+// COZY_REVIEWER_TOOLS_V5: reviewer-only gameplay shortcut, not a purchase.
+reviewerBonusButton.addEventListener("click", () => {
+  const bonus = getReviewerBonus(economy.coins, shopState);
+  if (!Number.isSafeInteger(economy.coins + bonus)) {
+    status.textContent = "Your test wallet is already full.";
+    return;
+  }
+
+  economy.coins += bonus;
+  saveEconomy(economy);
+  walletBalance.textContent = String(economy.coins);
+  status.textContent = `🧪 Tester bonus: +${bonus.toLocaleString("en-US")} coins! Open the Shop to buy and test every rod and location.`;
+  // The game still requires normal purchases; nothing is unlocked for free.
+  renderShop();
+});
+
 shopOpen.addEventListener("click", () => {
   renderShop();
   shopDialog.showModal();
@@ -735,6 +894,13 @@ updateEquippedRod();
 
 function renderInventory(): void {
   inventoryList.replaceChildren();
+
+  const junkCount = savedCatches.filter((entry) =>
+    isJunkCatch(entry.id),
+  ).length;
+  inventoryDiscardJunk.disabled = junkCount === 0;
+  inventoryDiscardJunk.textContent = `🧹 Discard junk (${junkCount})`;
+  inventoryClearAll.disabled = savedCatches.length === 0;
 
   const fishIds = new Set(economy.discoveredFishIds);
 
@@ -822,6 +988,25 @@ function renderInventory(): void {
       info.append(sellButton);
     }
 
+    // Junk has no selling value, but can be discarded individually.
+    if (item.kind === "junk") {
+      const discardButton = document.createElement("button");
+      discardButton.type = "button";
+      discardButton.className = "inventory-item__discard";
+      discardButton.textContent = "Discard";
+      discardButton.setAttribute("aria-label", `Discard ${item.name}`);
+      discardButton.addEventListener("click", () => {
+        const index = savedCatches.indexOf(entry);
+        if (index < 0) return;
+        savedCatches.splice(index, 1);
+        saveInventory(savedCatches);
+        inventoryCount.textContent = String(savedCatches.length);
+        renderInventory();
+        status.textContent = `Discarded ${item.name}.`;
+      });
+      info.append(discardButton);
+    }
+
     card.append(image, info);
     inventoryList.append(card);
   }
@@ -834,6 +1019,36 @@ inventoryOpen.addEventListener("click", () => {
 
 inventoryClose.addEventListener("click", () => {
   inventoryDialog.close();
+});
+
+inventoryDiscardJunk.addEventListener("click", () => {
+  const count = savedCatches.filter((entry) => isJunkCatch(entry.id)).length;
+  if (count === 0) return;
+  if (!window.confirm(`Discard ${count} junk item(s)? This cannot be undone.`))
+    return;
+
+  const discarded = discardJunk(savedCatches);
+  saveInventory(savedCatches);
+  inventoryCount.textContent = String(savedCatches.length);
+  renderInventory();
+  status.textContent = `Discarded ${discarded} junk item(s).`;
+});
+
+inventoryClearAll.addEventListener("click", () => {
+  const count = savedCatches.length;
+  if (count === 0) return;
+  if (
+    !window.confirm(
+      `Clear all ${count} items from your collection? Fish will not be sold. This cannot be undone.`,
+    )
+  )
+    return;
+
+  const removed = clearCollection(savedCatches);
+  saveInventory(savedCatches);
+  inventoryCount.textContent = String(savedCatches.length);
+  renderInventory();
+  status.textContent = `Removed ${removed} items. Your coins, unlocked locations and catch records are safe.`;
 });
 
 function finishReeling(success: boolean): void {
@@ -964,6 +1179,7 @@ async function startGame(): Promise<void> {
         activeLocation = next;
         location = config;
         updateLocationLabels();
+        renderDestinationMenu();
         status.textContent = `Ready to fish at ${location.name}!`;
       } catch (error) {
         console.error("Failed to load location", error);

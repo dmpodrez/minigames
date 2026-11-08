@@ -4,12 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cozy Fishing | MiniGames</title>
+    <!-- COZY_COLLECTION_CLEANUP_V4: dedicated game favicon -->
+    <link rel="icon" type="image/svg+xml" href="/cozy-fishing-favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="/cozy-fishing-favicon.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/cozy-fishing-apple-icon.png"
+    />
   </head>
   <body>
     <main class="fishing-page">
       <header class="topbar">
         <div class="brand">
-          <span class="brand__mark" aria-hidden="true">✦</span>
+          <span class="brand__mark" aria-hidden="true"
+            ><img src="/cozy-fishing-favicon.svg" width="32" height="32" alt=""
+          /></span>
           <div>
             <span class="brand__eyebrow">MINIGAMES · CREATIVE EXTENSION</span>
             <strong>Cozy Fishing</strong>
@@ -17,20 +32,71 @@
         </div>
 
         <div class="topbar__actions">
-          <label class="location-picker" for="location-select">
-            Location
-            <select id="location-select" aria-label="Fishing location">
+          <div class="location-picker" id="location-picker">
+            <span class="location-picker__caption">Destinations</span>
+            <button
+              type="button"
+              id="location-trigger"
+              class="location-trigger"
+              aria-expanded="false"
+              aria-haspopup="true"
+              aria-controls="location-menu"
+              aria-label="Choose fishing location"
+            >
+              <span
+                id="location-current-preview"
+                class="location-trigger__preview"
+                aria-hidden="true"
+              ></span>
+              <span class="location-trigger__details">
+                <span
+                  id="location-current-number"
+                  class="location-trigger__eyebrow"
+                  >LOCATION 01</span
+                >
+                <strong
+                  id="location-current-name"
+                  class="location-trigger__name"
+                  >Sunset Cove</strong
+                >
+              </span>
+              <span class="location-trigger__chevron" aria-hidden="true"
+                >⌄</span
+              >
+            </button>
+            <div
+              id="location-menu"
+              class="location-menu"
+              aria-label="Available fishing locations"
+              hidden
+            ></div>
+            <select
+              id="location-select"
+              class="location-picker__native"
+              aria-label="Fishing location"
+              aria-hidden="true"
+              tabindex="-1"
+            >
               <option value="1">Sunset Cove</option>
-              <option value="2" selected>Mountain River</option>
+              <option value="2">Mountain River</option>
               <option value="3">Tropical Lagoon</option>
               <option value="4">Winter Lake</option>
             </select>
-          </label>
+          </div>
           <div class="wallet" aria-label="Your wallet">
             <span aria-hidden="true">🪙</span>
             <strong id="wallet-balance">0</strong>
             <span>coins</span>
           </div>
+          <button
+            id="reviewer-bonus"
+            class="reviewer-bonus"
+            type="button"
+            title="For reviewers: grant enough test coins to buy every rod and location"
+            aria-label="Tester tools: grant 5000 or more test coins"
+          >
+            🧪 Tester <span class="reviewer-bonus__hint">+5k</span>
+          </button>
           <button id="shop-open" class="shop-button" type="button">
             🛒 Shop
           </button>
@@ -142,6 +208,22 @@
           </div>
           <p id="inventory-summary" class="inventory-summary"></p>
           <p id="discovered-species" class="inventory-discovered"></p>
+          <div class="inventory-actions" aria-label="Manage collection">
+            <button
+              id="inventory-discard-junk"
+              class="inventory-action inventory-action--junk"
+              type="button"
+            >
+              🧹 Discard junk
+            </button>
+            <button
+              id="inventory-clear-all"
+              class="inventory-action inventory-action--danger"
+              type="button"
+            >
+              🗑 Clear collection
+            </button>
+          </div>
           <div id="inventory-list" class="inventory-list"></div>
         </div>
       </dialog>
