@@ -26,14 +26,49 @@ export const RODS = [
 
 export type RodId = (typeof RODS)[number]["id"];
 
+export const FISHING_LOCATIONS = [
+  {
+    id: 1,
+    name: "Sunset Cove",
+    price: 0,
+    description: "Your starting lake at sunset.",
+  },
+  {
+    id: 2,
+    name: "Mountain River",
+    price: 500,
+    description: "Explore the mountain stream.",
+  },
+  {
+    id: 3,
+    name: "Tropical Lagoon",
+    price: 1000,
+    description: "Fish in the tropical lagoon.",
+  },
+  {
+    id: 4,
+    name: "Winter Lake",
+    price: 1500,
+    description: "Try peaceful winter fishing.",
+  },
+] as const;
+
+export type ShopLocationId = (typeof FISHING_LOCATIONS)[number]["id"];
+
+function isShopLocationId(value: unknown): value is ShopLocationId {
+  return FISHING_LOCATIONS.some((location) => location.id === value);
+}
+
 export interface ShopState {
   ownedRodIds: RodId[];
   equippedRodId: RodId;
+  ownedLocationIds: ShopLocationId[];
 }
 
 const DEFAULT_SHOP: ShopState = {
   ownedRodIds: ["wooden"],
   equippedRodId: "wooden",
+  ownedLocationIds: [1],
 };
 
 function isRodId(value: unknown): value is RodId {
@@ -48,13 +83,18 @@ export function loadShop(): ShopState {
       return {
         ownedRodIds: [...DEFAULT_SHOP.ownedRodIds],
         equippedRodId: "wooden",
+        ownedLocationIds: [1],
       };
     }
 
     const data: unknown = JSON.parse(stored);
 
     if (typeof data !== "object" || data === null) {
-      return { ...DEFAULT_SHOP, ownedRodIds: ["wooden"] };
+      return {
+        ...DEFAULT_SHOP,
+        ownedRodIds: ["wooden"],
+        ownedLocationIds: [1],
+      };
     }
 
     const parsed = data as Record<string, unknown>;
@@ -74,12 +114,19 @@ export function loadShop(): ShopState {
         ? parsed.equippedRodId
         : "wooden";
 
+    const locations: ShopLocationId[] = [1];
+    if (Array.isArray(parsed.ownedLocationIds)) {
+      for (const id of parsed.ownedLocationIds) {
+        if (isShopLocationId(id) && !locations.includes(id)) locations.push(id);
+      }
+    }
     return {
       ownedRodIds: owned,
       equippedRodId: equipped,
+      ownedLocationIds: locations,
     };
   } catch {
-    return { ...DEFAULT_SHOP, ownedRodIds: ["wooden"] };
+    return { ...DEFAULT_SHOP, ownedRodIds: ["wooden"], ownedLocationIds: [1] };
   }
 }
 
@@ -114,6 +161,7 @@ export function buyRod(
     success: true,
     coins: coins - rod.price,
     shop: {
+      ...shop,
       ownedRodIds: [...shop.ownedRodIds, rodId],
       equippedRodId: rodId,
     },
@@ -133,4 +181,28 @@ export function equipRod(shop: ShopState, rodId: RodId): ShopState {
 
 export function getEquippedRod(shop: ShopState) {
   return RODS.find((rod) => rod.id === shop.equippedRodId) ?? RODS[0];
+}
+
+/** Purchase a location exactly once, using the existing shared coin balance. */
+export function buyLocation(
+  shop: ShopState,
+  coins: number,
+  locationId: ShopLocationId,
+): { success: boolean; shop: ShopState; coins: number } {
+  const destination = FISHING_LOCATIONS.find((item) => item.id === locationId);
+  if (
+    !destination ||
+    shop.ownedLocationIds.includes(locationId) ||
+    coins < destination.price
+  ) {
+    return { success: false, shop, coins };
+  }
+  return {
+    success: true,
+    coins: coins - destination.price,
+    shop: {
+      ...shop,
+      ownedLocationIds: [...shop.ownedLocationIds, locationId],
+    },
+  };
 }

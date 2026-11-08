@@ -20,6 +20,9 @@ import {
   buyRod,
   equipRod,
   getEquippedRod,
+  FISHING_LOCATIONS,
+  buyLocation,
+  type ShopLocationId,
 } from "./game/shop";
 function getRequiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -185,7 +188,7 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
 };
 
 // COZY_SUBMISSION_FIX_V1
-let activeLocation: LocationId = 2;
+let activeLocation: LocationId = 1;
 let location = LOCATIONS[activeLocation];
 const locationSelect =
   getRequiredElement<HTMLSelectElement>("#location-select");
@@ -228,6 +231,24 @@ let pendingCatch: CatchResult | null = null;
 const savedCatches = loadInventory();
 const economy = loadEconomy(savedCatches);
 let shopState = loadShop();
+
+// COZY_LOCATION_UNLOCKS_V1: ownership from the existing shop save.
+function refreshLocationOptions(): void {
+  for (const item of FISHING_LOCATIONS) {
+    const option = locationSelect.querySelector<HTMLOptionElement>(
+      `option[value="${item.id}"]`,
+    );
+    if (!option) continue;
+    const unlocked = shopState.ownedLocationIds.includes(item.id);
+    option.textContent = unlocked
+      ? item.name
+      : `🔒 ${item.name} · ${item.price} coins`;
+    // Keep locked options selectable so the player can discover the shop.
+    option.disabled = false;
+  }
+  locationSelect.value = String(activeLocation);
+}
+refreshLocationOptions();
 let caughtFish = economy.totalFishCaught;
 
 catchCount.textContent = String(caughtFish);
@@ -569,6 +590,10 @@ function updateEquippedRod(): void {
 
 function renderShop(): void {
   shopList.replaceChildren();
+  const rodsTitle = document.createElement("h3");
+  rodsTitle.textContent = "Fishing Rods";
+  rodsTitle.className = "shop-section-title";
+  shopList.append(rodsTitle);
 
   for (const rod of RODS) {
     const card = document.createElement("div");
@@ -636,6 +661,62 @@ function renderShop(): void {
       renderShop();
     });
 
+    card.append(details, button);
+    shopList.append(card);
+  }
+
+  const destinationsTitle = document.createElement("h3");
+  destinationsTitle.textContent = "Fishing Locations";
+  destinationsTitle.className = "shop-section-title";
+  shopList.append(destinationsTitle);
+
+  for (const destination of FISHING_LOCATIONS) {
+    const unlocked = shopState.ownedLocationIds.includes(destination.id);
+    const card = document.createElement("div");
+    card.className = "shop-item";
+    if (unlocked) card.classList.add("shop-item--equipped");
+    const details = document.createElement("div");
+    details.className = "shop-item__details";
+    const title = document.createElement("strong");
+    title.textContent = `${unlocked ? "🗺️" : "🔒"} ${destination.name}`;
+    const description = document.createElement("p");
+    description.textContent = destination.description;
+    const price = document.createElement("span");
+    price.textContent = unlocked
+      ? "Unlocked forever"
+      : `${destination.price} coins`;
+    details.append(title, description, price);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "shop-item__action";
+    if (unlocked) {
+      button.textContent =
+        activeLocation === destination.id ? "Current location ✓" : "Travel";
+      button.disabled = activeLocation === destination.id;
+      button.addEventListener("click", () => {
+        shopDialog.close();
+        locationSelect.value = String(destination.id);
+        locationSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    } else {
+      button.textContent =
+        economy.coins < destination.price
+          ? "Not enough coins"
+          : `Unlock · ${destination.price}`;
+      button.disabled = economy.coins < destination.price;
+      button.addEventListener("click", () => {
+        const result = buyLocation(shopState, economy.coins, destination.id);
+        if (!result.success) return;
+        shopState = result.shop;
+        economy.coins = result.coins;
+        saveShop(shopState);
+        saveEconomy(economy);
+        walletBalance.textContent = String(economy.coins);
+        refreshLocationOptions();
+        status.textContent = `${destination.name} unlocked! Choose it from Locations.`;
+        renderShop();
+      });
+    }
     card.append(details, button);
     shopList.append(card);
   }
@@ -861,6 +942,14 @@ async function startGame(): Promise<void> {
       const next = Number(locationSelect.value) as LocationId;
       if (phase !== "ready" || !(next in LOCATIONS)) {
         updateLocationLabels();
+        return;
+      }
+      if (!shopState.ownedLocationIds.includes(next as ShopLocationId)) {
+        const destination = FISHING_LOCATIONS.find((item) => item.id === next);
+        updateLocationLabels();
+        status.textContent = `${destination?.name ?? "Location"} is locked. Unlock it in the Shop.`;
+        renderShop();
+        shopDialog.showModal();
         return;
       }
       locationSelect.disabled = true;
