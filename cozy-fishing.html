@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cozy Fishing | MiniGames</title>
+    <!-- COZY_COLLECTION_CLEANUP_V4: dedicated game favicon -->
+    <link rel="icon" type="image/svg+xml" href="/cozy-fishing-favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="/cozy-fishing-favicon.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/cozy-fishing-apple-icon.png"
+    />
+  </head>
+  <body>
+    <main class="fishing-page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true"
+            ><img src="/cozy-fishing-favicon.svg" width="32" height="32" alt=""
+          /></span>
+          <div>
+            <span class="brand__eyebrow">MINIGAMES · CREATIVE EXTENSION</span>
+            <strong>Cozy Fishing</strong>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <div class="location-picker" id="location-picker">
+            <span class="location-picker__caption">Destinations</span>
+            <button
+              type="button"
+              id="location-trigger"
+              class="location-trigger"
+              aria-expanded="false"
+              aria-haspopup="true"
+              aria-controls="location-menu"
+              aria-label="Choose fishing location"
+            >
+              <span
+                id="location-current-preview"
+                class="location-trigger__preview"
+                aria-hidden="true"
+              ></span>
+              <span class="location-trigger__details">
+                <span
+                  id="location-current-number"
+                  class="location-trigger__eyebrow"
+                  >LOCATION 01</span
+                >
+                <strong
+                  id="location-current-name"
+                  class="location-trigger__name"
+                  >Sunset Cove</strong
+                >
+              </span>
+              <span class="location-trigger__chevron" aria-hidden="true"
+                >⌄</span
+              >
+            </button>
+            <div
+              id="location-menu"
+              class="location-menu"
+              aria-label="Available fishing locations"
+              hidden
+            ></div>
+            <select
+              id="location-select"
+              class="location-picker__native"
+              aria-label="Fishing location"
+              aria-hidden="true"
+              tabindex="-1"
+            >
+              <option value="1">Sunset Cove</option>
+              <option value="2">Mountain River</option>
+              <option value="3">Tropical Lagoon</option>
+              <option value="4">Winter Lake</option>
+            </select>
+          </div>
+          <div class="wallet" aria-label="Your wallet">
+            <span aria-hidden="true">🪙</span>
+            <strong id="wallet-balance">0</strong>
+            <span>coins</span>
+          </div>
+          <button
+            id="reviewer-bonus"
+            class="reviewer-bonus"
+            type="button"
+            title="For reviewers: grant enough test coins to buy every rod and location"
+            aria-label="Tester tools: grant 5000 or more test coins"
+          >
+            🧪 Tester <span class="reviewer-bonus__hint">+5k</span>
+          </button>
+          <button id="shop-open" class="shop-button" type="button">
+            🛒 Shop
+          </button>
+          <button id="inventory-open" class="inventory-button" type="button">
+            🎒 Collection <span id="inventory-count">0</span>
+          </button>
+          <a class="back-link" href="/">← Back to MiniGames</a>
+        </div>
+      </header>
+
+      <section class="game-frame" aria-label="Fishing game scene">
+        <canvas
+          id="fishing-canvas"
+          width="1280"
+          height="720"
+          aria-label="Pixel-art sunset lake with a boat and fisherman"
+        ></canvas>
+        <div class="location-label">
+          <span id="location-number">LOCATION 02</span>
+          <h1 id="location-title">Mountain River</h1>
+          <p id="location-description">Wild trout by the mountain stream</p>
+        </div>
+        <div class="weather-label" id="weather-label">☀ DAY 01 · CLEAR</div>
+      </section>
+
+      <section class="game-panel" aria-label="Fishing controls">
+        <div class="game-panel__status">
+          <span class="game-panel__eyebrow">
+            FISHING STATUS · CAUGHT <strong id="catch-count">0</strong>
+          </span>
+          <p id="game-status" role="status" aria-live="polite">
+            The lake is quiet. Ready to cast?
+          </p>
+          <p id="equipped-rod" class="equipped-rod">Equipped: Wooden Rod</p>
+
+          <aside
+            id="reel-panel"
+            class="reel-panel"
+            aria-label="Fishing battle"
+            hidden
+          >
+            <p class="reel-panel__eyebrow">FISH ON THE LINE!</p>
+            <div class="reel-panel__heading">
+              <strong>Reel the fish in</strong>
+              <span id="reel-percent">0%</span>
+            </div>
+            <div
+              class="reel-panel__track"
+              role="progressbar"
+              aria-label="Catch progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="reel-progress"
+            >
+              <div
+                id="reel-progress-fill"
+                class="reel-panel__fill reel-panel__fill--progress"
+              ></div>
+            </div>
+            <div class="reel-panel__heading reel-panel__heading--tension">
+              <strong>Line tension</strong>
+              <span id="tension-percent">0%</span>
+            </div>
+            <div
+              class="reel-panel__track"
+              role="progressbar"
+              aria-label="Line tension"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="reel-tension"
+            >
+              <div
+                id="reel-tension-fill"
+                class="reel-panel__fill reel-panel__fill--tension"
+              ></div>
+            </div>
+            <p class="reel-panel__hint">
+              Hold the button or Space to reel. Release to lower tension.
+            </p>
+          </aside>
+        </div>
+
+        <div class="game-panel__controls">
+          <span class="game-panel__tip">
+            During the fight, hold to reel and release to relax
+          </span>
+          <button
+            id="cast-button"
+            class="cast-button"
+            type="button"
+            aria-pressed="false"
+          >
+            🎣 Cast line
+          </button>
+        </div>
+      </section>
+
+      <dialog
+        id="inventory-dialog"
+        class="inventory-dialog"
+        aria-labelledby="inventory-title"
+      >
+        <div class="inventory-content">
+          <div class="inventory-header">
+            <h2 id="inventory-title">Catch Collection</h2>
+            <button id="inventory-close" type="button">Close ✕</button>
+          </div>
+          <p id="inventory-summary" class="inventory-summary"></p>
+          <p id="discovered-species" class="inventory-discovered"></p>
+          <div class="inventory-actions" aria-label="Manage collection">
+            <button
+              id="inventory-discard-junk"
+              class="inventory-action inventory-action--junk"
+              type="button"
+            >
+              🧹 Discard junk
+            </button>
+            <button
+              id="inventory-clear-all"
+              class="inventory-action inventory-action--danger"
+              type="button"
+            >
+              🗑 Clear collection
+            </button>
+          </div>
+          <div id="inventory-list" class="inventory-list"></div>
+        </div>
+      </dialog>
+
+      <dialog id="shop-dialog" class="shop-dialog" aria-labelledby="shop-title">
+        <div class="shop-content">
+          <div class="shop-header">
+            <div>
+              <p class="shop-eyebrow">FISHING EQUIPMENT</p>
+              <h2 id="shop-title">Fishing Shop</h2>
+            </div>
+            <button id="shop-close" class="shop-close" type="button">
+              Close ✕
+            </button>
+          </div>
+          <p class="shop-description">
+            Upgrade your fishing rod to reduce line tension and catch more fish.
+          </p>
+          <div id="shop-list" class="shop-list"></div>
+        </div>
+      </dialog>
+
+      <dialog
+        id="catch-dialog"
+        class="catch-dialog"
+        aria-labelledby="catch-title"
+      >
+        <div class="catch-card">
+          <p id="catch-eyebrow" class="catch-card__eyebrow">A new catch!</p>
+          <h2 id="catch-title">Your catch</h2>
+          <div class="catch-card__art">
+            <img id="catch-image" alt="Caught item" width="448" height="304" />
+          </div>
+          <p id="catch-rarity" class="catch-card__rarity">Common</p>
+          <div class="catch-card__stats">
+            <div class="catch-card__stat">
+              <span>Weight</span>
+              <strong id="catch-weight">0.00 kg</strong>
+            </div>
+            <div class="catch-card__stat">
+              <span>Estimated value</span>
+              <strong id="catch-value">0 coins</strong>
+            </div>
+          </div>
+          <p id="catch-description" class="catch-card__description"></p>
+          <button
+            id="catch-continue"
+            class="catch-card__continue"
+            type="button"
+          >
+            Continue fishing
+          </button>
+        </div>
+      </dialog>
+    </main>
+    <script type="module" src="/cozy-fishing/main.ts"></script>
+  </body>
+</html>

@@ -1965,6 +1965,16 @@ gameDetailsDialog.addEventListener("cancel", (event: Event) => {
   closeGameFromUrl();
 });
 
+// Creative Extension: connect the Cast n Chill library card to Cozy Fishing.
+const cozyFishingPlayButton = document.querySelector<HTMLButtonElement>(
+  ".game-details-dialog .game-play-button",
+);
+cozyFishingPlayButton?.addEventListener("click", () => {
+  if (currentGameSlug === "cast-n-chill") {
+    window.location.assign("/cozy-fishing.html");
+  }
+});
+
 /* =========================
    STORY 2 — SLIDER AUTOPLAY
    ========================= */

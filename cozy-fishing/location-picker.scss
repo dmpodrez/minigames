@@ -1,0 +1,272 @@
+/* Cozy Fishing: destination chooser. The original <select> remains the source of truth. */
+.topbar {
+  position: relative;
+  z-index: 20;
+}
+
+.location-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: 9px;
+  color: #cfdbc7;
+  font-size: 12px;
+}
+
+.location-picker__caption {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #b7cbbd;
+}
+
+/* Keep the native select for the existing location-change logic, not for display. */
+.location-picker select.location-picker__native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border: 0;
+}
+
+.location-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 194px;
+  max-width: 230px;
+  min-height: 48px;
+  padding: 5px 10px 5px 5px;
+  border: 1px solid #8da58d;
+  border-radius: 12px;
+  color: #f9ecd1;
+  background: linear-gradient(145deg, #355951, #213d3e 72%);
+  box-shadow:
+    inset 0 1px #ffffff1d,
+    0 6px 18px #071e2038;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+.location-trigger:hover:not(:disabled),
+.location-trigger[aria-expanded="true"] {
+  border-color: #f0d48c;
+  box-shadow:
+    inset 0 1px #ffffff26,
+    0 0 0 2px #f1cb7540,
+    0 9px 24px #071e204a;
+}
+.location-trigger:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.location-trigger:focus-visible {
+  outline: 2px solid #ffe0a0;
+  outline-offset: 3px;
+}
+.location-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.location-trigger__preview {
+  display: block;
+  flex: 0 0 51px;
+  width: 51px;
+  height: 37px;
+  border: 1px solid #ffffff50;
+  border-radius: 7px;
+  background-color: #3c6d72;
+  background-position: center;
+  background-size: cover;
+}
+.location-trigger__details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.location-trigger__eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: #e4d099;
+}
+.location-trigger__name {
+  overflow: hidden;
+  color: #fff2d8;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.location-trigger__chevron {
+  flex: 0 0 auto;
+  color: #f1d6a1;
+  font-size: 18px;
+  transition: transform 140ms ease;
+}
+.location-trigger[aria-expanded="true"] .location-trigger__chevron {
+  transform: rotate(180deg);
+}
+
+.location-menu[hidden] {
+  display: none;
+}
+.location-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(390px, calc(100vw - 26px));
+  max-height: min(530px, 70dvh);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid #b7a67a;
+  border-radius: 17px;
+  background: linear-gradient(160deg, #274549, #142d32);
+  box-shadow:
+    0 19px 45px #07171cbb,
+    inset 0 1px #ffffff16;
+  color: #f9ebc9;
+}
+.location-menu__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 3px 3px 11px;
+  gap: 10px;
+}
+.location-menu__heading strong {
+  font-family: Georgia, serif;
+  font-size: 19px;
+}
+.location-menu__heading span {
+  color: #d8c18d;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.location-menu__items {
+  display: grid;
+  gap: 7px;
+}
+.location-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 11px;
+  padding: 8px;
+  border: 1px solid #9ab9ad44;
+  border-radius: 11px;
+  color: #f6e7c6;
+  background: #ffffff0d;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+.location-menu__item:hover,
+.location-menu__item:focus-visible {
+  border-color: #eecb83;
+  background: #ffffff18;
+}
+.location-menu__item:focus-visible {
+  outline: 2px solid #f5d68e;
+  outline-offset: 2px;
+}
+.location-menu__item--active {
+  border-color: #c7aa68;
+  background: #a7924b23;
+}
+.location-menu__item--locked .location-menu__thumb {
+  filter: saturate(0.45) brightness(0.65);
+}
+.location-menu__thumb {
+  display: block;
+  flex: 0 0 76px;
+  width: 76px;
+  height: 50px;
+  border: 1px solid #ffffff42;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  background-color: #477178;
+}
+.location-menu__copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.location-menu__copy strong {
+  font-size: 13px;
+}
+.location-menu__copy small {
+  overflow: hidden;
+  font-size: 10px;
+  color: #afc7c4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.location-menu__state {
+  flex: 0 0 auto;
+  color: #efd49c;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.location-menu__item--locked .location-menu__state {
+  color: #edbb7e;
+}
+.location-menu__footer {
+  padding: 10px 4px 2px;
+  color: #b7c9c2;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 850px) {
+  .location-picker {
+    order: 0;
+  }
+}
+@media (max-width: 520px) {
+  .location-picker__caption {
+    display: none;
+  }
+  .location-trigger {
+    min-width: 178px;
+  }
+  .location-menu {
+    width: min(370px, calc(100vw - 20px));
+  }
+}
+@media (max-width: 360px) {
+  .location-trigger {
+    min-width: 165px;
+  }
+  .location-menu__thumb {
+    flex-basis: 63px;
+    width: 63px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .location-trigger,
+  .location-trigger__chevron,
+  .location-menu__item {
+    transition: none;
+  }
+}

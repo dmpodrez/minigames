@@ -1,0 +1,181 @@
+// Native <dialog> handles focus trapping, Escape, and backdrop interaction.
+.catch-dialog {
+  width: min(450px, calc(100vw - 32px));
+  max-height: min(90dvh, 720px);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #bdac7e;
+  border-radius: 22px;
+  color: #f7e9cb;
+  background: #1a3235;
+  box-shadow: 0 32px 90px rgba(4, 18, 22, 0.65);
+}
+
+.catch-dialog:not([open]) {
+  display: none;
+}
+
+.catch-dialog::backdrop {
+  background: rgba(6, 19, 23, 0.75);
+  backdrop-filter: blur(5px);
+}
+
+.catch-card {
+  padding: 26px;
+  text-align: center;
+  background:
+    radial-gradient(
+      ellipse at 50% 15%,
+      rgba(113, 154, 130, 0.25),
+      transparent 65%
+    ),
+    linear-gradient(#244246, #182e32);
+}
+
+.catch-card__eyebrow {
+  margin: 0 0 8px;
+  font:
+    700 11px/1.4 Arial,
+    sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #dbba83;
+}
+
+.catch-card h2 {
+  margin: 0 0 14px;
+  font:
+    600 clamp(25px, 5vw, 33px)/1.2 Georgia,
+    serif;
+}
+
+.catch-card__art {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(221, 210, 174, 0.2);
+  border-radius: 15px;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(124, 166, 141, 0.28),
+      transparent 65%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 7px,
+      rgba(255, 255, 255, 0.025) 7px 8px
+    ),
+    #193c43;
+}
+
+.catch-card__art img {
+  display: block;
+  width: min(100%, 336px);
+  height: auto;
+  aspect-ratio: 28 / 19;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 15px 8px rgba(1, 15, 19, 0.23));
+}
+
+.catch-card__rarity {
+  display: inline-block;
+  margin: 16px 0 8px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font:
+    700 11px/1 Arial,
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e2f0e5;
+  background: #456a5b;
+}
+
+.catch-card__rarity--uncommon {
+  background: #416b82;
+}
+.catch-card__rarity--rare {
+  background: #705b9d;
+}
+.catch-card__rarity--legendary {
+  color: #392914;
+  background: #f3c879;
+}
+.catch-card__rarity--junk {
+  background: #6b6c69;
+}
+
+.catch-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+.catch-card__stat {
+  padding: 12px 8px;
+  border: 1px solid rgba(238, 216, 167, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.catch-card__stat span {
+  display: block;
+  margin-bottom: 6px;
+  color: #c0d0c9;
+  font:
+    600 10px Arial,
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.catch-card__stat strong {
+  font:
+    700 21px Georgia,
+    serif;
+}
+
+.catch-card__description {
+  margin: 0 0 20px;
+  min-height: 38px;
+  color: #cbddd1;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+
+.catch-card__continue {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #f1d39b;
+  border-radius: 12px;
+  color: #253b39;
+  background: #e4c68d;
+  font:
+    700 14px Arial,
+    sans-serif;
+  cursor: pointer;
+}
+
+.catch-card__continue:hover {
+  background: #f2d9a4;
+}
+.catch-card__continue:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .catch-card {
+    padding: 17px;
+  }
+  .catch-card__art {
+    min-height: 150px;
+  }
+}
