@@ -91,6 +91,13 @@ const ctx = context;
 const WIDTH = 640;
 const HEIGHT = 360;
 
+// COZY_HD_RENDER_V2: high-resolution Canvas, same 640x360 gameplay coordinates.
+// A 2x backing buffer means character PNGs retain more visual detail on screen.
+const HD_SCALE = 2;
+canvas.width = WIDTH * HD_SCALE;
+canvas.height = HEIGHT * HD_SCALE;
+ctx.setTransform(HD_SCALE, 0, 0, HD_SCALE, 0, 0);
+
 type LocationId = 1 | 2 | 3 | 4;
 
 interface LocationConfig {
@@ -115,16 +122,16 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
     name: "Sunset Cove",
     background: "./assets/boat-man.png",
     fisherman: "./assets/backgr.png",
-    x: 505,
+    x: 300,
     y: 207,
     width: 40,
     height: 54,
     direction: -1,
     handX: 512,
     handY: 239,
-    tipX: 444,
-    tipY: 207,
-    bobberX: 350,
+    tipX: 300,
+    tipY: 217,
+    bobberX: 200,
     bobberY: 279,
   },
   2: {
@@ -138,8 +145,8 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
     direction: 1,
     handX: 116,
     handY: 247,
-    tipX: 252,
-    tipY: 188,
+    tipX: 258,
+    tipY: 160,
     bobberX: 335,
     bobberY: 292,
   },
@@ -147,38 +154,67 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
     name: "Tropical Lagoon",
     background: "./assets/island.png",
     fisherman: "./assets/island-man.png",
-    x: 45,
-    y: 225,
+    x: 440,
+    y: 160,
     width: 44,
     height: 59,
     direction: 1,
     handX: 80,
     handY: 253,
-    tipX: 147,
-    tipY: 216,
+    tipX: 440,
+    tipY: 166,
     bobberX: 265,
-    bobberY: 280,
+    bobberY: 260,
   },
   4: {
     name: "Winter Lake",
     background: "./assets/snow.png",
     fisherman: "./assets/snow-man.png",
-    x: 535,
-    y: 210,
+    x: 450,
+    y: 240,
     width: 46,
     height: 61,
     direction: -1,
     handX: 542,
     handY: 246,
-    tipX: 484,
-    tipY: 226,
-    bobberX: 390,
-    bobberY: 285,
+    tipX: 494,
+    tipY: 265,
+    bobberX: 531,
+    bobberY: 286,
   },
 };
 
-const activeLocation: LocationId = 2;
-const location = LOCATIONS[activeLocation];
+// COZY_SUBMISSION_FIX_V1
+let activeLocation: LocationId = 2;
+let location = LOCATIONS[activeLocation];
+const locationSelect =
+  getRequiredElement<HTMLSelectElement>("#location-select");
+const locationHeading = getRequiredElement<HTMLElement>("#location-title");
+const locationNumber = getRequiredElement<HTMLElement>("#location-number");
+const locationDescription = getRequiredElement<HTMLElement>(
+  "#location-description",
+);
+const weatherLabel = getRequiredElement<HTMLElement>("#weather-label");
+const locationDescriptions: Record<LocationId, string> = {
+  1: "A peaceful evening on the lake",
+  2: "Wild trout by the mountain stream",
+  3: "Turquoise water and tropical sunshine",
+  4: "A quiet winter fishing adventure",
+};
+const locationWeather: Record<LocationId, string> = {
+  1: "🌅 DAY 01 · SUNSET",
+  2: "☀ DAY 01 · CLEAR",
+  3: "🌴 DAY 01 · SUNNY",
+  4: "❄ DAY 01 · SNOW",
+};
+function updateLocationLabels(): void {
+  locationSelect.value = String(activeLocation);
+  locationHeading.textContent = location.name;
+  locationNumber.textContent = `LOCATION 0${activeLocation}`;
+  locationDescription.textContent = locationDescriptions[activeLocation];
+  weatherLabel.textContent = locationWeather[activeLocation];
+}
+updateLocationLabels();
 
 interface GameArt {
   background: HTMLImageElement;
@@ -206,6 +242,8 @@ let ignoreNextClick = false;
 let spaceReleasePending = false;
 let reelState: ReelState = { progress: 0, tension: 0, elapsed: 0 };
 let lastFrame = 0;
+let castStartedAt = 0;
+let splashStartedAt = -1;
 
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = "high";
@@ -231,12 +269,55 @@ function drawFisherman(art: GameArt, time: number): void {
   );
 }
 
+function drawAmbientEffects(time: number): void {
+  // Subtle water sparkle without external graphics or heavy redraws.
+  if (activeLocation === 4) {
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    for (let i = 0; i < 12; i++) {
+      const px = (i * 113 + time * (5 + (i % 3))) % WIDTH;
+      const py = (i * 59 + time * (12 + (i % 5))) % HEIGHT;
+      ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
+    }
+    ctx.restore();
+    return;
+  }
+  const surfaceY =
+    activeLocation === 2 ? 238 : activeLocation === 3 ? 180 : 248;
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  for (let i = 0; i < 22; i++) {
+    const x = (i * 73 + time * (3 + (i % 4))) % WIDTH;
+    const y = surfaceY + ((i * 41) % (HEIGHT - surfaceY - 5));
+    if (activeLocation === 2 && x < 260) continue;
+    ctx.fillStyle = i % 3 ? "#b3e9e9" : "#fff5c8";
+    ctx.fillRect(Math.round(x), Math.round(y), 5 + (i % 5), 1);
+  }
+  ctx.restore();
+}
+
 function drawScene(art: GameArt, time: number): void {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
   ctx.drawImage(art.background, 0, 0, WIDTH, HEIGHT);
+  drawAmbientEffects(time);
 
+  // HD display: magnify around the feet / base, preserving original position.
+  const sizeBoost: Record<LocationId, number> = {
+    1: 1.08,
+    2: 1.13,
+    3: 1.12,
+    4: 1.1,
+  };
+  const scale = sizeBoost[activeLocation];
+  const anchorX = location.x + location.width / 2;
+  const anchorY = location.y + location.height;
+  ctx.save();
+  ctx.translate(anchorX, anchorY);
+  ctx.scale(scale, scale);
+  ctx.translate(-anchorX, -anchorY);
   drawFisherman(art, time);
+  ctx.restore();
   drawFishingLine(time);
 }
 
@@ -258,6 +339,7 @@ function updateButton(): void {
   castButton.setAttribute("aria-pressed", String(phase !== "ready"));
   inventoryOpen.disabled = phase !== "ready";
   shopOpen.disabled = phase !== "ready";
+  locationSelect.disabled = phase !== "ready";
 }
 
 function updateMeters(): void {
@@ -277,6 +359,8 @@ function resetFishing(message: string): void {
   clearFishingTimers();
   pendingCatch = null;
   phase = "ready";
+  castStartedAt = 0;
+  splashStartedAt = -1;
   pointerHeld = false;
   spaceHeld = false;
   reelPanel.hidden = true;
@@ -290,7 +374,9 @@ function castLine(): void {
   status.textContent = "Waiting for a fish to bite...";
   updateButton();
 
-  const delay = 2000 + Math.random() * 3500;
+  castStartedAt = performance.now() / 1000;
+  splashStartedAt = -1;
+  const delay = 2300 + Math.random() * 3200;
   biteTimer = window.setTimeout(() => {
     if (phase !== "waiting") return;
 
@@ -336,10 +422,17 @@ function drawFishingLine(time: number): void {
   const biting = phase === "bite";
   const reeling = phase === "reeling";
 
-  const wave = Math.sin(time * 2.5) * 1.5;
+  const wave = activeLocation === 4 ? 0 : Math.sin(time * 2.5) * 1.5;
   const biteMovement = biting ? Math.sin(time * 17) * 5 : 0;
 
-  const currentY = bobberY + wave + biteMovement;
+  // Float follows an arc for the first 0.8 s after casting.
+  const progress = Math.min(1, Math.max(0, (time - castStartedAt) / 0.8));
+  const flying = progress < 1;
+  const currentX = flying ? tipX + (bobberX - tipX) * progress : bobberX;
+  const currentY = flying
+    ? tipY + (bobberY - tipY) * progress - 38 * Math.sin(progress * Math.PI)
+    : bobberY + wave + biteMovement;
+  if (!flying && splashStartedAt < 0) splashStartedAt = time;
 
   ctx.save();
 
@@ -352,38 +445,40 @@ function drawFishingLine(time: number): void {
 
   // Небольшое провисание лески
   if (reeling || biting) {
-    ctx.lineTo(bobberX, currentY);
+    ctx.lineTo(currentX, currentY);
   } else {
     ctx.quadraticCurveTo(
       (tipX + bobberX) / 2,
       (tipY + currentY) / 2 + 8,
-      bobberX,
+      currentX,
       currentY,
     );
   }
 
   ctx.stroke();
 
-  // Круги на воде
-  const ripple = (time * 5) % 1;
+  if (activeLocation !== 4) {
+    // Круги на воде
+    const ripple = (time * 5) % 1;
 
-  ctx.strokeStyle = `rgba(220, 245, 250, ${0.6 * (1 - ripple)})`;
-  ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(220, 245, 250, ${flying ? 0 : 0.6 * (1 - ripple)})`;
+    ctx.lineWidth = 1;
 
-  ctx.beginPath();
-  ctx.ellipse(
-    bobberX,
-    currentY + 3,
-    4 + ripple * 9,
-    2 + ripple * 3,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(
+      currentX,
+      currentY + 3,
+      4 + ripple * 9,
+      2 + ripple * 3,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
 
   // Поплавок
-  const x = Math.round(bobberX);
+  const x = Math.round(currentX);
   const y = Math.round(currentY);
 
   // Антенна
@@ -403,13 +498,30 @@ function drawFishingLine(time: number): void {
   ctx.fillRect(x - 2, y, 5, 4);
 
   // При поклёвке поплавок погружается
-  if (biting) {
+  if (biting && !flying) {
     ctx.strokeStyle = "rgba(255,255,255,0.7)";
     ctx.beginPath();
     ctx.ellipse(x, y + 4, 10, 4, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
+  // Short landing splash after float reaches water.
+  if (!flying && splashStartedAt > 0 && time - splashStartedAt < 0.65) {
+    const splash = (time - splashStartedAt) / 0.65;
+    ctx.strokeStyle = `rgba(250, 255, 255, ${0.75 * (1 - splash)})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(
+      bobberX,
+      bobberY + 3,
+      3 + splash * 20,
+      2 + splash * 7,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -639,8 +751,6 @@ function finishReeling(success: boolean): void {
   ignoreNextClick = pointerHeld;
   spaceReleasePending = spaceHeld;
   if (success && result) {
-    const result = generateCatch();
-
     savedCatches.unshift({
       id: result.item.id,
       weightKg: result.weightKg,
@@ -736,6 +846,34 @@ async function startGame(): Promise<void> {
     ]);
 
     const art: GameArt = { background, fisherman };
+    // Change art while preserving coins, catches and game state.
+    locationSelect.addEventListener("change", async () => {
+      const next = Number(locationSelect.value) as LocationId;
+      if (phase !== "ready" || !(next in LOCATIONS)) {
+        updateLocationLabels();
+        return;
+      }
+      locationSelect.disabled = true;
+      try {
+        const config = LOCATIONS[next];
+        const [newBackground, newFisherman] = await Promise.all([
+          loadImage(new URL(config.background, import.meta.url).href),
+          loadImage(new URL(config.fisherman, import.meta.url).href),
+        ]);
+        art.background = newBackground;
+        art.fisherman = newFisherman;
+        activeLocation = next;
+        location = config;
+        updateLocationLabels();
+        status.textContent = `Ready to fish at ${location.name}!`;
+      } catch (error) {
+        console.error("Failed to load location", error);
+        updateLocationLabels();
+        status.textContent = "Failed to load this location.";
+      } finally {
+        locationSelect.disabled = phase !== "ready";
+      }
+    });
 
     function animate(timestamp: number): void {
       if (lastFrame === 0 || timestamp - lastFrame >= 33) {
