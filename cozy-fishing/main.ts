@@ -1,3 +1,13 @@
+// COZY_VERCEL_STATIC_ASSETS_FIX_V1
+// Explicit Vite asset imports make images work in production previews.
+import boatManAsset from "./assets/boat-man.png?url";
+import backgrAsset from "./assets/backgr.png?url";
+import natureAsset from "./assets/nature.png?url";
+import natureManAsset from "./assets/nature-man.png?url";
+import islandAsset from "./assets/island.png?url";
+import islandManAsset from "./assets/island-man.png?url";
+import snowAsset from "./assets/snow.png?url";
+import snowManAsset from "./assets/snow-man.png?url";
 import "./styles.scss";
 import "./reeling.scss";
 import "./catch.scss";
@@ -140,8 +150,8 @@ interface LocationConfig {
 const LOCATIONS: Record<LocationId, LocationConfig> = {
   1: {
     name: "Sunset Cove",
-    background: "./assets/boat-man.png",
-    fisherman: "./assets/backgr.png",
+    background: boatManAsset,
+    fisherman: backgrAsset,
     x: 260,
     y: 177,
     width: 70,
@@ -156,8 +166,8 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
   },
   2: {
     name: "Mountain River",
-    background: "./assets/nature.png",
-    fisherman: "./assets/nature-man.png",
+    background: natureAsset,
+    fisherman: natureManAsset,
     x: 180,
     y: 170,
     width: 75,
@@ -172,8 +182,8 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
   },
   3: {
     name: "Tropical Lagoon",
-    background: "./assets/island.png",
-    fisherman: "./assets/island-man.png",
+    background: islandAsset,
+    fisherman: islandManAsset,
     x: 440,
     y: 160,
     width: 44,
@@ -188,8 +198,8 @@ const LOCATIONS: Record<LocationId, LocationConfig> = {
   },
   4: {
     name: "Winter Lake",
-    background: "./assets/snow.png",
-    fisherman: "./assets/snow-man.png",
+    background: snowAsset,
+    fisherman: snowManAsset,
     x: 420,
     y: 200,
     width: 86,
@@ -268,7 +278,7 @@ let shopState = loadShop();
 function syncDestinationTrigger(): void {
   destinationName.textContent = location.name;
   destinationNumber.textContent = `LOCATION 0${activeLocation}`;
-  destinationPreview.style.backgroundImage = `url("${new URL(location.background, import.meta.url).href}")`;
+  destinationPreview.style.backgroundImage = `url("${location.background}")`;
 }
 
 function showDestinationMenu(open: boolean): void {
@@ -309,7 +319,7 @@ function renderDestinationMenu(): void {
 
     const thumb = document.createElement("span");
     thumb.className = "location-menu__thumb";
-    thumb.style.backgroundImage = `url("${new URL(LOCATIONS[place.id].background, import.meta.url).href}")`;
+    thumb.style.backgroundImage = `url("${LOCATIONS[place.id].background}")`;
     thumb.setAttribute("aria-hidden", "true");
     const copy = document.createElement("span");
     copy.className = "location-menu__copy";
@@ -1147,8 +1157,8 @@ window.addEventListener("blur", () => {
 async function startGame(): Promise<void> {
   try {
     const [background, fisherman] = await Promise.all([
-      loadImage(new URL(location.background, import.meta.url).href),
-      loadImage(new URL(location.fisherman, import.meta.url).href),
+      loadImage(location.background),
+      loadImage(location.fisherman),
     ]);
 
     const art: GameArt = { background, fisherman };
@@ -1171,8 +1181,8 @@ async function startGame(): Promise<void> {
       try {
         const config = LOCATIONS[next];
         const [newBackground, newFisherman] = await Promise.all([
-          loadImage(new URL(config.background, import.meta.url).href),
-          loadImage(new URL(config.fisherman, import.meta.url).href),
+          loadImage(config.background),
+          loadImage(config.fisherman),
         ]);
         art.background = newBackground;
         art.fisherman = newFisherman;
